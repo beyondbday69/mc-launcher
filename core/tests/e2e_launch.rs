@@ -30,8 +30,6 @@ use std::time::Duration as StdDuration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 
-static PORT: AtomicU16 = AtomicU16::new(0);
-
 /// Tiny single-shot HTTP server: GET /<name> serves a fixed in-memory byte
 /// payload with a known SHA-1. Counts how many times each path is hit.
 async fn spawn_server(payload: Vec<u8>) -> (SocketAddr, Arc<std::sync::Mutex<Vec<String>>>) {
@@ -90,23 +88,23 @@ fn make_instance(name: &str, version: &str, game_dir: PathBuf) -> Instance {
         id: "inst-e2e-001".into(),
         name: name.into(),
         version: version.into(),
+        mod_loader: None,
         game_dir: game_dir.clone(),
+        java_path: None,
         ram_mb: Some(1024),
         jvm_profile: "default".into(),
         custom_jvm_args: vec![],
         resolution_width: Some(854),
         resolution_height: Some(480),
         fullscreen: false,
-        env: Default::default(),
-        mods: Default::default(),
-        resourcepacks: Default::default(),
-        shaderpacks: Default::default(),
-        notes: "".into(),
-        color: "".into(),
-        show_log_on_launch: true,
-        close_on_launch: false,
-        java_path: None,
+        env: HashMap::new(),
         game_dir_override: Some(game_dir),
+        color: "#3b82f6".into(),
+        notes: "".into(),
+        created: Utc::now(),
+        last_played: None,
+        play_time_secs: 0,
+        schema: 1,
     }
 }
 
@@ -114,8 +112,8 @@ fn make_version_meta(java_major: u32) -> VersionMeta {
     serde_json::from_value(json!({
         "id": "1.21.4",
         "type": "release",
-        "mainClass": "net.minecraft.client.main.Main",
-        "assetIndex": {
+        "main_class": "net.minecraft.client.main.Main",
+        "asset_index": {
             "id": "1.21",
             "sha1": "0000000000000000000000000000000000000000",
             "size": 0,
@@ -253,7 +251,7 @@ async fn end_to_end_launch_with_mock_java() {
     };
 
     let registry = ProcessRegistry::new();
-    let handle = launch::launch(req, &registry)
+    let handle = launcher::launch(req, &registry)
         .await
         .expect("launch should succeed");
 
@@ -326,7 +324,7 @@ async fn end_to_end_launch_with_mock_java() {
         natives_dir: natives_dir.clone(),
     };
     let hits_before = hits.lock().unwrap().len();
-    let handle2 = launch::launch(req2, &registry)
+    let handle2 = launcher::launch(req2, &registry)
         .await
         .expect("relaunch should succeed");
     tokio::time::sleep(StdDuration::from_millis(300)).await;
