@@ -69,13 +69,23 @@ mod tests {
     #[test]
     fn validate_path_rejects_relative() {
         assert!(validate_path(&PathBuf::from("foo")).is_err());
-        assert!(validate_path(&PathBuf::from("/abs/path")).is_ok());
+        // Use a platform-appropriate absolute path. On Windows, `is_absolute`
+        // requires a drive prefix; on Unix, leading `/` is enough.
+        #[cfg(windows)]
+        let abs = PathBuf::from(r"C:\abs\path");
+        #[cfg(not(windows))]
+        let abs = PathBuf::from("/abs/path");
+        assert!(validate_path(&abs).is_ok());
     }
 
     #[test]
     fn validate_path_rejects_traversal() {
-        assert!(validate_path(&PathBuf::from("/foo/../bar")).is_err());
-        assert!(validate_path(&PathBuf::from("/foo/bar")).is_ok());
+        #[cfg(windows)]
+        let (ok, traversal) = (PathBuf::from(r"C:\foo\bar"), PathBuf::from(r"C:\foo\..\bar"));
+        #[cfg(not(windows))]
+        let (ok, traversal) = (PathBuf::from("/foo/bar"), PathBuf::from("/foo/../bar"));
+        assert!(validate_path(&traversal).is_err());
+        assert!(validate_path(&ok).is_ok());
     }
 
     #[test]

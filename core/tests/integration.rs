@@ -170,8 +170,14 @@ fn security_redact_refresh_token() {
 
 #[test]
 fn security_path_traversal_detected() {
-    assert!(security::validate_path(&PathBuf::from("/foo/../bar")).is_err());
-    assert!(security::validate_path(&PathBuf::from("/foo/bar")).is_ok());
+    // Use platform-appropriate absolute paths. On Windows, `is_absolute`
+    // requires a drive prefix; on Unix, leading `/` is enough.
+    #[cfg(windows)]
+    let (ok, traversal) = (PathBuf::from(r"C:\foo\bar"), PathBuf::from(r"C:\foo\..\bar"));
+    #[cfg(not(windows))]
+    let (ok, traversal) = (PathBuf::from("/foo/bar"), PathBuf::from("/foo/../bar"));
+    assert!(security::validate_path(&traversal).is_err());
+    assert!(security::validate_path(&ok).is_ok());
     assert!(security::validate_path(&PathBuf::from("relative")).is_err());
 }
 
