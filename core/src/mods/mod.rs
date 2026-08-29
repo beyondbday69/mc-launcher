@@ -19,9 +19,11 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 pub mod fabric;
+pub mod modrinth;
 pub mod stub;
 
 pub use fabric::FabricLoader;
+pub use modrinth::{ProjectHit, ProjectType, ProjectVersion, VersionFile};
 pub use stub::UnsupportedLoader;
 
 /// Loader kinds the launcher knows about.

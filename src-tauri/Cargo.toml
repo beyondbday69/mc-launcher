@@ -40,6 +40,7 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 # Filesystem / hashing
 sha1_smol = "1"
 sha2 = "0.10"
+md-5 = "0.10"
 hex = "0.4"
 zip = { version = "2", default-features = false, features = ["deflate"] }
 

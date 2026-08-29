@@ -20,9 +20,11 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 pub mod microsoft;
+pub mod offline;
 pub mod store;
 
 pub use microsoft::*;
+pub use offline::{new_offline_account, offline_uuid};
 pub use store::*;
 
 /// An authenticated user account. Tokens are required for online play.

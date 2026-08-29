@@ -8,7 +8,7 @@
 //! Commands are intentionally synchronous where possible (returns within a
 //! few ms) and use `async` only for downloads and the launch engine.
 
-use crate::auth::{microsoft, Account, AuthStore};
+use crate::auth::{microsoft, new_offline_account, Account, AuthStore};
 use crate::config::LauncherConfig;
 use crate::downloads::{Downloader, PollingProgressSink};
 use crate::error::{LauncherError, LauncherResult};
@@ -449,6 +449,23 @@ pub async fn auth_remove(state: State<'_, AppState>, id: String) -> LauncherResu
     store.remove(&id)
 }
 
+/// Add a purely offline (local) account. No MSA, no tokens. The launcher
+/// can use the returned account to play singleplayer and on
+/// `online-mode=false` servers. The UUID is deterministically derived
+/// from the username (MD5 of "OfflinePlayer:<username>") so the same
+/// username on a different machine yields the same identity.
+#[tauri::command]
+pub async fn auth_add_offline(
+    state: State<'_, AppState>,
+    username: String,
+) -> LauncherResult<Account> {
+    let acc = new_offline_account(&username)?;
+    let store = AuthStore::new(state.paths());
+    store.load().ok();
+    store.add(acc.clone())?;
+    Ok(acc)
+}
+
 // --------------------------------------------------------------------
 // Mod loaders
 // --------------------------------------------------------------------
@@ -485,6 +502,124 @@ pub async fn loader_install(
     )
     .await?;
     Ok(())
+}
+
+// --------------------------------------------------------------------
+// Modrinth content (mods / resource packs / shaders)
+// --------------------------------------------------------------------
+
+/// Search Modrinth. The frontend picks which `project_type` (mods,
+/// resourcepacks, shaders, modpacks) and any version/loader filters.
+#[tauri::command]
+pub async fn modrinth_search(
+    query: String,
+    project_type: String,
+    game_version: Option<String>,
+    loader: Option<String>,
+    limit: u32,
+) -> LauncherResult<Vec<crate::mods::modrinth::ProjectHit>> {
+    let pt = match project_type.as_str() {
+        "mod" | "mods" => crate::mods::modrinth::ProjectType::Mod,
+        "modpack" | "modpacks" => crate::mods::modrinth::ProjectType::Modpack,
+        "resourcepack" | "resourcepacks" | "resource_pack" | "resource_packs" => {
+            crate::mods::modrinth::ProjectType::Resourcepack
+        }
+        "shader" | "shaders" | "shaderpack" | "shaderpacks" => {
+            crate::mods::modrinth::ProjectType::Shader
+        }
+        other => {
+            return Err(LauncherError::Other(format!(
+                "Unknown project type: {other}"
+            )))
+        }
+    };
+    crate::mods::modrinth::search(
+        &query,
+        pt,
+        game_version.as_deref(),
+        loader.as_deref(),
+        limit,
+    )
+    .await
+}
+
+#[tauri::command]
+pub async fn modrinth_project(
+    slug_or_id: String,
+) -> LauncherResult<crate::mods::modrinth::ProjectHit> {
+    crate::mods::modrinth::get_project(&slug_or_id).await
+}
+
+#[tauri::command]
+pub async fn modrinth_versions(
+    slug_or_id: String,
+    game_version: Option<String>,
+    loader: Option<String>,
+) -> LauncherResult<Vec<crate::mods::modrinth::ProjectVersion>> {
+    crate::mods::modrinth::list_versions(
+        &slug_or_id,
+        game_version.as_deref(),
+        loader.as_deref(),
+    )
+    .await
+}
+
+/// Download a Modrinth version into the instance's subdirectory for the
+/// project type (mods / resourcepacks / shaderpacks). Uses the launcher's
+/// shared `Downloader` so the file is verified against Modrinth's SHA-1
+/// (which arrives as base64; we hex-decode before passing to the
+/// downloader).
+#[tauri::command]
+pub async fn instance_install_content(
+    cmd: State<'_, CommandState>,
+    state: State<'_, AppState>,
+    instance_id: String,
+    project_type: String,
+    file_url: String,
+    file_name: String,
+    file_size: u64,
+    sha1_base64: String,
+) -> LauncherResult<String> {
+    let inst = state
+        .instances()
+        .get(&instance_id)
+        .ok_or_else(|| LauncherError::InstanceNotFound(instance_id))?;
+    let pt = match project_type.as_str() {
+        "mod" | "mods" => crate::mods::modrinth::ProjectType::Mod,
+        "modpack" | "modpacks" => crate::mods::modrinth::ProjectType::Modpack,
+        "resourcepack" | "resourcepacks" | "resource_pack" | "resource_packs" => {
+            crate::mods::modrinth::ProjectType::Resourcepack
+        }
+        "shader" | "shaders" | "shaderpack" | "shaderpacks" => {
+            crate::mods::modrinth::ProjectType::Shader
+        }
+        other => {
+            return Err(LauncherError::Other(format!(
+                "Unknown project type: {other}"
+            )))
+        }
+    };
+    let game_dir = inst.effective_game_dir();
+    let dest_dir = game_dir.join(pt.instance_subdir());
+    tokio::fs::create_dir_all(&dest_dir).await?;
+    // Sanitize: keep it on disk — Modrinth file names are already safe
+    // (lowercase + dash + extension), but reject anything that tries to
+    // escape.
+    if file_name.is_empty()
+        || file_name.contains('/')
+        || file_name.contains('\\')
+        || file_name.contains("..")
+    {
+        return Err(LauncherError::Other(format!(
+            "Refusing to write unsafe filename: {file_name}"
+        )));
+    }
+    let dest = dest_dir.join(&file_name);
+    let sha1_hex = crate::mods::modrinth::sha1_base64_to_hex(&sha1_base64)?;
+    cmd.downloader
+        .download_verified(&file_url, &dest, &sha1_hex, file_size)
+        .await?;
+    Ok(dest.to_string_lossy().into_owned())
 }
 
 // --------------------------------------------------------------------

@@ -84,8 +84,13 @@ pub fn run() {
             commands::auth_begin,
             commands::auth_accounts,
             commands::auth_remove,
+            commands::auth_add_offline,
             commands::loader_versions,
             commands::loader_install,
+            commands::modrinth_search,
+            commands::modrinth_project,
+            commands::modrinth_versions,
+            commands::instance_install_content,
             commands::update_check,
         ])
         .run(tauri::generate_context!())
