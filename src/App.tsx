@@ -4,16 +4,24 @@ import { Home } from "./screens/Home";
 import { Instances } from "./screens/Instances";
 import { Versions } from "./screens/Versions";
 import { Downloads } from "./screens/Downloads";
+import { Content } from "./screens/Content";
 import { Settings } from "./screens/Settings";
 import { AccountButton } from "./screens/AccountButton";
 
-type Screen = "home" | "instances" | "versions" | "downloads" | "settings";
+type Screen =
+  | "home"
+  | "instances"
+  | "versions"
+  | "downloads"
+  | "content"
+  | "settings";
 
 const SCREENS: { id: Screen; label: string; icon: string }[] = [
   { id: "home", label: "Home", icon: "▣" },
   { id: "instances", label: "Instances", icon: "▤" },
   { id: "versions", label: "Versions", icon: "❖" },
   { id: "downloads", label: "Downloads", icon: "↧" },
+  { id: "content", label: "Content", icon: "✦" },
   { id: "settings", label: "Settings", icon: "⚙" },
 ];
 
@@ -189,6 +197,7 @@ export function App() {
           )}
           {screen === "versions" && <Versions onInstalled={refresh} />}
           {screen === "downloads" && <Downloads />}
+          {screen === "content" && <Content selected={selected} />}
           {screen === "settings" && (
             <Settings config={config} onChange={onConfigChange} />
           )}

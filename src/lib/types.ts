@@ -129,6 +129,45 @@ export interface UpdateInfo {
   download_url: string | null;
 }
 
+/** Modrinth project search hit. */
+export interface ProjectHit {
+  slug: string;
+  title: string;
+  description: string;
+  project_type: string;
+  downloads: number;
+  icon_url: string | null;
+  author: string;
+  versions: string[];
+  follows: number;
+}
+
+/** Modrinth project version. */
+export interface ProjectVersion {
+  id: string;
+  project_id: string;
+  name: string;
+  version_number: string;
+  game_versions: string[];
+  loaders: string[];
+  files: ProjectFile[];
+  date_published: string;
+  downloads: number;
+}
+
+/** Modrinth version file (downloadable artifact). */
+export interface ProjectFile {
+  url: string;
+  filename: string;
+  /** SHA-1 is the hex form returned by Modrinth's public API. */
+  hashes: {
+    sha1: string;
+    sha512?: string;
+  };
+  size: number;
+  primary: boolean;
+}
+
 export const api = {
   ping: () => invoke<string>("ping"),
   configGet: () => invoke<Config>("config_get"),
@@ -196,6 +235,49 @@ export const api = {
     invoke<void>("loader_install", { instanceId }),
 
   updateCheck: () => invoke<UpdateInfo>("update_check"),
+
+  modrinthSearch: (
+    query: string,
+    projectType: string,
+    gameVersion?: string,
+    loader?: string,
+    limit = 20,
+  ) =>
+    invoke<ProjectHit[]>("modrinth_search", {
+      query,
+      projectType,
+      gameVersion,
+      loader,
+      limit,
+    }),
+  modrinthProject: (slugOrId: string) =>
+    invoke<ProjectHit>("modrinth_project", { slugOrId }),
+  modrinthVersions: (
+    slugOrId: string,
+    gameVersion?: string,
+    loader?: string,
+  ) =>
+    invoke<ProjectVersion[]>("modrinth_versions", {
+      slugOrId,
+      gameVersion,
+      loader,
+    }),
+  instanceInstallContent: (
+    instanceId: string,
+    projectType: string,
+    fileUrl: string,
+    fileName: string,
+    fileSize: number,
+    sha1Base64: string,
+  ) =>
+    invoke<string>("instance_install_content", {
+      instanceId,
+      projectType,
+      fileUrl,
+      fileName,
+      fileSize,
+      sha1Base64,
+    }),
 };
 
 /** Format bytes for display. */
