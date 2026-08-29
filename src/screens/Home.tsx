@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { api, Config, Instance, LogLine } from "../lib/types";
+import {
+  api,
+  Config,
+  formatBytes,
+  formatDuration,
+  formatSpeed,
+  Instance,
+  LogLine,
+  ProgressSnapshot,
+} from "../lib/types";
 
 interface HomeProps {
   config: Config;
@@ -16,8 +25,41 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogLine[]>([]);
   const [showLogs, setShowLogs] = useState(false);
+  const [progress, setProgress] = useState<ProgressSnapshot | null>(null);
   const logBox = useRef<HTMLDivElement | null>(null);
   const pollHandle = useRef<number | null>(null);
+  const progressHandle = useRef<number | null>(null);
+
+  // While we're preparing/launching, poll the download progress so the user
+  // can see what's actually happening instead of staring at "Prep…".
+  useEffect(() => {
+    if (state !== "preparing") {
+      if (progressHandle.current != null) {
+        clearTimeout(progressHandle.current);
+        progressHandle.current = null;
+      }
+      return;
+    }
+    let cancelled = false;
+    const tick = async () => {
+      if (cancelled) return;
+      try {
+        const s = await api.downloadsProgress();
+        setProgress(s);
+      } catch {
+        // ignore — backend may briefly reject while preparing
+      }
+      progressHandle.current = window.setTimeout(tick, 400);
+    };
+    tick();
+    return () => {
+      cancelled = true;
+      if (progressHandle.current != null) {
+        clearTimeout(progressHandle.current);
+        progressHandle.current = null;
+      }
+    };
+  }, [state]);
 
   useEffect(() => {
     if (showLogs && logBox.current) {
@@ -63,6 +105,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
     setError(null);
     setLogs([]);
     setShowLogs(true);
+    setProgress(null);
     setState("preparing");
     try {
       await api.prepareLaunch(selected.id);
@@ -72,6 +115,14 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
     } catch (e) {
       setState("error");
       setError(typeof e === "string" ? e : (e as any)?.message ?? JSON.stringify(e));
+    }
+  };
+
+  const cancelPrepare = async () => {
+    try {
+      await api.downloadsCancel();
+    } catch {
+      // ignore
     }
   };
 
@@ -163,7 +214,13 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
               </button>
             )}
             <span className="muted" style={{ fontSize: 12 }}>
-              {state === "running" ? "Running" : "Ready"}
+              {state === "running"
+                ? "Running"
+                : state === "preparing"
+                  ? "Preparing"
+                  : state === "launching"
+                    ? "Launching"
+                    : "Ready"}
             </span>
           </div>
         </div>
@@ -181,6 +238,33 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
             label="Memory"
             value={`${selected.ram_mb ?? config.default_ram_mb} MB`}
           />
+        </div>
+      )}
+
+      {state === "preparing" && (
+        <div className="card" style={{ marginBottom: 20 }}>
+          <div className="row between" style={{ marginBottom: 10 }}>
+            <h3 style={{ margin: 0 }}>Downloading game files…</h3>
+            <button
+              className="btn ghost"
+              onClick={cancelPrepare}
+              title="Cancel the in-flight downloads"
+              style={{ fontSize: 12 }}
+            >
+              Cancel
+            </button>
+          </div>
+          {progress ? (
+            <PrepareProgress p={progress} />
+          ) : (
+            <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+              Connecting to Mojang servers…
+            </p>
+          )}
+          <p className="faint" style={{ fontSize: 11, marginTop: 10, marginBottom: 0 }}>
+            Files are cached locally — re-launches skip unchanged files.
+            See the Downloads tab for the full queue.
+          </p>
         </div>
       )}
 
@@ -230,6 +314,50 @@ function Kpi({ label, value }: { label: string; value: string }) {
     <div className="kpi">
       <div className="label">{label}</div>
       <div className="value">{value}</div>
+    </div>
+  );
+}
+
+function PrepareProgress({ p }: { p: ProgressSnapshot }) {
+  const pct = p.bytes_total > 0 ? (p.bytes_downloaded / p.bytes_total) * 100 : 0;
+  const eta =
+    p.speed_bps > 0 && p.bytes_total > p.bytes_downloaded
+      ? (p.bytes_total - p.bytes_downloaded) / p.speed_bps
+      : null;
+  const indeterminate = p.bytes_total === 0;
+  return (
+    <div>
+      <div className="kpi-row" style={{ marginBottom: 10 }}>
+        <Kpi label="Active" value={String(p.active)} />
+        <Kpi label="Done" value={String(p.completed)} />
+        <Kpi label="Failed" value={String(p.failed)} />
+        <Kpi label="Speed" value={formatSpeed(p.speed_bps)} />
+      </div>
+      <div className="row between" style={{ marginBottom: 6 }}>
+        <span className="muted" style={{ fontSize: 12 }}>
+          {indeterminate
+            ? `${formatBytes(p.bytes_downloaded)} downloaded…`
+            : `${formatBytes(p.bytes_downloaded)} / ${formatBytes(p.bytes_total)}`}
+        </span>
+        <span className="muted" style={{ fontSize: 12 }}>
+          {indeterminate
+            ? `${p.completed} files done`
+            : `${pct.toFixed(1)}%${
+                eta != null ? ` · ${formatDuration(eta)} left` : ""
+              }`}
+        </span>
+      </div>
+      <div className="progress">
+        <div
+          className="bar"
+          style={{
+            width: indeterminate ? "100%" : `${Math.min(100, pct)}%`,
+            // Pulse animation while total bytes is unknown (file count growing).
+            animation: indeterminate ? "indeterminate 1.4s ease-in-out infinite" : undefined,
+          }}
+        />
+      </div>
+      <style>{`@keyframes indeterminate { 0% { opacity: 0.4 } 50% { opacity: 1 } 100% { opacity: 0.4 } }`}</style>
     </div>
   );
 }
