@@ -15,6 +15,10 @@ pub struct Library {
     pub downloads: Option<LibraryDownloads>,
     pub natives: Option<NativeSpec>,
     pub extract: Option<ExtractSpec>,
+    /// Rules are optional — only libraries that need conditional inclusion
+    /// (e.g. macOS-only) declare them. The real Mojang version JSON omits
+    /// the field on libraries that are always included.
+    #[serde(default)]
     pub rules: Vec<Rule>,
     /// Hint: which side needs this. "client", "server", or both.
     #[serde(default)]

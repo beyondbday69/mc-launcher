@@ -95,7 +95,12 @@ pub struct VersionEntry {
     pub time: String,
     #[serde(rename = "releaseTime")]
     pub release_time: String,
-    pub sha1: String,
+    /// Optional: present in some older / cached manifest snapshots, but the
+    /// live Mojang endpoint as of 2024+ no longer returns it. The launcher
+    /// never relied on it (URL is the source of truth), so we tolerate
+    /// either form.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sha1: Option<String>,
     /// Compliance level (1, 2, or 3). 3 = fully compatible with current auth.
     #[serde(default)]
     pub compliance_level: u8,

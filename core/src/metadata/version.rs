@@ -13,14 +13,22 @@ use url::Url;
 
 /// Merged, fully-inherited version metadata. Everything the launcher needs to
 /// download files and build a classpath is exposed here.
+///
+/// Field names match the real Mojang version JSON: camelCase on the wire,
+/// translated to snake_case at the boundary via `serde(rename = ...)`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VersionMeta {
     pub id: String,
     #[serde(rename = "type")]
     pub kind: String,
+    #[serde(rename = "mainClass")]
     pub main_class: String,
+    /// Legacy versions (<1.13) used a single string with placeholders.
+    /// Modern versions use the structured `arguments` object instead.
+    #[serde(rename = "minecraftArguments", default)]
     pub minecraft_arguments: Option<String>,
     pub arguments: Option<Arguments>,
+    #[serde(rename = "assetIndex")]
     pub asset_index: AssetIndexRef,
     pub assets: String,
     pub downloads: VersionDownloads,
