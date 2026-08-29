@@ -18,6 +18,11 @@ jobs:
         with:
           toolchain: 1.89.0
           components: rustfmt, clippy
+      - name: Install OpenJDK 21
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends openjdk-21-jre-headless
+          /usr/lib/jvm/java-21-openjdk-amd64/bin/java -version
       - name: Cache cargo
         uses: actions/cache@v4
         with:
@@ -31,6 +36,9 @@ jobs:
         run: cargo check --all-targets
       - name: Test
         working-directory: core
+        env:
+          # Tell the real end-to-end test where to find a real JVM.
+          MC_E2E_JAVA: /usr/lib/jvm/java-21-openjdk-amd64/bin/java
         run: cargo test --all --no-fail-fast
       - name: Release build
         working-directory: core
