@@ -97,7 +97,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
           <div className="row" style={{ gap: 8 }}>
             <button
               className="btn primary"
-              onClick={() => onSelect({} as Instance) || onRefresh()}
+              onClick={() => { onSelect({} as Instance); onRefresh(); }}
             >
               Get started
             </button>
