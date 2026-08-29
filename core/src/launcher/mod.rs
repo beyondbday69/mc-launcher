@@ -20,7 +20,7 @@ use crate::error::{LauncherError, LauncherResult};
 use crate::instances::Instance;
 use crate::metadata::inherits;
 use crate::metadata::library::{self, ResolvedLibrary};
-use crate::metadata::version::{Arg, RuleAction, VersionMeta};
+use crate::metadata::version::{client_jar_path, Arg, RuleAction, VersionMeta};
 use crate::metadata::MetadataCache;
 use crate::downloads::Downloader;
 use crate::process::ProcessRegistry;
@@ -90,7 +90,7 @@ pub async fn launch(req: LaunchRequest, registry: &ProcessRegistry) -> LauncherR
     );
 
     // 2. Build classpath from already-downloaded libraries.
-    let classpath_entries: Vec<String> = resolved
+    let mut classpath_entries: Vec<String> = resolved
         .iter()
         .filter(|lib| lib.native.is_none() && !lib.extract)
         .filter_map(|lib| {
@@ -102,6 +102,20 @@ pub async fn launch(req: LaunchRequest, registry: &ProcessRegistry) -> LauncherR
             }
         })
         .collect();
+    // 2b. The client JAR contains the main class (e.g. net.minecraft.client.main.Main).
+    //     Mojang's launcher includes it in the classpath so Java can find it via -cp.
+    let client_jar = client_jar_path(&runtime_dir, &version.id);
+    if client_jar.exists() {
+        classpath_entries.push(path_to_classpath(&client_jar));
+    } else {
+        return Err(LauncherError::VersionJson {
+            version: version.id.clone(),
+            message: format!(
+                "Client JAR missing at {}. Run prepare() first.",
+                client_jar.display()
+            ),
+        });
+    }
     let classpath = classpath_entries.join(classpath_separator());
 
     // 3. Extract natives (idempotent).
