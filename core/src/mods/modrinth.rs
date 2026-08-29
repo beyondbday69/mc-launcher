@@ -111,13 +111,31 @@ pub struct Hashes {
     pub sha512: Option<String>,
 }
 
-/// Modrinth returns the SHA-1 as a base64-encoded string. The rest of the
-/// launcher stores SHA-1 as 40-char lowercase hex. This converts.
-pub fn sha1_base64_to_hex(b64: &str) -> LauncherResult<String> {
+/// Modrinth returns the SHA-1 as a 40-char lowercase hex string. Earlier
+/// versions of this file (and several unofficial docs floating around)
+/// claimed it was base64, but the real API serves hex. This function
+/// normalises to the launcher's canonical form: 40-char lowercase hex.
+///
+/// It tolerates two inputs for safety:
+///   * 40 hex characters  -> returned as-is, lowercased.
+///   * 28-char base64 (20 bytes encoded) -> decoded to bytes then hex.
+/// Anything else returns an error so we don't silently accept garbage.
+pub fn sha1_base64_to_hex(input: &str) -> LauncherResult<String> {
+    let trimmed = input.trim();
+    if trimmed.len() == 40 && trimmed.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Ok(trimmed.to_ascii_lowercase());
+    }
+    // Fall back to base64 in case some upstream caller passes one.
     use base64::Engine;
     let bytes = base64::engine::general_purpose::STANDARD
-        .decode(b64)
-        .map_err(|e| LauncherError::Other(format!("invalid base64 SHA-1: {e}")))?;
+        .decode(trimmed)
+        .map_err(|e| LauncherError::Other(format!("invalid Modrinth SHA-1 {trimmed:?}: {e}")))?;
+    if bytes.len() != 20 {
+        return Err(LauncherError::Other(format!(
+            "Modrinth SHA-1 {trimmed:?} decoded to {} bytes, expected 20",
+            bytes.len()
+        )));
+    }
     Ok(bytes
         .iter()
         .map(|b| format!("{:02x}", b))

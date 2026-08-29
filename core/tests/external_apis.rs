@@ -96,6 +96,25 @@ fn sha1_base64_to_hex_known_fixtures() {
     assert_eq!(hex_empty, "da39a3ee5e6b4b0d3255bfef95601890afd80709");
 }
 
+/// Real Modrinth serves SHA-1 as 40-char hex, not base64. The function
+/// must pass it through unchanged.
+#[test]
+fn sha1_base64_to_hex_passes_through_real_modrinth_hex() {
+    let hex = "cd702b814c40b084e346e30b1ae89a5975dac948";
+    let out = mc_launcher_core::mods::modrinth::sha1_base64_to_hex(hex)
+        .expect("real Modrinth hex must pass through");
+    assert_eq!(out, "cd702b814c40b084e346e30b1ae89a5975dac948");
+    // Uppercase input must be normalised to lowercase.
+    let out2 = mc_launcher_core::mods::modrinth::sha1_base64_to_hex(
+        "CD702B814C40B084E346E30B1AE89A5975DAC948",
+    )
+    .expect("uppercase hex must normalise");
+    assert_eq!(out2, "cd702b814c40b084e346e30b1ae89a5975dac948");
+    // Garbage must be rejected, not silently accepted.
+    assert!(mc_launcher_core::mods::modrinth::sha1_base64_to_hex("not-a-hash")
+        .is_err());
+}
+
 // ---------------------------------------------------------------------------
 // Live network tests — gated behind `#[ignore]`. Run with:
 //   cargo test --test external_apis -- --ignored --nocapture
