@@ -1,0 +1,64 @@
+[package]
+name = "mc-launcher-core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+description = "Tauri-free verification build of the MC launcher logic"
+
+[lib]
+name = "mc_launcher_core"
+path = "src/lib.rs"
+
+[dependencies]
+# Serialization
+serde = { version = "=1.0.219", features = ["derive"] }
+serde_json = "=1.0.140"
+
+# Async runtime
+tokio = { version = "=1.40.0", features = ["full"] }
+async-trait = "=0.1.86"
+futures = "=0.3.30"
+
+# HTTP client
+reqwest = { version = "=0.12.7", default-features = false, features = ["rustls-tls", "stream", "gzip", "brotli", "deflate", "json"] }
+
+# Hashing
+sha1_smol = "=1.0.0"
+sha2 = "=0.10.8"
+hex = "=0.4.3"
+
+# Files
+zip = { version = "=0.6.6", default-features = false, features = ["deflate"] }
+
+# Errors
+thiserror = "=1.0.69"
+anyhow = "=1.0.89"
+
+# Logging (kept lightweight)
+tracing = "=0.1.40"
+
+# Time
+chrono = { version = "=0.4.38", features = ["serde"] }
+
+# Paths
+dirs = "=5.0.1"
+which = "=6.0.3"
+
+# URL + base64
+url = "=2.5.2"
+base64 = "=0.22.1"
+urlencoding = "=2.1.3"
+rand = "=0.8.5"
+rand_chacha = "=0.3.1"
+uuid = { version = "=1.10.0", features = ["v4"] }
+
+# Concurrency
+parking_lot = "=0.12.3"
+dashmap = "=6.1.0"
+
+[dev-dependencies]
+tokio = { version = "=1.40.0", features = ["full", "test-util"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"

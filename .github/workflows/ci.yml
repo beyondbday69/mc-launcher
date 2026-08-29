@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  backend-core:
+    name: core (no tauri, fast)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.89.0
+          components: rustfmt, clippy
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            core/target
+          key: ${{ runner.os }}-core-${{ hashFiles('core/Cargo.lock', 'core/Cargo.toml') }}
+      - name: Check
+        working-directory: core
+        run: cargo check --all-targets
+      - name: Test
+        working-directory: core
+        run: cargo test --all --no-fail-fast
+      - name: Release build
+        working-directory: core
+        run: cargo build --release --lib
+      - name: Clippy
+        working-directory: core
+        run: cargo clippy --all-targets -- -D warnings
+
+  backend-tauri-linux:
+    name: tauri shell (linux)
+    runs-on: ubuntu-22.04
+    needs: backend-core
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev librsvg2-dev libsoup-3.0-dev \
+            libjavascriptcoregtk-4.1-dev
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.89.0
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+            node_modules
+          key: ${{ runner.os }}-tauri-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml', 'package-lock.json') }}
+      - name: npm ci
+        run: npm ci || npm install
+      - name: Build frontend
+        run: npm run build
+      - name: cargo check (bin)
+        working-directory: src-tauri
+        run: cargo check --bins
+      - name: cargo build (bin, debug)
+        working-directory: src-tauri
+        run: cargo build --bins
+      - name: cargo test
+        working-directory: src-tauri
+        run: cargo test --all --no-fail-fast
+
+  backend-tauri-windows:
+    name: tauri shell (windows)
+    runs-on: windows-2022
+    needs: backend-core
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.89.0
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+            node_modules
+          key: ${{ runner.os }}-tauri-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml', 'package-lock.json') }}
+      - name: npm ci
+        run: npm ci || npm install
+      - name: Build frontend
+        run: npm run build
+      - name: cargo check (bin)
+        working-directory: src-tauri
+        shell: bash
+        run: cargo check --bins
+      - name: cargo build (bin, debug)
+        working-directory: src-tauri
+        shell: bash
+        run: cargo build --bins
+      - name: cargo test
+        working-directory: src-tauri
+        shell: bash
+        run: cargo test --all --no-fail-fast
+
+  frontend:
+    name: frontend (ts + vitest)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci || npm install
+      - run: npx tsc --noEmit
+      - run: npx vitest run --reporter=basic
+      - run: npm run build
