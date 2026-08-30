@@ -15,6 +15,10 @@ pub struct Library {
     pub downloads: Option<LibraryDownloads>,
     pub natives: Option<NativeSpec>,
     pub extract: Option<ExtractSpec>,
+    /// OS / feature rules. Optional in Mojang's schema — libraries
+    /// without `rules` apply unconditionally, which is equivalent to
+    /// having a single `{"action":"allow"}` rule.
+    #[serde(default)]
     pub rules: Vec<Rule>,
     /// Hint: which side needs this. "client", "server", or both.
     #[serde(default)]
