@@ -129,38 +129,34 @@ async fn mojang_manifest_filters_by_kind() {
             .collect();
         assert!(!releases.is_empty(), "no release versions found");
         assert!(!snapshots.is_empty(), "no snapshot versions found");
-        // Sanity: every release id looks like a version string. Mojang
-        // has used several shapes over the years:
-        //   * 1.X, 1.X.Y                — legacy 2011-2025
-        //   * YY.N, YY.N.M              — new 2026 year-prefixed form
-        //   * 1.X.Y-preZ / 1.X.Y-rcZ    — pre-releases
-        // We just enforce "starts with an ASCII digit and contains a
-        // dot" so the test stays valid as the schema evolves further.
+        // Sanity: the manifest's `kind` discriminator must match the
+        // filter. We deliberately do NOT police the exact id shape —
+        // Mojang has used many formats over the years (1.X, 1.X.Y,
+        // 1.X.Y-preZ, 1.X.Y-rcZ, YYwWWA, YY.N, YY.N-snapshot-M, and
+        // even old free-text ids like "1.14.2 Pre-Release 4"), and
+        // adding more cases here just creates flaky tests when Mojang
+        // adds a new shape. The whole point of this test is that
+        // `VersionKind` parses and the filter works.
         for r in &releases {
-            assert!(
-                r.id.starts_with(|c: char| c.is_ascii_digit())
-                    && r.id.contains('.'),
-                "weird release id: {}",
-                r.id
-            );
+            assert_eq!(r.kind, VersionKind::Release, "release has wrong kind: {}", r.id);
         }
-        // Snapshots are the pre-release / "in-development" variants.
-        // They keep the same overall shape as releases but carry an
-        // explicit pre-release suffix. We accept:
-        //   * 1.X-preN / 1.X.Y-preZ / 1.X.Y-rcZ
-        //   * YYwWWA                       (new-style 2023+ snapshots)
-        //   * YY.N-snapshot-M              (2026 year-prefixed snapshots)
         for s in &snapshots {
-            let is_pre_or_rc = s.id.contains("-pre") || s.id.contains("-rc");
-            let is_new_style_2023 = s.id.len() >= 4
-                && s.id.as_bytes()[..2].iter().all(u8::is_ascii_digit)
-                && s.id.as_bytes().get(2) == Some(&b'w');
-            let is_2026_snapshot = s.id.contains("-snapshot-");
-            assert!(
-                is_pre_or_rc || is_new_style_2023 || is_2026_snapshot,
-                "weird snapshot id: {}",
-                s.id
-            );
+            assert_eq!(s.kind, VersionKind::Snapshot, "snapshot has wrong kind: {}", s.id);
+        }
+        // And the latest release must also be reachable from the
+        // version list and itself be classified as Release.
+        let latest_rel = &m.latest.release;
+        let latest = m
+            .versions
+            .iter()
+            .find(|v| v.id == *latest_rel)
+            .unwrap_or_else(|| panic!("latest.release {latest_rel} not in version list"));
+        assert_eq!(latest.kind, VersionKind::Release);
+        // Every id in the manifest is non-empty. Anything else would
+        // be a real malformed entry, not a naming policy we disagree
+        // with.
+        for v in &m.versions {
+            assert!(!v.id.trim().is_empty(), "manifest entry with empty id");
         }
     })
     .await;
