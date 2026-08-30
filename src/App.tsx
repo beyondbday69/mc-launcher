@@ -26,7 +26,26 @@ const SCREENS: { id: Screen; label: string; icon: string }[] = [
 ];
 
 export function App() {
+  // `MC_LAUNCHER_INITIAL_SCREEN` (env var) overrides the default screen.
+  // Used by the smoke test to take screenshots of multiple pages in one
+  // run by re-launching the app. Falls back to "home" if unset.
   const [screen, setScreen] = useState<Screen>("home");
+  useEffect(() => {
+    api.initialScreen()
+      .then((s) => {
+        if (
+          s === "home" ||
+          s === "instances" ||
+          s === "versions" ||
+          s === "downloads" ||
+          s === "content" ||
+          s === "settings"
+        ) {
+          setScreen(s);
+        }
+      })
+      .catch(() => {});
+  }, []);
   const [config, setConfig] = useState<Config | null>(null);
   const [instances, setInstances] = useState<Instance[]>([]);
   const [selected, setSelected] = useState<Instance | null>(null);

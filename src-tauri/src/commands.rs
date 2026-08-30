@@ -55,6 +55,20 @@ impl CommandState {
 // Config
 // --------------------------------------------------------------------
 
+/// Returns the initial screen the GUI should open on, sourced from the
+/// `MC_LAUNCHER_INITIAL_SCREEN` env var. Used by the smoke test (and
+/// anything else that wants to deep-link to a specific screen). Returns
+/// "home" when the env var is unset or unknown.
+#[tauri::command]
+pub fn initial_screen() -> String {
+    let raw = std::env::var("MC_LAUNCHER_INITIAL_SCREEN").unwrap_or_default();
+    match raw.to_ascii_lowercase().as_str() {
+        "home" | "instances" | "versions" | "downloads" | "content" | "settings" => raw
+            .to_ascii_lowercase(),
+        _ => "home".to_string(),
+    }
+}
+
 #[tauri::command]
 pub async fn config_get(state: State<'_, AppState>) -> LauncherResult<LauncherConfig> {
     Ok(state.config().read().clone())

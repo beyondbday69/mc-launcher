@@ -57,6 +57,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::ping,
+            commands::initial_screen,
             commands::config_get,
             commands::config_update,
             commands::versions_list,

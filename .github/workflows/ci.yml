@@ -283,45 +283,58 @@ jobs:
           XDG_DATA_HOME: /tmp/launcher-smoke-data
         run: |
           set +e
-          # Start the app in the background, capture PID + logs.
-          src-tauri/target/debug/mc-launcher >/tmp/tauri.log 2>&1 &
-          APP_PID=$!
-          echo "APP_PID=$APP_PID"
-          # Wait up to 30s for the window to appear (xdotool/wmctrl would
-          # be nicer, but we don't want to add more deps — poll the log).
-          for i in $(seq 1 30); do
-            sleep 1
-            if [ -s /tmp/tauri.log ]; then
-              # App has produced some output -> the main loop is running.
-              if grep -qi "ready\|started\|listening\|main" /tmp/tauri.log; then
-                echo "App appears to be running (log activity)"
-                break
+          capture_screen() {
+            local out=$1
+            # Start the app in the background, capture PID + logs.
+            src-tauri/target/debug/mc-launcher >/tmp/tauri.log 2>&1 &
+            local app_pid=$!
+            echo "APP_PID=$app_pid"
+            # Wait up to 30s for the window to appear.
+            for i in $(seq 1 30); do
+              sleep 1
+              if [ -s /tmp/tauri.log ]; then
+                if grep -qi "ready\|started\|listening\|main" /tmp/tauri.log; then
+                  echo "App appears to be running (log activity)"
+                  break
+                fi
               fi
-            fi
-            if ! kill -0 "$APP_PID" 2>/dev/null; then
-              echo "App exited early!"
-              echo "--- tauri.log ---"
-              cat /tmp/tauri.log
-              exit 1
-            fi
-          done
-          # Give the WebView a few more seconds to paint the home
-          # screen with the installed instance visible.
-          sleep 5
-          echo "Capturing screenshot"
-          import -window root /tmp/launcher.png
-          ls -la /tmp/launcher.png
-          # Stop the app cleanly.
-          kill "$APP_PID" 2>/dev/null || true
-          sleep 1
-          kill -9 "$APP_PID" 2>/dev/null || true
-          echo "--- tauri.log (last 40 lines) ---"
+              if ! kill -0 "$app_pid" 2>/dev/null; then
+                echo "App exited early!"
+                echo "--- tauri.log ---"
+                cat /tmp/tauri.log
+                return 1
+              fi
+            done
+            # Give the WebView a few more seconds to paint the screen.
+            sleep 5
+            echo "Capturing screenshot to $out"
+            import -window root "$out"
+            ls -la "$out"
+            # Stop the app cleanly.
+            kill "$app_pid" 2>/dev/null || true
+            sleep 1
+            kill -9 "$app_pid" 2>/dev/null || true
+            # Give Xvfb a moment to release the window before the next launch.
+            sleep 2
+          }
+          # 1. Home screen (default).
+          capture_screen /tmp/launcher-home.png
+          # 2. Mods (Content) screen — re-launch with the env var.
+          MC_LAUNCHER_INITIAL_SCREEN=content capture_screen /tmp/launcher-mods.png
+          echo "--- tauri.log (last 40 lines, from final run) ---"
           tail -40 /tmp/tauri.log || true
-      - name: Upload screenshot
+      - name: Upload home screenshot
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-linux-smoke-with-install
-          path: /tmp/launcher.png
+          name: tauri-linux-smoke-home
+          path: /tmp/launcher-home.png
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload mods screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-linux-smoke-mods
+          path: /tmp/launcher-mods.png
           if-no-files-found: error
           retention-days: 7
       - name: Upload tauri log

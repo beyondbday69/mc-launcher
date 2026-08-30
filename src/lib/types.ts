@@ -207,6 +207,7 @@ export interface VersionFileLookup {
 
 export const api = {
   ping: () => invoke<string>("ping"),
+  initialScreen: () => invoke<string>("initial_screen"),
   configGet: () => invoke<Config>("config_get"),
   configUpdate: (c: Config) => invoke<void>("config_update", { new: c }),
 
