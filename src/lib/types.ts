@@ -168,6 +168,45 @@ export interface ProjectFile {
   primary: boolean;
 }
 
+/** One loader tag from `GET /v2/tag/loader`. */
+export interface LoaderTag {
+  icon: string;
+  name: string;
+  supported_project_types: string[];
+}
+
+/** One Minecraft version from `GET /v2/tag/game_version`. */
+export interface GameVersionTag {
+  version: string;
+  version_type: string;
+  date: string;
+  major: boolean;
+}
+
+/** One project category from `GET /v2/tag/category`. */
+export interface CategoryTag {
+  icon: string;
+  name: string;
+  project_type: string;
+  header: string | null;
+}
+
+/** One dependency node from `GET /v2/project/{id}/dependencies`. */
+export interface ProjectDependency {
+  version_id: string | null;
+  project_id: string;
+  file_name: string | null;
+  dependency_type: "required" | "optional" | "incompatible" | "embedded";
+}
+
+/** Response of `GET /v2/version_file/{hash}` (when found). */
+export interface VersionFileLookup {
+  version: ProjectVersion;
+  file: ProjectFile | null;
+}
+  primary: boolean;
+}
+
 export const api = {
   ping: () => invoke<string>("ping"),
   configGet: () => invoke<Config>("config_get"),
@@ -262,6 +301,20 @@ export const api = {
       gameVersion,
       loader,
     }),
+  modrinthGetVersion: (versionId: string) =>
+    invoke<ProjectVersion>("modrinth_get_version", { versionId }),
+  modrinthGetVersionByHash: (hash: string, algorithm = "sha1") =>
+    invoke<VersionFileLookup | null>("modrinth_get_version_by_hash", {
+      hash,
+      algorithm,
+    }),
+  modrinthProjectDependencies: (slugOrId: string) =>
+    invoke<ProjectDependency[]>("modrinth_project_dependencies", {
+      slugOrId,
+    }),
+  modrinthLoaders: () => invoke<LoaderTag[]>("modrinth_loaders"),
+  modrinthGameVersions: () => invoke<GameVersionTag[]>("modrinth_game_versions"),
+  modrinthCategories: () => invoke<CategoryTag[]>("modrinth_categories"),
   instanceInstallContent: (
     instanceId: string,
     projectType: string,

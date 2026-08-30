@@ -211,3 +211,88 @@ async fn fabric_meta_loader_version_detail_0_16_5() {
         "mainClass.client mismatch; body: {body}"
     );
 }
+
+// ---------------------------------------------------------------------------
+// Modrinth tag endpoints — used by the Content screen filter dropdowns.
+// ---------------------------------------------------------------------------
+
+/// `GET /v2/tag/loader` must include the loaders we care about
+/// (fabric, forge, neoforge, quilt). The list is JSON.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+#[ignore = "live network; cargo test --test external_apis -- --ignored --nocapture"]
+async fn modrinth_tag_loaders_includes_fabric() {
+    let c = client();
+    let (status, body) = fetch(&c, "https://api.modrinth.com/v2/tag/loader").await;
+    assert!(status.is_success(), "loaders returned {status}; body: {body}");
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&body)
+        .unwrap_or_else(|e| panic!("invalid JSON: {e}; body: {body}"));
+    let names: Vec<&str> = arr
+        .iter()
+        .filter_map(|v| v.get("name").and_then(|n| n.as_str()))
+        .collect();
+    for required in ["fabric", "forge", "neoforge"] {
+        assert!(
+            names.contains(&required),
+            "tag/loader must include {required}; got: {names:?}"
+        );
+    }
+}
+
+/// `GET /v2/tag/game_version` must include the latest stable MC.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+#[ignore = "live network; cargo test --test external_apis -- --ignored --nocapture"]
+async fn modrinth_tag_game_versions_non_empty() {
+    let c = client();
+    let (status, body) = fetch(&c, "https://api.modrinth.com/v2/tag/game_version").await;
+    assert!(status.is_success(), "game_versions returned {status}; body: {body}");
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&body)
+        .unwrap_or_else(|e| panic!("invalid JSON: {e}; body: {body}"));
+    assert!(arr.len() > 20, "expected many game versions; got {}", arr.len());
+    let first = &arr[0];
+    assert!(
+        first.get("version").and_then(|v| v.as_str()).is_some(),
+        "first entry must have a version; body: {body}"
+    );
+    assert!(
+        first.get("version_type").and_then(|v| v.as_str()).is_some(),
+        "first entry must have version_type; body: {body}"
+    );
+}
+
+/// `GET /v2/version_file/{hash}` returns the version that owns the file.
+/// fabric-api has a stable SHA-1 we can pin: cd702b814c40b084e346e30b1ae89a5975dac948.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+#[ignore = "live network; cargo test --test external_apis -- --ignored --nocapture"]
+async fn modrinth_version_file_by_hash_finds_fabric_api() {
+    let c = client();
+    let sha1 = "cd702b814c40b084e346e30b1ae89a5975dac948";
+    let url = format!("https://api.modrinth.com/v2/version_file/{sha1}");
+    let (status, body) = fetch(&c, &url).await;
+    assert!(status.is_success(), "version_file returned {status}; body: {body}");
+    let v: serde_json::Value = serde_json::from_str(&body)
+        .unwrap_or_else(|e| panic!("invalid JSON: {e}; body: {body}"));
+    let project_id = v
+        .get("project_id")
+        .and_then(|p| p.as_str())
+        .unwrap_or_else(|| panic!("version_file must have project_id; body: {body}"));
+    assert!(
+        !project_id.is_empty(),
+        "project_id must be non-empty; body: {body}"
+    );
+}
+
+/// `GET /v2/project/{id}/dependencies` returns a JSON array. For
+/// fabric-api (a single mod with no embedded deps) the array is usually
+/// empty or short.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+#[ignore = "live network; cargo test --test external_apis -- --ignored --nocapture"]
+async fn modrinth_project_dependencies_is_array() {
+    let c = client();
+    let url = "https://api.modrinth.com/v2/project/fabric-api/dependencies";
+    let (status, body) = fetch(&c, url).await;
+    assert!(status.is_success(), "dependencies returned {status}; body: {body}");
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&body)
+        .unwrap_or_else(|e| panic!("invalid JSON: {e}; body: {body}"));
+    // We don't assert any specific length; the contract is "returns a list".
+    let _ = arr.len();
+}

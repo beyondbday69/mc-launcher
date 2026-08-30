@@ -4,10 +4,16 @@
 //! resource packs. The API is documented at <https://docs.modrinth.com>.
 //!
 //! This module wraps the public read-only endpoints we need:
-//!   * `GET /search`           — full-text + facet search
-//!   * `GET /project/{id}`     — project metadata
-//!   * `GET /project/{id}/version` — all versions, optionally filtered by
-//!     Minecraft version and loader
+//!   * `GET /search`                     — full-text + facet search
+//!   * `GET /project/{id}`               — project metadata
+//!   * `GET /project/{id}/version`       — all versions, optionally filtered
+//!   * `GET /version/{id}`               — single version lookup
+//!   * `GET /version_file/{hash}`        — version lookup by file hash
+//!   * `GET /project/{id}/dependencies`  — modpack dependency graph
+//!   * `GET /tag/loader`                 — list of known mod loaders
+//!   * `GET /tag/game_version`           — list of known Minecraft versions
+//!   * `GET /tag/category`               — list of project categories
+//!   * `GET /tag/project_type`           — list of project types
 //!
 //! The download URLs returned by the version endpoint point at Modrinth's
 //! CDN; we hand them to the existing `Downloader` (which handles SHA-1
@@ -75,11 +81,8 @@ pub struct ProjectHit {
 #[derive(Debug, Deserialize)]
 struct SearchEnvelope {
     hits: Vec<ProjectHit>,
-    #[allow(dead_code)]
     total_hits: u64,
-    #[allow(dead_code)]
     offset: u64,
-    #[allow(dead_code)]
     limit: u64,
 }
 
@@ -128,6 +131,7 @@ pub fn sha1_base64_to_hex(input: &str) -> LauncherResult<String> {
     if trimmed.len() == 40 && trimmed.chars().all(|c| c.is_ascii_hexdigit()) {
         return Ok(trimmed.to_ascii_lowercase());
     }
+    // Fall back to base64 in case some upstream caller passes one.
     use base64::Engine;
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(trimmed)
@@ -240,4 +244,163 @@ pub async fn latest_matching(
 ) -> LauncherResult<Option<ProjectVersion>> {
     let versions = list_versions(slug_or_id, Some(game_version), loader).await?;
     Ok(versions.into_iter().max_by_key(|v| v.date_published.clone()))
+}
+
+// --------------------------------------------------------------------
+// Single-version and hash lookups
+// --------------------------------------------------------------------
+
+/// Fetch one specific version by its Modrinth version id.
+pub async fn get_version(version_id: &str) -> LauncherResult<ProjectVersion> {
+    let url = format!("{API_BASE}/version/{}", urlencoding::encode(version_id));
+    let bytes = http_get(&url).await?;
+    let v: ProjectVersion = serde_json::from_slice(&bytes)
+        .map_err(|e| LauncherError::Other(format!("modrinth version: {e}")))?;
+    Ok(v)
+}
+
+/// Result of `GET /version_file/{hash}`. The endpoint returns either the
+/// version object or an empty `null` body when no project has uploaded
+/// that hash, so we model it as `Option`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VersionFileLookup {
+    pub version: ProjectVersion,
+    /// The file on the version that matched the hash, if the server
+    /// disambiguated between multiple files.
+    #[serde(default)]
+    pub file: Option<VersionFile>,
+}
+
+/// Look up a Modrinth version by a file hash. `algorithm` is one of
+/// `"sha1"`, `"sha512"`, or `"sha256"`. Returns `Ok(None)` when the API
+/// responds 404 (no project has uploaded a file with this hash).
+pub async fn get_version_by_hash(
+    hash: &str,
+    algorithm: &str,
+) -> LauncherResult<Option<VersionFileLookup>> {
+    let url = format!(
+        "{API_BASE}/version_file/{}?algorithm={}",
+        urlencoding::encode(hash),
+        urlencoding::encode(algorithm)
+    );
+    // The endpoint returns 200 with the version body, or 404 for unknown
+    // hashes. `http_get` already returns Err on non-2xx, so handle 404
+    // by re-issuing with status inspection.
+    let client = reqwest::Client::builder()
+        .user_agent(USER_AGENT)
+        .build()
+        .map_err(|e| LauncherError::Other(e.to_string()))?;
+    let resp = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| LauncherError::Other(e.to_string()))?;
+    let status = resp.status();
+    if status.as_u16() == 404 {
+        return Ok(None);
+    }
+    if !status.is_success() {
+        return Err(LauncherError::Other(format!(
+            "modrinth /version_file returned {status}"
+        )));
+    }
+    let bytes = resp
+        .bytes()
+        .await
+        .map_err(|e| LauncherError::Other(e.to_string()))?;
+    let lookup: VersionFileLookup = serde_json::from_slice(&bytes)
+        .map_err(|e| LauncherError::Other(format!("modrinth /version_file: {e}")))?;
+    Ok(Some(lookup))
+}
+
+/// One node of a project's dependency graph (returned by
+/// `GET /project/{id}/dependencies`).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProjectDependency {
+    pub version_id: Option<String>,
+    pub project_id: String,
+    pub file_name: Option<String>,
+    /// One of `"required"`, `"optional"`, `"incompatible"`, `"embedded"`.
+    pub dependency_type: String,
+}
+
+/// List the dependencies declared by a project's latest version. Modpacks
+/// embed their mod list here; mods declare library dependencies the
+/// launcher must install alongside.
+pub async fn list_project_dependencies(
+    slug_or_id: &str,
+) -> LauncherResult<Vec<ProjectDependency>> {
+    let url = format!(
+        "{API_BASE}/project/{}/dependencies",
+        urlencoding::encode(slug_or_id)
+    );
+    let bytes = http_get(&url).await?;
+    let deps: Vec<ProjectDependency> = serde_json::from_slice(&bytes)
+        .map_err(|e| LauncherError::Other(format!("modrinth /dependencies: {e}")))?;
+    Ok(deps)
+}
+
+// --------------------------------------------------------------------
+// Tag endpoints — used to populate the UI filter dropdowns
+// --------------------------------------------------------------------
+
+/// A single loader tag from `GET /tag/loader`. Each loader has an SVG
+/// icon and a list of project types it can be associated with.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LoaderTag {
+    pub icon: String,
+    pub name: String,
+    #[serde(default)]
+    pub supported_project_types: Vec<String>,
+}
+
+/// A single Minecraft game version from `GET /tag/game_version`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GameVersionTag {
+    pub version: String,
+    /// "release" or "snapshot".
+    pub version_type: String,
+    pub date: String,
+    /// Whether this version is a major release boundary (Modrinth flag).
+    pub major: bool,
+}
+
+/// A project category from `GET /tag/category`. Categories group mods
+/// inside a single Minecraft version (e.g. "adventure", "optimization").
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CategoryTag {
+    pub icon: String,
+    pub name: String,
+    /// Project types this category can apply to.
+    pub project_type: String,
+    pub header: Option<String>,
+}
+
+/// Fetch the list of known mod loaders (fabric, forge, neoforge, …).
+pub async fn list_loaders() -> LauncherResult<Vec<LoaderTag>> {
+    let url = format!("{API_BASE}/tag/loader");
+    let bytes = http_get(&url).await?;
+    let v: Vec<LoaderTag> = serde_json::from_slice(&bytes)
+        .map_err(|e| LauncherError::Other(format!("modrinth /tag/loader: {e}")))?;
+    Ok(v)
+}
+
+/// Fetch the list of Minecraft versions Modrinth knows about. Ordered
+/// newest-first by Modrinth.
+pub async fn list_game_versions() -> LauncherResult<Vec<GameVersionTag>> {
+    let url = format!("{API_BASE}/tag/game_version");
+    let bytes = http_get(&url).await?;
+    let v: Vec<GameVersionTag> = serde_json::from_slice(&bytes)
+        .map_err(|e| LauncherError::Other(format!("modrinth /tag/game_version: {e}")))?;
+    Ok(v)
+}
+
+/// Fetch the list of project categories (e.g. "adventure", "fabric",
+/// "optimization"). Categories are per-project-type.
+pub async fn list_categories() -> LauncherResult<Vec<CategoryTag>> {
+    let url = format!("{API_BASE}/tag/category");
+    let bytes = http_get(&url).await?;
+    let v: Vec<CategoryTag> = serde_json::from_slice(&bytes)
+        .map_err(|e| LauncherError::Other(format!("modrinth /tag/category: {e}")))?;
+    Ok(v)
 }

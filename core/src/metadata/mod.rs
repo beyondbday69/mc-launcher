@@ -20,7 +20,7 @@ pub use asset::*;
 
 /// Canonical Mojang endpoints.
 pub const MOJANG_MANIFEST_URL: &str =
-    "https://piston-meta.mojang.com/mc/game/version_manifest.json";
+    "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 pub const MOJANG_RESOURCES_URL: &str = "https://resources.download.minecraft.net";
 pub const MOJANG_LIBRARIES_URL: &str = "https://libraries.minecraft.net";
 

@@ -564,6 +564,54 @@ pub async fn modrinth_versions(
     .await
 }
 
+#[tauri::command]
+pub async fn modrinth_get_version(
+    version_id: String,
+) -> LauncherResult<crate::mods::modrinth::ProjectVersion> {
+    crate::mods::modrinth::get_version(&version_id).await
+}
+
+#[tauri::command]
+pub async fn modrinth_get_version_by_hash(
+    hash: String,
+    algorithm: Option<String>,
+) -> LauncherResult<Option<crate::mods::modrinth::VersionFileLookup>> {
+    let alg = algorithm.unwrap_or_else(|| "sha1".to_string());
+    crate::mods::modrinth::get_version_by_hash(&hash, &alg).await
+}
+
+#[tauri::command]
+pub async fn modrinth_project_dependencies(
+    slug_or_id: String,
+) -> LauncherResult<Vec<crate::mods::modrinth::ProjectDependency>> {
+    crate::mods::modrinth::list_project_dependencies(&slug_or_id).await
+}
+
+/// All known mod loaders (fabric, forge, neoforge, quilt, …). Used to
+/// populate the loader filter dropdown on the Content screen.
+#[tauri::command]
+pub async fn modrinth_loaders(
+) -> LauncherResult<Vec<crate::mods::modrinth::LoaderTag>> {
+    crate::mods::modrinth::list_loaders().await
+}
+
+/// All Minecraft game versions Modrinth knows about, newest first. Used
+/// to populate the version filter dropdown on the Content screen.
+#[tauri::command]
+pub async fn modrinth_game_versions(
+) -> LauncherResult<Vec<crate::mods::modrinth::GameVersionTag>> {
+    crate::mods::modrinth::list_game_versions().await
+}
+
+/// All project categories Modrinth uses to classify mods/resource packs/
+/// shaders. The frontend can pick by `project_type` (mod/resourcepack/
+/// shader/modpack).
+#[tauri::command]
+pub async fn modrinth_categories(
+) -> LauncherResult<Vec<crate::mods::modrinth::CategoryTag>> {
+    crate::mods::modrinth::list_categories().await
+}
+
 /// Download a Modrinth version into the instance's subdirectory for the
 /// project type (mods / resourcepacks / shaderpacks). Uses the launcher's
 /// shared `Downloader` so the file is verified against Modrinth's SHA-1

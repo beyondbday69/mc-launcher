@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   api,
   formatBytes,
+  GameVersionTag,
   Instance,
+  LoaderTag,
   ProjectFile,
   ProjectHit,
   ProjectVersion,
@@ -22,7 +24,13 @@ const TABS: TabDef[] = [
   { id: "modpack", label: "Modpacks" },
 ];
 
-const LOADER_OPTIONS = ["any", "fabric", "forge", "neoforge", "quilt"];
+/**
+ * Loaders the Modrinth /v2/tag/loader response is filtered to. The full
+ * list has ~30 entries (bukkit, paper, velocity, etc.) that are irrelevant
+ * for the mod install path. We only show loaders that the launcher's
+ * installer pipeline knows about.
+ */
+const ALLOWED_LOADER_PREFIXES = ["fabric", "forge", "neoforge", "quilt", "legacy-fabric"];
 
 type InstallStatus =
   | { kind: "idle" }
@@ -46,6 +54,53 @@ export function Content({ selected }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<Record<string, InstallStatus>>({});
   const [hasSearched, setHasSearched] = useState(false);
+
+  // Real tag data, fetched lazily once per session. We don't refetch when
+  // the user changes instance; the tag list is global to Modrinth and
+  // changes at most a few times a month.
+  const [allLoaders, setAllLoaders] = useState<LoaderTag[]>([]);
+  const [allGameVersions, setAllGameVersions] = useState<GameVersionTag[]>([]);
+  const [tagsError, setTagsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [ls, gvs] = await Promise.all([
+          api.modrinthLoaders(),
+          api.modrinthGameVersions(),
+        ]);
+        if (cancelled) return;
+        setAllLoaders(ls);
+        setAllGameVersions(gvs);
+      } catch (e) {
+        if (!cancelled) setTagsError(errMsg(e));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /** Loaders the user can pick for the current tab, filtered to the
+   *  loaders the install pipeline actually supports and that Modrinth
+   *  associates with the current project type. */
+  const loaderOptions = useMemo(() => {
+    const projectType = tab;
+    return allLoaders.filter(
+      (l) =>
+        ALLOWED_LOADER_PREFIXES.includes(l.name) &&
+        l.supported_project_types.includes(projectType),
+    );
+  }, [allLoaders, tab]);
+
+  // If the current loader selection is no longer in the option list
+  // (e.g. the user picked "paper" for a server), fall back to "any".
+  useEffect(() => {
+    if (loader !== "any" && !loaderOptions.some((l) => l.name === loader)) {
+      setLoader("any");
+    }
+  }, [loaderOptions, loader]);
 
   // Sync filters with the currently selected instance.
   useEffect(() => {
@@ -200,23 +255,32 @@ export function Content({ selected }: Props) {
             }}
             style={{ flex: 1, minWidth: 200 }}
           />
-          <input
-            placeholder="Game version"
+          <select
             value={gameVersion}
             onChange={(e) => setGameVersion(e.target.value)}
-            style={{ width: 130 }}
+            style={{ width: 160 }}
             title="Minecraft version"
-          />
+            disabled={allGameVersions.length === 0}
+          >
+            <option value="">Any version</option>
+            {allGameVersions.map((v) => (
+              <option key={v.version} value={v.version}>
+                {v.version}
+                {v.version_type === "snapshot" ? " (snap)" : ""}
+              </option>
+            ))}
+          </select>
           {tab === "mod" && (
             <select
               value={loader}
               onChange={(e) => setLoader(e.target.value)}
-              style={{ width: 140 }}
+              style={{ width: 160 }}
               title="Mod loader"
             >
-              {LOADER_OPTIONS.map((l) => (
-                <option key={l} value={l}>
-                  {l === "any" ? "Any loader" : l}
+              <option value="any">Any loader</option>
+              {loaderOptions.map((l) => (
+                <option key={l.name} value={l.name}>
+                  {l.name}
                 </option>
               ))}
             </select>
@@ -232,6 +296,14 @@ export function Content({ selected }: Props) {
         <p className="faint" style={{ fontSize: 11, marginTop: 8 }}>
           Files are downloaded from Modrinth, verified by SHA-1, and placed in
           the instance's {tabDir(tab)} folder.
+          {tagsError && (
+            <>
+              {" "}
+              <span style={{ color: "var(--danger)" }}>
+                Could not load filter lists from Modrinth: {tagsError}
+              </span>
+            </>
+          )}
         </p>
       </div>
 

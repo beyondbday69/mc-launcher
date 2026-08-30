@@ -90,6 +90,12 @@ pub fn run() {
             commands::modrinth_search,
             commands::modrinth_project,
             commands::modrinth_versions,
+            commands::modrinth_get_version,
+            commands::modrinth_get_version_by_hash,
+            commands::modrinth_project_dependencies,
+            commands::modrinth_loaders,
+            commands::modrinth_game_versions,
+            commands::modrinth_categories,
             commands::instance_install_content,
             commands::update_check,
         ])

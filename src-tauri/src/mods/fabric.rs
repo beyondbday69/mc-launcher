@@ -10,7 +10,7 @@ use crate::error::{LauncherError, LauncherResult};
 use crate::metadata::library::{Library, LibraryDownloads, OsRule, Rule, RuleAction};
 use crate::mods::{LoaderKind, LoaderProfile, ModLoader};
 use async_trait::async_trait;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 const FABRIC_META_URL: &str = "https://meta.fabricmc.net/v2";
@@ -109,10 +109,38 @@ impl ModLoader for FabricLoader {
 
         // 2. Build a profile that inherits the vanilla version.
         let profile_id = format!("fabric-loader-{}-{}", loader_version, minecraft_version);
-        let libs = vec![
-            build_fabric_lib(loader_maven),
-            build_fabric_lib(intermediary_maven),
-        ];
+
+        // 2a. The launcherMeta.libraries block lists every jar Fabric needs
+        //     (loader, intermediary, ASM, mixin extras, etc.) with real
+        //     SHA-1 + size. We prefer those over the synthetic libraries we
+        //     used to build, because they are the canonical set and the
+        //     SHA-1s allow the downloader to verify integrity.
+        let mut libs: Vec<Library> = Vec::new();
+        if let Some(lm) = meta.get("launcherMeta").and_then(|v| v.get("libraries")) {
+            // Shape: { client: [...], common: [...], server: [...], development: [...] }
+            for group in ["client", "common"] {
+                if let Some(arr) = lm.get(group).and_then(|g| g.as_array()) {
+                    for entry in arr {
+                        if let Some(lib) = parse_fabric_lib_entry(entry) {
+                            libs.push(lib);
+                        }
+                    }
+                }
+            }
+        }
+        // Always make sure the loader and intermediary jars are present
+        // (they're in the launcherMeta.common list in practice, but be
+        // defensive).
+        let coords: Vec<String> = libs
+            .iter()
+            .filter_map(|l| l.name.clone())
+            .collect();
+        if !coords.iter().any(|c| c == loader_maven) {
+            libs.push(build_fabric_lib(loader_maven));
+        }
+        if !coords.iter().any(|c| c == intermediary_maven) {
+            libs.push(build_fabric_lib(intermediary_maven));
+        }
 
         let profile = LoaderProfile {
             id: profile_id.clone(),
@@ -190,6 +218,49 @@ impl ModLoader for FabricLoader {
         }
         Ok(issues)
     }
+}
+
+/// Parse a single entry from `launcherMeta.libraries.{client,common,server,development}`.
+/// Real shape:
+///   { "name": "org.ow2.asm:asm:9.6",
+///     "url": "https://maven.fabricmc.net/",
+///     "sha1": "aa205cf0a06dbd8e04ece91c0b37c3f5d567546a",
+///     "size": 123598 }
+fn parse_fabric_lib_entry(entry: &serde_json::Value) -> Option<Library> {
+    let name = entry.get("name").and_then(|v| v.as_str())?;
+    let url_base = entry
+        .get("url")
+        .and_then(|v| v.as_str())
+        .unwrap_or("https://maven.fabricmc.net/");
+    let sha1 = entry
+        .get("sha1")
+        .and_then(|v| v.as_str())
+        .unwrap_or("0000000000000000000000000000000000000000")
+        .to_string();
+    let size = entry.get("size").and_then(|v| v.as_u64()).unwrap_or(0);
+    let path = maven_to_lib_path(name);
+    let url = format!("{}{}", url_base.trim_end_matches('/'), &path);
+    let parts: Vec<&str> = name.split(':').collect();
+    if parts.len() < 3 {
+        return None;
+    }
+    let (group, artifact, version) = (parts[0], parts[1], parts[2]);
+    let _ = (group, artifact, version); // fields are encoded in `path`
+    Some(Library {
+        name: Some(name.to_string()),
+        downloads: Some(LibraryDownloads {
+            artifact: Some(crate::metadata::version::DownloadArtifact {
+                sha1,
+                size,
+                url,
+            }),
+            classifiers: None,
+        }),
+        natives: None,
+        extract: None,
+        rules: vec![],
+        side: None,
+    })
 }
 
 fn build_fabric_lib(maven: &str) -> Library {
@@ -270,4 +341,84 @@ fn jar_contains(jar: &Path, needle: &str) -> bool {
         }
     }
     false
+}
+
+// --------------------------------------------------------------------
+// Fabric-supported Minecraft versions
+// --------------------------------------------------------------------
+
+/// One row from `GET /v2/versions/game`:
+/// ```json
+/// { "version": "1.21.4", "stable": true }
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FabricGameVersion {
+    pub version: String,
+    pub stable: bool,
+}
+
+/// Return the list of Minecraft versions that the Fabric project lists as
+/// having at least one loader build, in the order Fabric publishes them
+/// (newest first).
+pub async fn list_game_versions(downloader: &Downloader) -> LauncherResult<Vec<FabricGameVersion>> {
+    let url = format!("{}/versions/game", FABRIC_META_URL);
+    let bytes = downloader.fetch_bytes(&url).await?;
+    let mut versions: Vec<FabricGameVersion> = serde_json::from_slice(&bytes)
+        .map_err(|e| LauncherError::ModLoader(format!("fabric /versions/game: {e}")))?;
+    // Sanity: drop empty / whitespace version strings defensively.
+    versions.retain(|v| !v.version.trim().is_empty());
+    Ok(versions)
+}
+
+/// Quick check: does Fabric list a loader build for this Minecraft version?
+/// Returns `false` on error or empty input so it can be used as a UI hint
+/// without surfacing every transient API error to the user.
+pub async fn supports_minecraft_version(
+    downloader: &Downloader,
+    version: &str,
+) -> bool {
+    if version.trim().is_empty() {
+        return false;
+    }
+    match list_game_versions(downloader).await {
+        Ok(vs) => vs.iter().any(|v| v.version == version),
+        Err(_) => false,
+    }
+}
+
+#[cfg(test)]
+mod game_version_tests {
+    use super::*;
+
+    #[test]
+    fn fabric_game_version_parses_real_shape() {
+        // Sample of the real `/v2/versions/game` shape.
+        let raw = r#"[{"version":"1.21.4","stable":true},{"version":"1.21.4-pre1","stable":false}]"#;
+        let vs: Vec<FabricGameVersion> = serde_json::from_str(raw).unwrap();
+        assert_eq!(vs.len(), 2);
+        assert_eq!(vs[0].version, "1.21.4");
+        assert!(vs[0].stable);
+        assert!(!vs[1].stable);
+    }
+
+    #[test]
+    fn empty_version_filter_works() {
+        let mut vs = vec![
+            FabricGameVersion {
+                version: "".into(),
+                stable: true,
+            },
+            FabricGameVersion {
+                version: "1.21.4".into(),
+                stable: true,
+            },
+            FabricGameVersion {
+                version: "   ".into(),
+                stable: false,
+            },
+        ];
+        vs.retain(|v| !v.version.trim().is_empty());
+        assert_eq!(vs.len(), 1);
+        assert_eq!(vs[0].version, "1.21.4");
+    }
 }

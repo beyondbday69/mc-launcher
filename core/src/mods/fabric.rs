@@ -10,7 +10,7 @@ use crate::error::{LauncherError, LauncherResult};
 use crate::metadata::library::{Library, LibraryDownloads, OsRule, Rule, RuleAction};
 use crate::mods::{LoaderKind, LoaderProfile, ModLoader};
 use async_trait::async_trait;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 const FABRIC_META_URL: &str = "https://meta.fabricmc.net/v2";
@@ -341,4 +341,84 @@ fn jar_contains(jar: &Path, needle: &str) -> bool {
         }
     }
     false
+}
+
+// --------------------------------------------------------------------
+// Fabric-supported Minecraft versions
+// --------------------------------------------------------------------
+
+/// One row from `GET /v2/versions/game`:
+/// ```json
+/// { "version": "1.21.4", "stable": true }
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FabricGameVersion {
+    pub version: String,
+    pub stable: bool,
+}
+
+/// Return the list of Minecraft versions that the Fabric project lists as
+/// having at least one loader build, in the order Fabric publishes them
+/// (newest first).
+pub async fn list_game_versions(downloader: &Downloader) -> LauncherResult<Vec<FabricGameVersion>> {
+    let url = format!("{}/versions/game", FABRIC_META_URL);
+    let bytes = downloader.fetch_bytes(&url).await?;
+    let mut versions: Vec<FabricGameVersion> = serde_json::from_slice(&bytes)
+        .map_err(|e| LauncherError::ModLoader(format!("fabric /versions/game: {e}")))?;
+    // Sanity: drop empty / whitespace version strings defensively.
+    versions.retain(|v| !v.version.trim().is_empty());
+    Ok(versions)
+}
+
+/// Quick check: does Fabric list a loader build for this Minecraft version?
+/// Returns `false` on error or empty input so it can be used as a UI hint
+/// without surfacing every transient API error to the user.
+pub async fn supports_minecraft_version(
+    downloader: &Downloader,
+    version: &str,
+) -> bool {
+    if version.trim().is_empty() {
+        return false;
+    }
+    match list_game_versions(downloader).await {
+        Ok(vs) => vs.iter().any(|v| v.version == version),
+        Err(_) => false,
+    }
+}
+
+#[cfg(test)]
+mod game_version_tests {
+    use super::*;
+
+    #[test]
+    fn fabric_game_version_parses_real_shape() {
+        // Sample of the real `/v2/versions/game` shape.
+        let raw = r#"[{"version":"1.21.4","stable":true},{"version":"1.21.4-pre1","stable":false}]"#;
+        let vs: Vec<FabricGameVersion> = serde_json::from_str(raw).unwrap();
+        assert_eq!(vs.len(), 2);
+        assert_eq!(vs[0].version, "1.21.4");
+        assert!(vs[0].stable);
+        assert!(!vs[1].stable);
+    }
+
+    #[test]
+    fn empty_version_filter_works() {
+        let mut vs = vec![
+            FabricGameVersion {
+                version: "".into(),
+                stable: true,
+            },
+            FabricGameVersion {
+                version: "1.21.4".into(),
+                stable: true,
+            },
+            FabricGameVersion {
+                version: "   ".into(),
+                stable: false,
+            },
+        ];
+        vs.retain(|v| !v.version.trim().is_empty());
+        assert_eq!(vs.len(), 1);
+        assert_eq!(vs[0].version, "1.21.4");
+    }
 }
