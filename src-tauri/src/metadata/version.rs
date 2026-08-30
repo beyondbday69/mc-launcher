@@ -20,13 +20,25 @@ pub struct VersionMeta {
     pub kind: String,
     /// The fully-qualified main class (e.g. `net.minecraft.client.main.Main`).
     /// Mojang spells this `mainClass`; the launcher renames it to the
-    /// snake_case `main_class` for ergonomic Rust use.
-    #[serde(rename = "mainClass")]
+    /// snake_case `main_class` for ergonomic Rust use. Optional in the
+    /// JSON: mod-loader profiles inherit `mainClass` from the vanilla
+    /// version, and the merge step below back-fills it from the parent
+    /// when missing.
+    #[serde(rename = "mainClass", default)]
     pub main_class: String,
     pub minecraft_arguments: Option<String>,
     pub arguments: Option<Arguments>,
-    pub asset_index: AssetIndexRef,
-    pub assets: String,
+    /// Asset index reference. Optional in the JSON: mod-loader profiles
+    /// inherit it from the vanilla version. The merge step in
+    /// `resolve_inheritance` back-fills it from the parent chain when
+    /// missing, so callers can always rely on this being `Some`.
+    #[serde(default)]
+    pub asset_index: Option<AssetIndexRef>,
+    /// Asset version id (e.g. "19"). Optional for the same reason as
+    /// `asset_index` — back-filled from the parent chain when missing.
+    #[serde(default)]
+    pub assets: Option<String>,
+    #[serde(default)]
     pub downloads: VersionDownloads,
     pub libraries: Vec<Library>,
     #[serde(rename = "javaVersion")]
@@ -250,6 +262,15 @@ pub async fn resolve_inheritance(
         let parent = fetch_parent(cache, downloader, &parent_id).await?;
         value = merge_json(parent, value);
     }
+    // Some fields are required by `VersionMeta` but a mod-loader profile
+    // (e.g. fabric-loader-0.19.5-1.21.4) does not redefine them — the
+    // child JSON just inherits them from the vanilla parent. The merge
+    // above already preserves parent-only keys, but `serde_json::from_value`
+    // still requires the field to be present on the merged object. If
+    // a required field is missing, walk the parent chain again and
+    // back-fill it. (This is a safety net for cases where the upstream
+    // schema is missing a key we expect.)
+    backfill_from_parents(cache, downloader, &mut value, &visited).await;
     let mut meta: VersionMeta = serde_json::from_value(value)?;
     if let Some(last) = visited.last() {
         if meta.id != *last && meta.inherits_from.is_none() {
@@ -257,6 +278,56 @@ pub async fn resolve_inheritance(
         }
     }
     Ok(meta)
+}
+
+/// If a required field is missing on the merged JSON, walk the
+/// inheritance chain (in order, outermost first) and copy it from the
+/// first parent that has it. Only the known required fields are
+/// back-filled — optional fields are left as-is.
+async fn backfill_from_parents(
+    cache: &MetadataCache,
+    downloader: &Downloader,
+    value: &mut serde_json::Value,
+    visited: &[String],
+) {
+    const REQUIRED: &[&str] = &[
+        "mainClass",
+        "assetIndex",
+        "assets",
+        "libraries",
+    ];
+    let obj = match value.as_object_mut() {
+        Some(o) => o,
+        None => return,
+    };
+    let missing: Vec<&str> = REQUIRED
+        .iter()
+        .copied()
+        .filter(|k| !obj.contains_key(*k))
+        .collect();
+    if missing.is_empty() {
+        return;
+    }
+    for parent_id in visited {
+        let parent = match fetch_parent(cache, downloader, parent_id).await {
+            Ok(p) => p,
+            Err(_) => continue,
+        };
+        if let Some(pobj) = parent.as_object() {
+            for key in &missing {
+                if let Some(v) = pobj.get(*key) {
+                    obj.insert((*key).to_string(), v.clone());
+                }
+            }
+        }
+        // Stop walking once we've filled everything we can.
+        let still_missing = REQUIRED
+            .iter()
+            .any(|k| !obj.contains_key(*k));
+        if !still_missing {
+            break;
+        }
+    }
 }
 
 async fn fetch_parent(
@@ -385,5 +456,25 @@ mod tests {
     fn derive_id_from_url_works() {
         let id = derive_id_from_url("https://piston-meta.mojang.com/v1/packages/abc/1.21.4.json");
         assert_eq!(id, "1.21.4");
+    }
+
+    #[test]
+    fn version_meta_parses_with_optional_asset_index() {
+        // The fields that were once required but are now optional must
+        // still default cleanly when absent — this is the shape a
+        // mod-loader profile (e.g. fabric-loader-0.19.5-1.21.4) has
+        // before inheritance is resolved.
+        let raw = json!({
+            "id": "fabric-loader-0.19.5-1.21.4",
+            "inheritsFrom": "1.21.4",
+            "type": "release",
+            "mainClass": "net.fabricmc.loader.impl.launch.knot.KnotClient",
+            "libraries": []
+        });
+        let v: VersionMeta = serde_json::from_value(raw).expect("parse with missing fields");
+        assert_eq!(v.id, "fabric-loader-0.19.5-1.21.4");
+        assert_eq!(v.main_class, "net.fabricmc.loader.impl.launch.knot.KnotClient");
+        assert!(v.asset_index.is_none());
+        assert!(v.assets.is_none());
     }
 }

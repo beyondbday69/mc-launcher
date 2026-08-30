@@ -101,16 +101,25 @@ pub async fn prepare(
         });
     }
 
-    // Asset index.
-    let index_path = asset::index_dir(runtime_dir, &version.asset_index.id);
+    // Asset index. `asset_index` is optional on `VersionMeta` because
+    // a mod-loader profile inherits it from the vanilla parent; we
+    // back-filled it during `resolve_inheritance` so it should be
+    // `Some` here. Bail clearly if it isn't.
+    let asset_index = version.asset_index.as_ref().ok_or_else(|| {
+        LauncherError::VersionJson {
+            version: version.id.clone(),
+            message: "Version has no asset index (loader profile missing parent?)".to_string(),
+        }
+    })?;
+    let index_path = asset::index_dir(runtime_dir, &asset_index.id);
     if let Some(parent) = index_path.parent() {
         tokio::fs::create_dir_all(parent).await.ok();
     }
     jobs.push(DownloadJob {
-        url: version.asset_index.url.clone(),
+        url: asset_index.url.clone(),
         path: index_path.clone(),
-        sha1: version.asset_index.sha1.clone(),
-        size: version.asset_index.size,
+        sha1: asset_index.sha1.clone(),
+        size: asset_index.size,
     });
 
     // 5. Run all downloads concurrently.
@@ -171,7 +180,8 @@ pub async fn prepare(
     tokio::fs::create_dir_all(&natives_dir).await.ok();
 
     let client_jar = client_jar_path(runtime_dir, &version.id);
-    let asset_index_id = version.asset_index.id.clone();
+    // `asset_index` is guaranteed Some by the early-return above.
+    let asset_index_id = version.asset_index.as_ref().map(|a| a.id.clone()).unwrap_or_default();
     Ok(PreparedLaunch {
         version,
         version_url,
