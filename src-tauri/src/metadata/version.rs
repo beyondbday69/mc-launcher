@@ -32,10 +32,15 @@ pub struct VersionMeta {
     /// inherit it from the vanilla version. The merge step in
     /// `resolve_inheritance` back-fills it from the parent chain when
     /// missing, so callers can always rely on this being `Some`.
-    #[serde(default)]
+    ///
+    /// Mojang spells this `assetIndex`; without the rename serde would
+    /// silently leave this as `None` because the snake_case field name
+    /// doesn't match the camelCase JSON key.
+    #[serde(rename = "assetIndex", default)]
     pub asset_index: Option<AssetIndexRef>,
     /// Asset version id (e.g. "19"). Optional for the same reason as
     /// `asset_index` — back-filled from the parent chain when missing.
+    /// (JSON key happens to be lowercase, so no rename needed.)
     #[serde(default)]
     pub assets: Option<String>,
     #[serde(default)]
@@ -246,6 +251,22 @@ pub async fn resolve_inheritance(
     downloader: &Downloader,
     mut value: serde_json::Value,
 ) -> LauncherResult<VersionMeta> {
+    // Diagnostic: log which version id and which top-level keys we
+    // are about to parse. Helps debug "missing field" errors when the
+    // schema is unexpected (e.g. mod-loader profile vs vanilla).
+    let diag_id = value
+        .get("id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("<no id>");
+    let diag_keys: Vec<String> = value
+        .as_object()
+        .map(|o| o.keys().cloned().collect())
+        .unwrap_or_default();
+    tracing::info!(
+        id = diag_id,
+        keys = ?diag_keys,
+        "resolve_inheritance: parsing version json"
+    );
     let mut visited: Vec<String> = Vec::new();
     while let Some(parent_id) = value
         .get("inheritsFrom")
@@ -476,5 +497,59 @@ mod tests {
         assert_eq!(v.main_class, "net.fabricmc.loader.impl.launch.knot.KnotClient");
         assert!(v.asset_index.is_none());
         assert!(v.assets.is_none());
+    }
+
+    #[test]
+    fn version_meta_parses_mojang_camelcase_shape() {
+        // Mojang's actual 1.21.4 JSON uses camelCase keys (`assetIndex`,
+        // `mainClass`, `javaVersion`). The struct uses snake_case
+        // fields — the renames are critical, otherwise serde silently
+        // leaves the fields as `None` and the launch fails later with
+        // a confusing "loader profile missing parent" error.
+        let raw = json!({
+            "id": "1.21.4",
+            "type": "release",
+            "mainClass": "net.minecraft.client.main.Main",
+            "assetIndex": {
+                "id": "19",
+                "sha1": "f95b2d091d1c4d7f353a1bbcb25d89bb61363142",
+                "size": 464718,
+                "totalSize": 421071267,
+                "url": "https://piston-meta.mojang.com/v1/packages/f95b2d091d1c4d7f353a1bbcb25d89bb61363142/19.json"
+            },
+            "assets": "19",
+            "javaVersion": {
+                "majorVersion": 21
+            },
+            "downloads": {
+                "client": {
+                    "sha1": "a7e5a6024bfd3cd614625aa05629adf760020304",
+                    "size": 28335587,
+                    "url": "https://piston-data.mojang.com/v1/objects/a7e5a6024bfd3cd614625aa05629adf760020304/client.jar"
+                }
+            },
+            "libraries": []
+        });
+        let v: VersionMeta = serde_json::from_value(raw)
+            .expect("Mojang camelCase shape must parse with the rename annotations");
+        assert_eq!(v.id, "1.21.4");
+        assert_eq!(v.kind, "release");
+        assert_eq!(v.main_class, "net.minecraft.client.main.Main");
+        let asset_index = v
+            .asset_index
+            .as_ref()
+            .expect("assetIndex must deserialize to Some (rename annotation)");
+        assert_eq!(asset_index.id, "19");
+        assert_eq!(asset_index.sha1, "f95b2d091d1c4d7f353a1bbcb25d89bb61363142");
+        assert_eq!(asset_index.size, 464718);
+        assert_eq!(v.assets.as_deref(), Some("19"));
+        let java = v.java_version.as_ref().expect("javaVersion must deserialize");
+        assert_eq!(java.major_version, 21);
+        let client = v
+            .downloads
+            .client
+            .as_ref()
+            .expect("client download must deserialize");
+        assert_eq!(client.sha1, "a7e5a6024bfd3cd614625aa05629adf760020304");
     }
 }
