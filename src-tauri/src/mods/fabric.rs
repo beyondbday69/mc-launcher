@@ -34,8 +34,26 @@ struct FabricYarnEntry {
     pub version: String,
 }
 
+/// One entry in the response of `GET /v2/versions/loader/{game}`.
+///
+/// The current Fabric meta schema nests the version info under `loader`:
+/// ```json
+/// { "loader":   { "separator": ".", "build": 5,
+///                 "maven": "net.fabricmc:fabric-loader:0.19.5",
+///                 "version": "0.19.5", "stable": false },
+///   "intermediary": { ... },
+///   "launcherMeta": { ... } }
+/// ```
+/// We only need the loader version (and maven coord) for the launcher,
+/// so we read those from the nested object and ignore the rest.
 #[derive(Debug, Deserialize)]
 struct FabricLoaderEntry {
+    #[serde(default)]
+    pub loader: Option<FabricLoaderInfo>,
+}
+
+#[derive(Debug, Deserialize)]
+struct FabricLoaderInfo {
     pub version: String,
     #[serde(default)]
     pub maven: String,
@@ -68,7 +86,10 @@ impl ModLoader for FabricLoader {
         let url = format!("{}/versions/loader/{}", FABRIC_META_URL, minecraft_version);
         let bytes = downloader.fetch_bytes(&url).await?;
         let entries: Vec<FabricLoaderEntry> = serde_json::from_slice(&bytes)?;
-        Ok(entries.into_iter().map(|e| e.version).collect())
+        Ok(entries
+            .into_iter()
+            .filter_map(|e| e.loader.map(|l| l.version))
+            .collect())
     }
 
     async fn install(

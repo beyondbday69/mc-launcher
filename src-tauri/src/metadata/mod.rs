@@ -95,10 +95,15 @@ pub struct VersionEntry {
     pub time: String,
     #[serde(rename = "releaseTime")]
     pub release_time: String,
-    pub sha1: String,
-    /// Compliance level (1, 2, or 3). 3 = fully compatible with current auth.
-    #[serde(default)]
-    pub compliance_level: u8,
+    /// Per-version SHA-1 of the version JSON. Removed from the live
+    /// Mojang manifest circa 2025; kept as optional for forward compat
+    /// with any older cached manifests.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sha1: Option<String>,
+    /// Compliance level (1, 2, or 3). 3 = fully compatible with current
+    /// auth. Also removed from the live manifest; kept optional.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub compliance_level: Option<u8>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]

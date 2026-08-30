@@ -176,6 +176,12 @@ async fn http_get(url: &str) -> LauncherResult<Vec<u8>> {
 
 /// Search Modrinth. `query` may be empty (browse). `game_version` and
 /// `loader` are optional filters. Returns up to `limit` hits.
+///
+/// The `facets` query parameter is a real JSON array, e.g.
+/// `[["project_type:mod"],["versions:1.21.4"],["categories:fabric"]]`.
+/// We build it as a structured `Vec<Vec<String>>` and serialize it
+/// directly — earlier code stringified and then JSON-escaped it, which
+/// caused Modrinth to reject the request with HTTP 400.
 pub async fn search(
     query: &str,
     project_type: ProjectType,
@@ -183,18 +189,20 @@ pub async fn search(
     loader: Option<&str>,
     limit: u32,
 ) -> LauncherResult<Vec<ProjectHit>> {
-    let mut facets: Vec<String> = vec![format!("[\"project_type:{}\"]", project_type.as_str())];
+    let mut facets: Vec<Vec<String>> = Vec::new();
+    facets.push(vec![format!("project_type:{}", project_type.as_str())]);
     if let Some(gv) = game_version {
-        facets.push(format!("[\"versions:{}\"]", gv));
+        facets.push(vec![format!("versions:{gv}")]);
     }
     if let Some(ld) = loader {
-        facets.push(format!("[\"categories:{}\"]", ld));
+        facets.push(vec![format!("categories:{ld}")]);
     }
-    let facets_enc = serde_json::to_string(&facets.join(","))
-        .map_err(|e| LauncherError::Other(e.to_string()))?;
+    let facets_json = serde_json::to_string(&facets)
+        .map_err(|e| LauncherError::Other(format!("encode facets: {e}")))?;
     let url = format!(
-        "{API_BASE}/search?query={}&facets={facets_enc}&limit={limit}",
-        urlencoding::encode(query)
+        "{API_BASE}/search?query={}&facets={}&limit={limit}",
+        urlencoding::encode(query),
+        urlencoding::encode(&facets_json),
     );
     let bytes = http_get(&url).await?;
     let env: SearchEnvelope = serde_json::from_slice(&bytes)
