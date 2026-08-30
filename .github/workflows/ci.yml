@@ -217,6 +217,18 @@ jobs:
             src-tauri/target
           # Same key as backend-tauri-linux so we share the populated cache.
           key: ${{ runner.os }}-tauri-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: npm ci
+        run: npm ci || npm install
+      # `tauri::generate_context!()` validates the frontendDist path at
+        # compile time, so we must rebuild the frontend before re-running
+        # `cargo build --bins`. The cache key above covers target/, not
+        # dist/, so this step is cheap when nothing changed.
+      - name: Build frontend
+        run: npm run build
       - name: Rebuild debug binary
         working-directory: src-tauri
         # `cargo build` is a no-op when the cache hit means the binary is
