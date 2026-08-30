@@ -18,6 +18,10 @@ pub struct VersionMeta {
     pub id: String,
     #[serde(rename = "type")]
     pub kind: String,
+    /// The fully-qualified main class (e.g. `net.minecraft.client.main.Main`).
+    /// Mojang spells this `mainClass`; the launcher renames it to the
+    /// snake_case `main_class` for ergonomic Rust use.
+    #[serde(rename = "mainClass")]
     pub main_class: String,
     pub minecraft_arguments: Option<String>,
     pub arguments: Option<Arguments>,
