@@ -202,17 +202,26 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            xvfb imagemagick x11-utils x11-apps libxi6 libxtst6 \
+            pkg-config xvfb imagemagick x11-utils x11-apps libxi6 libxtst6 \
             libnss3 libxss1 libasound2 libatk1.0-0 libatk-bridge2.0-0 \
             libdrm2 libxkbcommon0 libgbm1 libpango-1.0-0 libpangocairo-1.0-0 \
-            libgtk-3-0 libwebkit2gtk-4.1-0
+            libgtk-3-dev libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev librsvg2-dev libsoup-3.0-dev \
+            libjavascriptcoregtk-4.1-dev
       - name: Restore debug binary from cache
         uses: actions/cache@v4
         with:
-          path: src-tauri/target
-          key: ${{ runner.os }}-tauri-smoke-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          # Same key as backend-tauri-linux so we share the populated cache.
+          key: ${{ runner.os }}-tauri-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
       - name: Rebuild debug binary
         working-directory: src-tauri
+        # `cargo build` is a no-op when the cache hit means the binary is
+        # already up to date. We run it explicitly to guarantee the binary
+        # exists in case the cache miss path was taken.
         run: cargo build --bins
       - name: Start Xvfb on :99
         run: |
