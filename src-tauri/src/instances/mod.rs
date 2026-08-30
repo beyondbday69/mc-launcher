@@ -21,9 +21,11 @@ use uuid::Uuid;
 
 pub mod mods;
 pub mod store;
+pub mod version;
 
 pub use mods::*;
 pub use store::*;
+pub use version::*;
 
 /// Schema version for the on-disk `instance.json`. Bump when fields change
 /// in a breaking way. Migrations live in `instance_migrations`.

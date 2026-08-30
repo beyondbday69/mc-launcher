@@ -401,12 +401,11 @@ fn resolve_java(state: &State<'_, AppState>, inst: &Instance) -> LauncherResult<
 }
 
 fn parse_mc_major(v: &str) -> u32 {
-    let mut parts = v.split('.');
-    let _ = parts.next();
-    parts
-        .next()
-        .and_then(|s| s.parse::<u32>().ok())
-        .unwrap_or(0)
+    // Kept as a thin shim so call sites in this file don't change.
+    // The real implementation lives in `instances::version` and is
+    // covered by unit tests there (and by the integration tests in
+    // `tests/install_features.rs`).
+    crate::instances::version::parse_mc_major(v)
 }
 
 // --------------------------------------------------------------------
