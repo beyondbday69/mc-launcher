@@ -204,8 +204,6 @@ export interface VersionFileLookup {
   version: ProjectVersion;
   file: ProjectFile | null;
 }
-  primary: boolean;
-}
 
 export const api = {
   ping: () => invoke<string>("ping"),
