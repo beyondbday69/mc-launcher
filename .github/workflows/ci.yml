@@ -190,3 +190,98 @@ jobs:
           path: src-tauri/target/release/mc-launcher.exe
           if-no-files-found: error
           retention-days: 14
+
+  tauri-linux-smoke:
+    name: tauri linux smoke (xvfb + screenshot)
+    runs-on: ubuntu-22.04
+    needs: backend-tauri-linux
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Xvfb + screenshot tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            xvfb imagemagick x11-utils x11-apps libxi6 libxtst6 \
+            libnss3 libxss1 libasound2 libatk1.0-0 libatk-bridge2.0-0 \
+            libdrm2 libxkbcommon0 libgbm1 libpango-1.0-0 libpangocairo-1.0-0 \
+            libgtk-3-0 libwebkit2gtk-4.1-0
+      - name: Restore debug binary from cache
+        uses: actions/cache@v4
+        with:
+          path: src-tauri/target
+          key: ${{ runner.os }}-tauri-smoke-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
+      - name: Rebuild debug binary
+        working-directory: src-tauri
+        run: cargo build --bins
+      - name: Start Xvfb on :99
+        run: |
+          Xvfb :99 -screen 0 1280x800x24 -ac &
+          XVFB_PID=$!
+          echo "XVFB_PID=$XVFB_PID"
+          # Give Xvfb a moment to come up.
+          for i in 1 2 3 4 5; do
+            if xdpyinfo -display :99 >/dev/null 2>&1; then
+              echo "Xvfb is up"
+              break
+            fi
+            sleep 1
+          done
+      - name: Launch Tauri app under Xvfb
+        env:
+          DISPLAY: :99
+          # Disable dmabuf renderer in WebKitGTK so it works without a
+          # real GPU under Xvfb.
+          WEBKIT_DISABLE_DMABUF_RENDERER: "1"
+          # Force software GL so the WebView renders at all on headless.
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          set +e
+          # Start the app in the background, capture PID + logs.
+          src-tauri/target/debug/mc-launcher >/tmp/tauri.log 2>&1 &
+          APP_PID=$!
+          echo "APP_PID=$APP_PID"
+          # Wait up to 20s for the window to appear (xdotool/wmctrl would
+          # be nicer, but we don't want to add more deps — poll the log).
+          for i in $(seq 1 20); do
+            sleep 1
+            if [ -s /tmp/tauri.log ]; then
+              # App has produced some output -> the main loop is running.
+              if grep -qi "ready\|started\|listening\|main" /tmp/tauri.log; then
+                echo "App appears to be running (log activity)"
+                break
+              fi
+            fi
+            if ! kill -0 "$APP_PID" 2>/dev/null; then
+              echo "App exited early!"
+              echo "--- tauri.log ---"
+              cat /tmp/tauri.log
+              exit 1
+            fi
+          done
+          # Extra second to let WebView paint the first frame.
+          sleep 2
+          echo "Capturing screenshot"
+          import -window root /tmp/launcher.png
+          ls -la /tmp/launcher.png
+          # Stop the app cleanly.
+          kill "$APP_PID" 2>/dev/null || true
+          sleep 1
+          kill -9 "$APP_PID" 2>/dev/null || true
+          echo "--- tauri.log (last 40 lines) ---"
+          tail -40 /tmp/tauri.log || true
+      - name: Upload screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-linux-smoke-screenshot
+          path: /tmp/launcher.png
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload tauri log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-linux-smoke-log
+          path: /tmp/tauri.log
+          if-no-files-found: ignore
+          retention-days: 7
