@@ -13,6 +13,14 @@ rust-version = "1.77"
 name = "mc-launcher"
 path = "src/main.rs"
 
+# Headless install driver used by the CI smoke job. Exercises the
+# exact same code path as the GUI (AppState::bootstrap, mods::install_for_instance,
+# launcher::prepare::prepare) but driven by CLI args so the GUI can
+# be launched afterwards to screenshot the installed instance.
+[[bin]]
+name = "install-cli"
+path = "src/bin/install_cli.rs"
+
 [build-dependencies]
 tauri-build = { version = "2.0", features = [] }
 
