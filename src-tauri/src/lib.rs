@@ -26,7 +26,14 @@ use tauri::Manager;
 
 /// Tauri application entry point. Initializes the app state, logging, and
 /// plugins, then runs the event loop.
-pub fn run() {
+///
+/// The caller (currently `main.rs`) is responsible for providing the
+/// `tauri::Context` via `tauri::generate_context!()`. Keeping the macro
+/// out of this lib function is what lets the `install-cli` and
+/// `launch-cli` binaries build without compiling the frontend (the
+/// macro panics at compile time if `tauri.conf.json`'s `frontendDist`
+/// path doesn't exist). See `.github/workflows/play-smoke.yml`.
+pub fn run_with_context(context: tauri::Context) {
     let _guard = match init_logging() {
         Ok(g) => g,
         Err(_) => {
@@ -100,7 +107,7 @@ pub fn run() {
             commands::instance_install_content,
             commands::update_check,
         ])
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("error while running tauri application");
 }
 
