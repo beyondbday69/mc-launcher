@@ -1,0 +1,215 @@
+name: play-smoke
+
+# Headless end-to-end smoke test:
+#   1. Build ONLY `install-cli` and `launch-cli` (NOT the Tauri GUI exe).
+#   2. Use `install-cli` to install Minecraft + Fabric into an isolated data dir.
+#   3. Use `launch-cli` to spawn Minecraft under Xvfb.
+#   4. Screenshot the running game window.
+#   5. Upload the screenshot as an artifact.
+#
+# Unlike `tauri-linux-smoke`, this workflow does NOT build the
+# `mc-launcher` GUI binary, so it costs less CI time and exercises
+# the install + launch paths directly.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  play-smoke-linux:
+    name: play smoke (linux, no gui build)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      # Java is needed both by the install step (nothing) and by the
+      # launch step (we spawn Minecraft). 21 is fine for 1.21.x.
+      - name: Install OpenJDK 21
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends openjdk-21-jre-headless
+          /usr/lib/jvm/java-21-openjdk-amd64/bin/java -version
+          echo "JAVA=/usr/lib/jvm/java-21-openjdk-amd64/bin/java" >> "$GITHUB_ENV"
+
+      # Xvfb + screenshot tooling. Same set the GUI smoke job uses,
+      # minus GTK/WebKit (we don't build the Tauri shell here).
+      - name: Install Xvfb + screenshot tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            xvfb imagemagick x11-utils x11-apps libxi6 libxtst6 \
+            libnss3 libxss1 libasound2 libatk1.0-0 libatk-bridge2.0-0 \
+            libdrm2 libxkbcommon0 libgbm1 libpango-1.0-0 libpangocairo-1.0-0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.89.0
+
+      # Cache just the registry + git DBs. We rebuild from scratch —
+      # install-cli + launch-cli are small enough that the build is
+      # dominated by deps, not incremental compilation, and we don't
+      # want to share `target/` with the GUI job's cache key.
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-play-smoke-registry-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-play-smoke-registry-
+
+      # Build only the two CLI binaries. Crucially we do NOT include
+      # `--bin mc-launcher`, so the Tauri GUI executable is never
+      # compiled here. `cargo build --bins` would also build it; we
+      # pass the explicit list instead.
+      - name: Build install-cli and launch-cli
+        working-directory: src-tauri
+        env:
+          MC_LAUNCHER_JAVA: ${{ env.JAVA }}
+        run: |
+          set -e
+          cargo build --bin install-cli --bin launch-cli
+          # Sanity check: the Tauri GUI binary MUST NOT exist.
+          if [ -e target/debug/mc-launcher ]; then
+            echo "ERROR: mc-launcher GUI binary was built (target/debug/mc-launcher exists)"
+            echo "This workflow is supposed to skip the GUI build."
+            exit 1
+          fi
+          echo "Confirmed: mc-launcher GUI binary not built."
+          ls -la target/debug/install-cli target/debug/launch-cli
+
+      # Step 1: install MC 1.21.4 + Fabric. Same as the GUI smoke job.
+      - name: Pre-install Minecraft 1.21.4 + Fabric (headless)
+        working-directory: src-tauri
+        env:
+          XDG_DATA_HOME: /tmp/play-smoke-data
+          MC_LAUNCHER_JAVA: ${{ env.JAVA }}
+        run: |
+          set -e
+          LOADER=$(curl -sS "https://meta.fabricmc.net/v2/versions/loader/1.21.4" \
+            | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0]['loader']['version'])")
+          echo "Using Fabric loader: $LOADER"
+          ./target/debug/install-cli \
+            --version 1.21.4 \
+            --fabric "$LOADER" \
+            --instance-name smoke-1-21-4
+
+      # Step 2: start Xvfb so the game has a display to render to.
+      # Software GL via LIBGL_ALWAYS_SOFTWARE; LWJGL in headless CI
+      # otherwise fails to find a GL context.
+      - name: Start Xvfb on :99
+        run: |
+          Xvfb :99 -screen 0 1280x800x24 -ac &
+          XVFB_PID=$!
+          echo "XVFB_PID=$XVFB_PID"
+          for i in 1 2 3 4 5; do
+            if xdpyinfo -display :99 >/dev/null 2>&1; then
+              echo "Xvfb is up"
+              break
+            fi
+            sleep 1
+          done
+
+      # Step 3: launch Minecraft. launch-cli writes the spawned Java
+      # PID to /tmp/launch-cli.pid and tails log lines until the
+      # caller kills it.
+      - name: Launch Minecraft (under Xvfb)
+        env:
+          DISPLAY: :99
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          XDG_DATA_HOME: /tmp/play-smoke-data
+          MC_LAUNCHER_JAVA: ${{ env.JAVA }}
+        run: |
+          set +e
+          # launch-cli prints lines like "PID_FILE=/tmp/launch-cli.pid".
+          # Run it in the background and capture its log.
+          ./src-tauri/target/debug/launch-cli \
+            --instance-name smoke-1-21-4 \
+            --username Player \
+            --resolution 854x480 \
+            --max-ram 1536 \
+            >/tmp/launch-cli.log 2>&1 &
+          LC_PID=$!
+          echo "LAUNCH_CLI_PID=$LC_PID"
+
+          # Wait for launch-cli to print the spawned Java PID.
+          for i in $(seq 1 60); do
+            sleep 1
+            if [ -s /tmp/launch-cli.pid ]; then
+              MC_PID=$(cat /tmp/launch-cli.pid)
+              echo "Minecraft Java PID = $MC_PID"
+              break
+            fi
+            if ! kill -0 "$LC_PID" 2>/dev/null; then
+              echo "launch-cli exited before spawning Minecraft!"
+              echo "--- launch-cli.log ---"
+              cat /tmp/launch-cli.log
+              exit 1
+            fi
+          done
+
+          if [ ! -s /tmp/launch-cli.pid ]; then
+            echo "Timed out waiting for Minecraft to spawn."
+            echo "--- launch-cli.log ---"
+            cat /tmp/launch-cli.log
+            kill "$LC_PID" 2>/dev/null || true
+            exit 1
+          fi
+
+          # Give Minecraft time to init JVM + LWJGL + assets and render
+          # the main menu. Most of this happens in the first 60s.
+          echo "Waiting 90s for Minecraft to fully render..."
+          sleep 90
+
+          # Confirm the Java process is still alive before screenshot.
+          if ! kill -0 "$MC_PID" 2>/dev/null; then
+            echo "Minecraft exited before screenshot was taken!"
+            echo "--- launch-cli.log (last 40) ---"
+            tail -40 /tmp/launch-cli.log
+            kill "$LC_PID" 2>/dev/null || true
+            exit 1
+          fi
+
+          # Take the screenshot of the entire X display.
+          echo "Capturing screenshot..."
+          import -window root /tmp/play-smoke.png
+          ls -la /tmp/play-smoke.png
+          file /tmp/play-smoke.png
+
+          # Cleanly tear down: kill the Java process (launch-cli exits
+          # when its child exits), then kill launch-cli itself if needed.
+          echo "Stopping Minecraft..."
+          kill "$MC_PID" 2>/dev/null || true
+          sleep 2
+          kill -9 "$MC_PID" 2>/dev/null || true
+          kill "$LC_PID" 2>/dev/null || true
+          sleep 1
+          kill -9 "$LC_PID" 2>/dev/null || true
+
+          echo "--- launch-cli.log (last 60 lines) ---"
+          tail -60 /tmp/launch-cli.log || true
+
+      # Step 4: upload the screenshot artifact so a human can eyeball
+      # it. The CI log is also uploaded for debugging.
+      - name: Upload game screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: play-smoke-screenshot
+          path: /tmp/play-smoke.png
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload launch-cli log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: play-smoke-log
+          path: /tmp/launch-cli.log
+          if-no-files-found: ignore
+          retention-days: 7

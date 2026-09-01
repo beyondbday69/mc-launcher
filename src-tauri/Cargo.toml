@@ -21,6 +21,15 @@ path = "src/main.rs"
 name = "install-cli"
 path = "src/bin/install_cli.rs"
 
+# Headless launch driver used by the CI play-smoke job. Uses the same
+# `launcher::launch` pipeline as the GUI but driven by CLI args, so a
+# workflow can spawn Minecraft under Xvfb, screenshot the running game,
+# then kill it. This lets CI verify a real install actually launches
+# without paying for the Tauri GUI compile.
+[[bin]]
+name = "launch-cli"
+path = "src/bin/launch_cli.rs"
+
 [build-dependencies]
 tauri-build = { version = "2.0", features = [] }
 
