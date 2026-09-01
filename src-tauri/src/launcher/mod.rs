@@ -50,6 +50,12 @@ pub struct LaunchRequest {
     pub downloads: Arc<Downloader>,
     pub metadata: Arc<MetadataCache>,
     pub runtime_dir: PathBuf,
+    /// Path to the resolved Minecraft client JAR. **Must be on the
+    /// JVM classpath** — `net.minecraft.client.main.Main` (and the
+    /// Fabric Knot shim for modded launches) live in this JAR, not
+    /// in the `libraries/` tree. `prepare::prepare` returns this in
+    /// `PreparedLaunch::client_jar`; callers must thread it through.
+    pub client_jar: PathBuf,
     pub asset_index_path: PathBuf,
     pub asset_index_id: String,
     pub natives_dir: PathBuf,
@@ -70,6 +76,7 @@ pub async fn launch(req: LaunchRequest, registry: &ProcessRegistry) -> LauncherR
         downloads,
         metadata: _,
         runtime_dir,
+        client_jar,
         asset_index_path,
         asset_index_id,
         natives_dir,
@@ -89,19 +96,22 @@ pub async fn launch(req: LaunchRequest, registry: &ProcessRegistry) -> LauncherR
         false,
     );
 
-    // 2. Build classpath from already-downloaded libraries.
-    let classpath_entries: Vec<String> = resolved
+    // 2. Build classpath from the client JAR + already-downloaded
+    //    libraries. The client JAR must come first because
+    //    `net.minecraft.client.main.Main` (and the Fabric Knot shim
+    //    for modded launches) live in it; without it, Java exits
+    //    immediately with ClassNotFoundException.
+    let mut classpath_entries: Vec<String> = Vec::with_capacity(resolved.len() + 1);
+    classpath_entries.push(path_to_classpath(&client_jar));
+    for lib in resolved
         .iter()
         .filter(|lib| lib.native.is_none() && !lib.extract)
-        .filter_map(|lib| {
-            let p = runtime_dir.join("libraries").join(&lib.path);
-            if p.exists() {
-                Some(path_to_classpath(&p))
-            } else {
-                None
-            }
-        })
-        .collect();
+    {
+        let p = runtime_dir.join("libraries").join(&lib.path);
+        if p.exists() {
+            classpath_entries.push(path_to_classpath(&p));
+        }
+    }
     let classpath = classpath_entries.join(classpath_separator());
 
     // 3. Extract natives (idempotent).

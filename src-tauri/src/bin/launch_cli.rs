@@ -231,6 +231,7 @@ async fn main() -> ExitCode {
         downloads: downloader.clone(),
         metadata: metadata.clone(),
         runtime_dir: paths.runtime_dir.clone(),
+        client_jar: prepared.client_jar.clone(),
         asset_index_path: prepared.asset_index_path.clone(),
         asset_index_id: prepared.asset_index_id.clone(),
         natives_dir: prepared.natives_dir.clone(),
