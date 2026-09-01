@@ -334,6 +334,7 @@ pub async fn launch_instance(
         downloads: cmd.downloader.clone(),
         metadata: cmd.metadata.clone(),
         runtime_dir: state.paths().runtime_dir.clone(),
+        client_jar: prepared.client_jar,
         asset_index_path: prepared.asset_index_path,
         asset_index_id: prepared.asset_index_id,
         natives_dir: prepared.natives_dir,
