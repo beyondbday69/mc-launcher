@@ -35,15 +35,24 @@ jobs:
           /usr/lib/jvm/java-21-openjdk-amd64/bin/java -version
           echo "JAVA=/usr/lib/jvm/java-21-openjdk-amd64/bin/java" >> "$GITHUB_ENV"
 
-      # Xvfb + screenshot tooling. Same set the GUI smoke job uses,
-      # minus GTK/WebKit (we don't build the Tauri shell here).
-      - name: Install Xvfb + screenshot tooling
+      # Xvfb + screenshot tooling + the GTK/WebKit dev packages
+      # `cargo build --bin install-cli --bin launch-cli` needs.
+      # Even though we do NOT build the Tauri GUI binary, both CLI
+      # bins use the lib crate, which `use`s `tauri::State`, which
+      # pulls `tauri` -> `tauri-runtime-wry` -> `wry` -> `gtk3` ->
+      # `gdk-sys` and friends. Each `-sys` crate's build script
+      # shells out to `pkg-config`, so we need `-dev` packages +
+      # `pkg-config` itself. Same set the GUI smoke job installs.
+      - name: Install Xvfb + GTK/WebKit dev + screenshot tooling
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            xvfb imagemagick x11-utils x11-apps libxi6 libxtst6 \
+            pkg-config xvfb imagemagick x11-utils x11-apps libxi6 libxtst6 \
             libnss3 libxss1 libasound2 libatk1.0-0 libatk-bridge2.0-0 \
-            libdrm2 libxkbcommon0 libgbm1 libpango-1.0-0 libpangocairo-1.0-0
+            libdrm2 libxkbcommon0 libgbm1 libpango-1.0-0 libpangocairo-1.0-0 \
+            libgtk-3-dev libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev librsvg2-dev libsoup-3.0-dev \
+            libjavascriptcoregtk-4.1-dev
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable

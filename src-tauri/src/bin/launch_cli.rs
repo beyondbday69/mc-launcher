@@ -85,7 +85,7 @@ fn parse_args() -> Result<Args, String> {
 
 fn parse_resolution(s: &str) -> Option<(u32, u32)> {
     let (w, h) = s.split_once('x')?;
-    Some((w.parse().ok()?, h.parse().ok()?)
+    Some((w.parse().ok()?, h.parse().ok()?))
 }
 
 #[tokio::main(flavor = "current_thread")]
