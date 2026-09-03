@@ -17,7 +17,6 @@ import {
   IconCalendar,
   IconCube,
   IconRam,
-  IconSpeed,
   IconRefresh,
   IconPlus,
 } from "../lib/icons";
@@ -148,32 +147,33 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Welcome / Empty state if no instance */}
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {/* Welcome / Empty state if no instances */}
       {instances.length === 0 ? (
-        <Card style={{ padding: "36px 32px", textAlign: "center" }}>
+        <Card style={{ padding: "40px 32px", textAlign: "center" }}>
           <Card.Content>
             <div
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: "50%",
-                background: "var(--md-sys-color-primary-container)",
-                color: "var(--md-sys-color-primary)",
+                width: 52,
+                height: 52,
+                borderRadius: "10px",
+                background: "#18181b",
+                border: "1px solid #27272a",
+                color: "#0070f3",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 margin: "0 auto 16px",
               }}
             >
-              <IconCube size={28} />
+              <IconCube size={26} />
             </div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: "#ffffff" }}>
               Welcome to MC Launcher
             </h2>
-            <p className="muted" style={{ maxWidth: 460, margin: "0 auto 24px", fontSize: 14 }}>
-              Create your first Minecraft instance to get started. Choose your preferred
-              version, configure RAM, and jump straight into the game.
+            <p className="muted" style={{ maxWidth: 440, margin: "0 auto 24px", fontSize: 13.5, lineHeight: 1.5 }}>
+              Create your first Minecraft instance to get started. Choose a version,
+              tune memory, and jump straight into the game.
             </p>
             <div style={{ display: "flex", justifyContent: "center" }}>
               <Button
@@ -191,68 +191,84 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
           </Card.Content>
         </Card>
       ) : (
-        /* Hero Showcase Card */
-        <Card className="home-hero hero-card">
+        /* Streamlined Hero Card */
+        <Card className="home-hero hero-card" style={{ padding: "24px 28px" }}>
           <Card.Content style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
-            <div className="info">
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <div className="info" style={{ flex: 1, minWidth: 0, paddingRight: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
                 {selected?.color && (
                   <span
                     style={{
-                      width: 12,
-                      height: 12,
+                      width: 10,
+                      height: 10,
                       borderRadius: "50%",
                       background: selected.color,
-                      boxShadow: `0 0 12px ${selected.color}`,
+                      boxShadow: `0 0 10px ${selected.color}`,
                       display: "inline-block",
+                      flexShrink: 0,
                     }}
                   />
                 )}
-                <h1>{selected ? selected.name : "No instance selected"}</h1>
+                <h1
+                  style={{
+                    fontSize: 24,
+                    fontWeight: 800,
+                    letterSpacing: "-0.02em",
+                    margin: 0,
+                    color: "#ffffff",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                  title={selected?.name}
+                >
+                  {selected ? selected.name : "No instance selected"}
+                </h1>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-                {selected && (
-                  <>
-                    <Chip color="success">
-                      <IconCube size={13} />
-                      Minecraft {selected.version}
+              {selected && (
+                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                  <Chip color="success" size="sm">
+                    <IconCube size={13} />
+                    <span>Minecraft {selected.version}</span>
+                  </Chip>
+
+                  {selected.mod_loader && (
+                    <Chip variant="secondary" size="sm">
+                      {selected.mod_loader.kind} {selected.mod_loader.version}
                     </Chip>
+                  )}
 
-                    {selected.mod_loader && (
-                      <Chip variant="secondary">
-                        {selected.mod_loader.kind} {selected.mod_loader.version}
-                      </Chip>
-                    )}
+                  <Chip size="sm">
+                    <IconRam size={13} />
+                    <span>{selected.ram_mb ?? config.default_ram_mb} MB</span>
+                  </Chip>
 
-                    <Chip>
-                      <IconRam size={13} />
-                      {selected.ram_mb ?? config.default_ram_mb} MB
-                    </Chip>
-
-                    <Chip>
+                  {selected.jvm_profile && selected.jvm_profile !== "default" && (
+                    <Chip size="sm" variant="secondary">
                       JVM: {selected.jvm_profile}
                     </Chip>
-                  </>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
               {error && (
                 <div
                   style={{
-                    marginTop: 16,
-                    padding: "10px 14px",
-                    borderRadius: "var(--md-sys-shape-corner-md)",
-                    background: "var(--md-sys-color-error-container)",
-                    color: "var(--md-sys-color-error)",
-                    fontSize: 13,
+                    marginTop: 14,
+                    padding: "8px 14px",
+                    borderRadius: "8px",
+                    background: "rgba(239, 68, 68, 0.1)",
+                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                    color: "#ef4444",
+                    fontSize: 12.5,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: 12,
                   }}
                 >
-                  <span>{error}</span>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{error}</span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -265,21 +281,21 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
               )}
             </div>
 
-            {/* Heroic Play FAB */}
-            <div className="play">
+            {/* Play Button & State Indicator */}
+            <div className="play" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
               {state === "running" ? (
                 <button
                   className="play-button"
                   onClick={kill}
-                  title="Stop the running game"
+                  title="Stop running instance"
                   style={{
                     background: "#ef4444",
                     color: "#ffffff",
                     boxShadow: "0 4px 16px rgba(239, 68, 68, 0.4)",
                   }}
                 >
-                  <IconStop size={28} />
-                  <span style={{ fontSize: 12, fontWeight: 700, marginTop: 2 }}>STOP</span>
+                  <IconStop size={26} />
+                  <span style={{ fontSize: 11.5, fontWeight: 800, marginTop: 2 }}>STOP</span>
                 </button>
               ) : (
                 <button
@@ -290,17 +306,17 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                 >
                   {state === "preparing" ? (
                     <>
-                      <IconRefresh size={26} style={{ animation: "indeterminate 1.5s infinite linear" }} />
-                      <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>PREP…</span>
+                      <IconRefresh size={24} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+                      <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>PREPARING</span>
                     </>
                   ) : state === "launching" ? (
                     <>
-                      <IconPlay size={26} style={{ opacity: 0.7 }} />
-                      <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>LAUNCH…</span>
+                      <IconPlay size={24} style={{ opacity: 0.7 }} />
+                      <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>STARTING</span>
                     </>
                   ) : (
                     <>
-                      <IconPlay size={32} />
+                      <IconPlay size={30} />
                       <span style={{ fontSize: 13, fontWeight: 800, marginTop: 2, letterSpacing: "0.5px" }}>PLAY</span>
                     </>
                   )}
@@ -312,36 +328,36 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
-                  fontSize: 12,
+                  fontSize: 11.5,
                   fontWeight: 600,
                   color:
                     state === "running"
-                      ? "var(--md-sys-color-tertiary)"
+                      ? "#10b981"
                       : state === "preparing"
-                        ? "var(--md-sys-color-warning)"
+                        ? "#f59e0b"
                         : state === "launching"
-                          ? "var(--md-sys-color-primary)"
-                          : "var(--md-sys-color-on-surface-variant)",
+                          ? "#0070f3"
+                          : "#a1a1aa",
                 }}
               >
                 <span
                   style={{
-                    width: 7,
-                    height: 7,
+                    width: 6,
+                    height: 6,
                     borderRadius: "50%",
                     background:
                       state === "running"
-                        ? "var(--md-sys-color-tertiary)"
+                        ? "#10b981"
                         : state === "preparing"
-                          ? "var(--md-sys-color-warning)"
+                          ? "#f59e0b"
                           : state === "launching"
-                            ? "var(--md-sys-color-primary)"
-                            : "var(--md-sys-color-outline)",
+                            ? "#0070f3"
+                            : "#52525b",
                     boxShadow:
                       state === "running"
-                        ? "0 0 8px var(--md-sys-color-tertiary)"
+                        ? "0 0 8px #10b981"
                         : state === "preparing"
-                          ? "0 0 8px var(--md-sys-color-warning)"
+                          ? "0 0 8px #f59e0b"
                           : "none",
                   }}
                 />
@@ -358,27 +374,28 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
         </Card>
       )}
 
-      {/* Expressive KPI Cards */}
+      {/* Non-Redundant Key Activity Stats */}
       {selected && (
-        <div className="kpi-row">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 12,
+          }}
+        >
           <KpiCard
-            icon={<IconClock size={16} />}
-            label="Play time"
+            icon={<IconClock size={15} />}
+            label="Total Play Time"
             value={fmtTime(selected.play_time_secs)}
           />
           <KpiCard
-            icon={<IconCalendar size={16} />}
-            label="Last played"
-            value={selected.last_played ? fmtDate(selected.last_played) : "Never"}
+            icon={<IconCalendar size={15} />}
+            label="Last Launched"
+            value={selected.last_played ? fmtDate(selected.last_played) : "Never played"}
           />
           <KpiCard
-            icon={<IconCube size={16} />}
-            label="Minecraft"
-            value={selected.version}
-          />
-          <KpiCard
-            icon={<IconRam size={16} />}
-            label="Allocated RAM"
+            icon={<IconRam size={15} />}
+            label="Memory Allocation"
             value={`${selected.ram_mb ?? config.default_ram_mb} MB`}
           />
         </div>
@@ -386,32 +403,20 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
 
       {/* Live Download & Prepare Progress Bar */}
       {state === "preparing" && (
-        <Card style={{ animation: "m3-fade-in var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard)" }}>
+        <Card>
           <Card.Content>
-            <div className="row between" style={{ marginBottom: 14 }}>
+            <div className="row between" style={{ marginBottom: 12 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: "50%",
-                    background: "var(--md-sys-color-primary-container)",
-                    color: "var(--md-sys-color-primary)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <IconRefresh size={16} style={{ animation: "indeterminate 1.5s infinite linear" }} />
-                </div>
-                <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
-                  Downloading & Preparing Game Files…
+                <IconRefresh size={16} style={{ color: "#0070f3", animation: "indeterminate 1.5s infinite linear" }} />
+                <h3 style={{ margin: 0, textTransform: "none", fontSize: 14, fontWeight: 700 }}>
+                  Preparing Game Files…
                 </h3>
               </div>
               <Button
                 variant="outline"
+                size="sm"
                 onPress={cancelPrepare}
-                style={{ fontSize: 12, padding: "4px 12px" }}
+                style={{ fontSize: 11.5, padding: "3px 10px" }}
               >
                 Cancel
               </Button>
@@ -420,75 +425,83 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
             {progress ? (
               <PrepareProgress p={progress} />
             ) : (
-              <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-                Connecting to Mojang & metadata repositories…
+              <p className="muted" style={{ fontSize: 12.5, margin: 0 }}>
+                Verifying Mojang manifest and local cache…
               </p>
             )}
-
-            <p className="faint" style={{ fontSize: 11.5, marginTop: 12, marginBottom: 0 }}>
-              Files are validated with SHA-1 hashes and cached locally. Subsequent launches bypass unchanged files.
-            </p>
           </Card.Content>
         </Card>
       )}
 
-      {/* Switch Instance Selector with HeroUI Chips */}
+      {/* Sleek Horizontal Instance Switcher */}
       {instances.length > 1 && (
-        <Card>
-          <Card.Content>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <h3 style={{ margin: 0 }}>Switch instance</h3>
-              <span className="muted" style={{ fontSize: 12 }}>
-                {instances.length} instances installed
-              </span>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {instances.map((i) => {
-                const isCur = selected?.id === i.id;
-                return (
-                  <Chip
-                    key={i.id}
-                    variant={isCur ? "primary" : "secondary"}
-                    onClick={() => onSelect(i)}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "8px 12px",
+            background: "#121215",
+            border: "1px solid #27272a",
+            borderRadius: "10px",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+              color: "#71717a",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Quick Switch
+          </span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, flex: 1 }}>
+            {instances.map((i) => {
+              const isCur = selected?.id === i.id;
+              return (
+                <Chip
+                  key={i.id}
+                  variant={isCur ? "primary" : "secondary"}
+                  size="sm"
+                  onClick={() => onSelect(i)}
+                  style={{
+                    cursor: "pointer",
+                    padding: "3px 10px",
+                    gap: 6,
+                    fontSize: 12,
+                    fontWeight: isCur ? 700 : 500,
+                  }}
+                >
+                  <span
                     style={{
-                      cursor: "pointer",
-                      padding: "6px 14px",
-                      gap: 8,
-                      fontSize: 12.5,
-                      fontWeight: isCur ? 700 : 500,
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: i.color || "#0070f3",
                     }}
-                  >
-                    <span
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: i.color || "var(--md-sys-color-primary)",
-                      }}
-                    />
-                    <span>{i.name}</span>
-                    <span style={{ fontSize: 11, opacity: 0.75 }}>
-                      ({i.version})
-                    </span>
-                  </Chip>
-                );
-              })}
-            </div>
-          </Card.Content>
-        </Card>
+                  />
+                  <span>{i.name}</span>
+                </Chip>
+              );
+            })}
+          </div>
+        </div>
       )}
 
-      {/* Game Output / Logs */}
+      {/* Clean Game Output / Logs */}
       {showLogs && logs.length > 0 && (
         <Card>
           <Card.Content>
-            <div className="row between" style={{ marginBottom: 10 }}>
-              <h3 style={{ margin: 0 }}>Game output</h3>
-              <div style={{ display: "flex", gap: 8 }}>
+            <div className="row between" style={{ marginBottom: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#ffffff" }}>Game Console Output</span>
+              <div style={{ display: "flex", gap: 6 }}>
                 <Button
                   variant="ghost"
                   size="sm"
-                  style={{ fontSize: 12, padding: "4px 10px" }}
+                  style={{ fontSize: 11, padding: "2px 8px" }}
                   onPress={() => setLogs([])}
                 >
                   Clear
@@ -496,14 +509,14 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                 <Button
                   variant="ghost"
                   size="sm"
-                  style={{ fontSize: 12, padding: "4px 10px" }}
+                  style={{ fontSize: 11, padding: "2px 8px" }}
                   onPress={() => setShowLogs(false)}
                 >
                   Hide
                 </Button>
               </div>
             </div>
-            <div className="log-view" ref={logBox} style={{ height: 260 }}>
+            <div className="log-view" ref={logBox} style={{ height: 220, borderRadius: "6px" }}>
               {logs.map((l, idx) => (
                 <div key={idx} className={`log-line ${l.stream}`}>
                   {l.text}
@@ -529,29 +542,23 @@ function KpiCard({
   accent?: string;
 }) {
   return (
-    <Card className="kpi">
-      <Card.Content>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text-muted)" }}>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 26,
-              height: 26,
-              borderRadius: "6px",
-              background: "#18181b",
-              border: "1px solid #27272a",
-              color: accent,
-            }}
-          >
-            {icon}
-          </span>
-          <div className="label" style={{ margin: 0 }}>{label}</div>
-        </div>
-        <div className="value" style={{ marginTop: 8 }}>{value}</div>
-      </Card.Content>
-    </Card>
+    <div
+      style={{
+        padding: "14px 16px",
+        background: "#121215",
+        border: "1px solid #27272a",
+        borderRadius: "10px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#71717a", fontSize: 11.5, fontWeight: 600 }}>
+        <span style={{ color: accent, display: "flex" }}>{icon}</span>
+        <span>{label}</span>
+      </div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: "#ffffff" }}>{value}</div>
+    </div>
   );
 }
 
@@ -565,30 +572,20 @@ function PrepareProgress({ p }: { p: ProgressSnapshot }) {
 
   return (
     <div>
-      <div className="kpi-row" style={{ marginBottom: 14 }}>
-        <KpiCard icon={<IconRefresh size={14} />} label="Active" value={String(p.active)} accent="#0070f3" />
-        <KpiCard icon={<IconCube size={14} />} label="Completed" value={String(p.completed)} accent="#10b981" />
-        <KpiCard icon={<IconStop size={14} />} label="Failed" value={String(p.failed)} accent="#ef4444" />
-        <KpiCard icon={<IconSpeed size={14} />} label="Speed" value={formatSpeed(p.speed_bps)} accent="#a855f7" />
-      </div>
-
       <div className="row between" style={{ marginBottom: 8 }}>
-        <span className="muted" style={{ fontSize: 12.5, fontWeight: 500, fontFamily: "var(--mono)" }}>
+        <span className="muted" style={{ fontSize: 12, fontFamily: "var(--mono)" }}>
           {indeterminate
-            ? `${formatBytes(p.bytes_downloaded)} downloaded…`
-            : `${formatBytes(p.bytes_downloaded)} of ${formatBytes(p.bytes_total)}`}
+            ? `${formatBytes(p.bytes_downloaded)} downloaded`
+            : `${formatBytes(p.bytes_downloaded)} / ${formatBytes(p.bytes_total)}`}
         </span>
-        <span className="muted" style={{ fontSize: 12.5, fontWeight: 600, color: "#0070f3" }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: "#0070f3" }}>
           {indeterminate
             ? `${p.completed} files done`
-            : `${pct.toFixed(1)}%${eta != null ? ` · ${formatDuration(eta)} left` : ""}`}
+            : `${pct.toFixed(1)}% · ${formatSpeed(p.speed_bps)}${eta != null ? ` · ${formatDuration(eta)} left` : ""}`}
         </span>
       </div>
 
-      <ProgressBar
-        value={pct}
-        isIndeterminate={indeterminate}
-      >
+      <ProgressBar value={pct} isIndeterminate={indeterminate}>
         <ProgressBar.Track>
           <ProgressBar.Fill />
         </ProgressBar.Track>

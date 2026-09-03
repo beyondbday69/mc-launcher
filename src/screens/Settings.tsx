@@ -1,7 +1,6 @@
 import { useEffect, useState, ReactNode } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Button, Card, Chip, Input, Label, Slider, Switch } from "@heroui/react";
-import WithIcons from "@/components/ui/demo";
 import { api, Config, JavaInstallation } from "../lib/types";
 import {
   IconSettings,
@@ -31,7 +30,7 @@ const TABS: SettingTabDef[] = [
   { id: "java", label: "Java Runtimes", icon: <IconCube size={16} /> },
   { id: "jvm", label: "JVM Tuning", icon: <IconRam size={16} /> },
   { id: "downloads", label: "Downloads", icon: <IconDownloads size={16} /> },
-  { id: "about", label: "About", icon: <span style={{ fontSize: 14 }}>ℹ</span> },
+  { id: "about", label: "About", icon: <span style={{ fontSize: 13 }}>ℹ</span> },
 ];
 
 export function Settings({ config, onChange }: Props) {
@@ -43,14 +42,14 @@ export function Settings({ config, onChange }: Props) {
   }, []);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* Header */}
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em" }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0, color: "#ffffff" }}>
           Launcher Settings
         </h2>
         <span className="muted" style={{ fontSize: 12 }}>
-          Customize performance, Java environments, runtime preferences, and storage
+          Customize runtime performance, Java environments, and preferences
         </span>
       </div>
 
@@ -73,9 +72,7 @@ export function Settings({ config, onChange }: Props) {
               >
                 <span
                   style={{
-                    color: isActive
-                      ? "var(--md-sys-color-primary)"
-                      : "var(--md-sys-color-on-surface-variant)",
+                    color: isActive ? "#0070f3" : "#a1a1aa",
                     display: "flex",
                     alignItems: "center",
                   }}
@@ -126,9 +123,9 @@ function GeneralTab({
   const ramMb = config.default_ram_mb || 2048;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       {/* Memory Allocation Card */}
-      <Card style={{ position: "relative" }}>
+      <Card>
         <Card.Header>
           <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
             Default Memory Allocation
@@ -178,11 +175,11 @@ function GeneralTab({
         </Card.Content>
       </Card>
 
-      {/* Interface & Theme Card */}
-      <Card style={{ position: "relative" }}>
+      {/* Interface & Options Card */}
+      <Card>
         <Card.Header>
           <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
-            Interface & Appearance
+            Interface & Options
           </Card.Title>
         </Card.Header>
 
@@ -195,7 +192,6 @@ function GeneralTab({
                 onChange={(e) => onChange({ ...config, theme: e.target.value })}
               >
                 <option value="dark">Solid Black (HeroUI v3 OLED)</option>
-                <option value="m3">Material 3 Dark Tonal (Expressive)</option>
               </select>
             </div>
 
@@ -210,7 +206,7 @@ function GeneralTab({
             </div>
           </div>
 
-          <div className="divider" />
+          <div className="divider" style={{ margin: "14px 0" }} />
 
           {/* HeroUI Switches */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -256,19 +252,6 @@ function GeneralTab({
               </Switch.Content>
             </Switch>
           </div>
-
-          {/* Quick Action Toggles with Icons */}
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-            <div style={{ marginBottom: 10 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
-                Quick Action Switches (Icon Toggles)
-              </span>
-              <p className="muted" style={{ margin: "2px 0 0 0", fontSize: 12 }}>
-                HeroUI v3 icon-embedded switches with custom active colors
-              </p>
-            </div>
-            <WithIcons />
-          </div>
         </Card.Content>
       </Card>
 
@@ -281,11 +264,10 @@ function GeneralTab({
         </Card.Header>
         <Card.Content>
           <p className="muted" style={{ fontSize: 12.5, marginBottom: 12 }}>
-            Launcher data and cache are managed automatically. Override the default directory if you want
-            instances saved on a specific drive.
+            Launcher data and cache are managed automatically. Override the default directory if needed.
           </p>
           <div className="field" style={{ margin: 0 }}>
-            <label>Data Directory Override</label>
+            <label>Data Directory Path</label>
             <div style={{ display: "flex", gap: 8 }}>
               <Input
                 value={config.data_dir_override ?? ""}
@@ -334,7 +316,7 @@ function JavaTab({
   const [detecting, setDetecting] = useState(false);
 
   return (
-    <Card style={{ position: "relative" }}>
+    <Card>
       <Card.Header className="row between" style={{ marginBottom: 14 }}>
         <div>
           <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
@@ -359,7 +341,7 @@ function JavaTab({
                 setDetecting(false);
               }
             }}
-            style={{ padding: "6px 14px", fontSize: 12, gap: 6 }}
+            style={{ padding: "5px 12px", fontSize: 12, gap: 6 }}
           >
             <IconRefresh
               size={14}
@@ -386,7 +368,7 @@ function JavaTab({
                 }
               }
             }}
-            style={{ padding: "6px 14px", fontSize: 12, gap: 6 }}
+            style={{ padding: "5px 12px", fontSize: 12, gap: 6 }}
           >
             <IconFolder size={14} />
             <span>Add Manually…</span>
@@ -400,11 +382,12 @@ function JavaTab({
             style={{
               padding: "24px",
               textAlign: "center",
-              background: "var(--md-sys-color-surface-container-lowest)",
-              borderRadius: "var(--md-sys-shape-corner-lg)",
+              background: "#18181b",
+              borderRadius: "8px",
+              border: "1px solid #27272a",
             }}
           >
-            <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
+            <p className="muted" style={{ fontSize: 13, marginBottom: 6 }}>
               No Java installations detected on your system.
             </p>
             <span className="faint" style={{ fontSize: 12 }}>
@@ -428,18 +411,18 @@ function JavaTab({
                   return (
                     <tr key={j.path}>
                       <td>
-                        <Chip color="success" size="sm" style={{ padding: "2px 8px" }}>
+                        <Chip color="success" size="sm">
                           Java {j.version}
                         </Chip>
                       </td>
-                      <td style={{ fontWeight: 600, color: "var(--md-sys-color-on-surface)" }}>
+                      <td style={{ fontWeight: 600, color: "#ffffff" }}>
                         {j.vendor}
                       </td>
                       <td
                         style={{
                           fontFamily: "var(--mono)",
                           fontSize: 11,
-                          color: "var(--md-sys-color-on-surface-variant)",
+                          color: "#a1a1aa",
                           maxWidth: 240,
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -451,8 +434,8 @@ function JavaTab({
                       </td>
                       <td style={{ textAlign: "right" }}>
                         {isDefault ? (
-                          <Chip variant="primary" size="sm" style={{ padding: "2px 8px" }}>
-                            <IconCheck size={12} />
+                          <Chip variant="primary" size="sm">
+                            <IconCheck size={12} style={{ marginRight: 4 }} />
                             <span>Default</span>
                           </Chip>
                         ) : (
@@ -462,7 +445,7 @@ function JavaTab({
                             onPress={() =>
                               onChange({ ...config, default_java_path: j.path })
                             }
-                            style={{ fontSize: 11, padding: "3px 10px" }}
+                            style={{ fontSize: 11, padding: "2px 8px" }}
                           >
                             Set Default
                           </Button>
@@ -492,16 +475,15 @@ function JvmTab({
   onChange: (c: Config) => void;
 }) {
   return (
-    <Card style={{ position: "relative" }}>
+    <Card>
       <Card.Header>
-        <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 8 }}>
+        <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
           Java Virtual Machine Profiles
         </Card.Title>
       </Card.Header>
       <Card.Content>
-        <p className="muted" style={{ marginBottom: 16, fontSize: 12.5 }}>
+        <p className="muted" style={{ marginBottom: 14, fontSize: 12.5 }}>
           Choose optimization presets for garbage collection and memory tuning.
-          Instances inherit this profile unless configured individually.
         </p>
 
         <div className="field">
@@ -555,9 +537,9 @@ function DownloadsTab({
   onChange: (c: Config) => void;
 }) {
   return (
-    <Card style={{ position: "relative" }}>
+    <Card>
       <Card.Header>
-        <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
+        <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 14 }}>
           Network & Download Manager
         </Card.Title>
       </Card.Header>
@@ -617,13 +599,13 @@ function DownloadsTab({
 
 function AboutTab() {
   return (
-    <Card style={{ position: "relative" }}>
+    <Card>
       <Card.Header>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
           <div
             style={{
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               borderRadius: "8px",
               background: "#0070f3",
               display: "flex",
@@ -631,45 +613,44 @@ function AboutTab() {
               justifyContent: "center",
               color: "#ffffff",
               fontWeight: 800,
-              fontSize: 20,
-              boxShadow: "0 0 16px rgba(56, 189, 248, 0.35)",
+              fontSize: 18,
             }}
           >
             M
           </div>
           <div>
-            <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 17, fontWeight: 700 }}>
+            <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 16, fontWeight: 700 }}>
               MC Launcher
             </Card.Title>
             <span className="muted" style={{ fontSize: 12 }}>
-              Version 0.1.0 · Material 3 Expressive Edition
+              Version 0.1.0 · Solid Black OLED Edition
             </span>
           </div>
         </div>
       </Card.Header>
 
       <Card.Content>
-        <p className="muted" style={{ fontSize: 13, lineHeight: 1.6, marginBottom: 16 }}>
+        <p className="muted" style={{ fontSize: 12.5, lineHeight: 1.6, marginBottom: 14 }}>
           A lightweight, secure Minecraft Java Edition launcher designed for speed,
-          clarity, and modern desktop experiences. Powered by Tauri 2.0, Rust, HeroUI v3, and React 19.
+          clarity, and minimal resource usage. Powered by Tauri 2.0, Rust, and HeroUI v3.
         </p>
 
-        <div className="divider" />
+        <div className="divider" style={{ margin: "12px 0" }} />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 12.5 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span className="muted">Privacy & Analytics:</span>
-            <span style={{ fontWeight: 600, color: "var(--md-sys-color-tertiary)" }}>
+            <span className="muted">Privacy:</span>
+            <span style={{ fontWeight: 600, color: "#10b981" }}>
               Zero Telemetry · 100% Local
             </span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <span className="muted">Engine:</span>
-            <span style={{ fontWeight: 600 }}>Tauri v2 + Tokio Async Core</span>
+            <span style={{ fontWeight: 600 }}>Tauri v2 + Tokio Core</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span className="muted">UI System:</span>
-            <span style={{ fontWeight: 600 }}>HeroUI v3 + Material 3 Glassmorphism</span>
+            <span className="muted">Design System:</span>
+            <span style={{ fontWeight: 600 }}>HeroUI v3 Solid Black</span>
           </div>
         </div>
       </Card.Content>

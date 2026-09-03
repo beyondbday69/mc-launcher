@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Chip, Input, Tabs } from "@heroui/react";
 import {
   api,
-  formatBytes,
   GameVersionTag,
   Instance,
   LoaderTag,
@@ -24,14 +23,13 @@ type ContentTab = "mod" | "modpack" | "resourcepack" | "shader";
 interface TabDef {
   id: ContentTab;
   label: string;
-  icon: string;
 }
 
 const TABS: TabDef[] = [
-  { id: "mod", label: "Mods", icon: "✦" },
-  { id: "resourcepack", label: "Resource Packs", icon: "▤" },
-  { id: "shader", label: "Shaders", icon: "☀" },
-  { id: "modpack", label: "Modpacks", icon: "📦" },
+  { id: "mod", label: "Mods" },
+  { id: "resourcepack", label: "Resource Packs" },
+  { id: "shader", label: "Shaders" },
+  { id: "modpack", label: "Modpacks" },
 ];
 
 const ALLOWED_LOADER_PREFIXES = ["fabric", "forge", "neoforge", "quilt", "legacy-fabric"];
@@ -176,18 +174,17 @@ export function Content({ selected }: Props) {
 
   if (!selected) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0, color: "#ffffff" }}>
           Content & Mods
         </h2>
         <div className="empty">
           <div className="icon">
-            <IconContent size={44} />
+            <IconContent size={40} />
           </div>
-          <p style={{ fontSize: 16, fontWeight: 600 }}>No instance selected</p>
-          <p className="faint" style={{ fontSize: 13, maxWidth: 440 }}>
-            Please select or create a Minecraft instance in the sidebar before
-            installing mods, resource packs, shaders, or modpacks.
+          <p style={{ fontSize: 16, fontWeight: 600, color: "#ffffff" }}>No instance selected</p>
+          <p className="faint" style={{ fontSize: 13, maxWidth: 420 }}>
+            Select an instance first to browse and install compatible mods, resource packs, and shaders.
           </p>
         </div>
       </div>
@@ -195,185 +192,151 @@ export function Content({ selected }: Props) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* Top Header */}
       <div className="row between" style={{ flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em" }}>
-            Content & Mods
-          </h2>
-          <span className="muted" style={{ fontSize: 12 }}>
-            Browse and install community packages directly from Modrinth
-          </span>
-        </div>
+        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0, color: "#ffffff" }}>
+          Content & Mods
+        </h2>
 
-        {/* Target Instance Indicator */}
-        <Chip
-          size="sm"
-          style={{
-            background: "var(--md-sys-color-surface-container-high)",
-            padding: "4px 12px",
-            gap: 8,
-          }}
+        {/* Category Tabs */}
+        <Tabs
+          selectedKey={tab}
+          onSelectionChange={(key) => setTab(key as ContentTab)}
         >
-          <span
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: selected.color || "var(--md-sys-color-primary)",
-              boxShadow: `0 0 6px ${selected.color || "var(--md-sys-color-primary)"}`,
-            }}
-          />
-          <span style={{ fontWeight: 600, color: "var(--md-sys-color-on-surface)" }}>
-            {selected.name}
-          </span>
-          <span style={{ fontSize: 11, color: "var(--md-sys-color-on-surface-variant)" }}>
-            ({selected.version}{selected.mod_loader ? ` · ${selected.mod_loader.kind}` : ""})
-          </span>
-        </Chip>
+          <Tabs.List>
+            {TABS.map((t) => (
+              <Tabs.Tab key={t.id} id={t.id}>
+                {t.label}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+        </Tabs>
       </div>
 
-      {/* Category Tabs */}
-      <Tabs
-        selectedKey={tab}
-        onSelectionChange={(key) => setTab(key as ContentTab)}
+      {/* Clean Filter & Search Bar */}
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          flexWrap: "wrap",
+          alignItems: "center",
+          padding: "10px 14px",
+          background: "#121215",
+          border: "1px solid #27272a",
+          borderRadius: "10px",
+        }}
       >
-        <Tabs.List>
-          {TABS.map((t) => (
-            <Tabs.Tab key={t.id} id={t.id}>
-              <span>{t.icon}</span> {t.label}
-            </Tabs.Tab>
-          ))}
-        </Tabs.List>
-      </Tabs>
-
-      {/* Frosted Glass Search & Filters Bar */}
-      <Card style={{ padding: "16px 20px" }}>
-        <Card.Content style={{ padding: 0 }}>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-            {/* Pill Glass Search Input */}
-            <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
-              <Input
-                type="text"
-                className="search-bar frosted-glass-input"
-                placeholder={`Search ${tab === "mod" ? "mods" : tab === "shader" ? "shaders" : "content"} (e.g. Sodium, Iris, Complementary)…`}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") onSearch();
-                }}
-                style={{
-                  width: "100%",
-                  fontSize: 13,
-                  background: "var(--glass-bg-interactive)",
-                  backdropFilter: "var(--glass-blur-sm)",
-                  WebkitBackdropFilter: "var(--glass-blur-sm)",
-                  borderColor: "var(--glass-border)",
-                  borderRadius: "var(--glass-radius-full)",
-                  paddingLeft: 16,
-                }}
-              />
-              {query && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onPress={() => setQuery("")}
-                  aria-label="Clear query"
-                  style={{
-                    position: "absolute",
-                    right: 8,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    padding: "2px 6px",
-                    fontSize: 12,
-                    color: "var(--md-sys-color-on-surface-variant)",
-                  }}
-                >
-                  ✕
-                </Button>
-              )}
-            </div>
-
-            {/* Version Filter */}
-            <select
-              value={gameVersion}
-              onChange={(e) => setGameVersion(e.target.value)}
-              style={{ width: 150, fontSize: 13 }}
-              title="Minecraft Version filter"
-              disabled={allGameVersions.length === 0}
-            >
-              <option value="">Any Version</option>
-              {allGameVersions.map((v) => (
-                <option key={v.version} value={v.version}>
-                  {v.version} {v.version_type === "snapshot" ? "(snap)" : ""}
-                </option>
-              ))}
-            </select>
-
-            {/* Loader Filter */}
-            {tab === "mod" && (
-              <select
-                value={loader}
-                onChange={(e) => setLoader(e.target.value)}
-                style={{ width: 140, fontSize: 13 }}
-                title="Mod Loader filter"
-              >
-                <option value="any">Any Loader</option>
-                {loaderOptions.map((l) => (
-                  <option key={l.name} value={l.name}>
-                    {l.name}
-                  </option>
-                ))}
-              </select>
-            )}
-
-            {/* Search Button */}
+        <div style={{ position: "relative", flex: 1, minWidth: 220 }}>
+          <Input
+            type="text"
+            className="search-bar"
+            placeholder={`Search ${tab === "mod" ? "mods" : tab === "shader" ? "shaders" : "content"} (e.g. Sodium, Iris)…`}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onSearch();
+            }}
+            style={{
+              width: "100%",
+              fontSize: 13,
+            }}
+          />
+          {query && (
             <Button
-              variant="primary"
-              onPress={onSearch}
-              isDisabled={searching || !query.trim()}
-              style={{ padding: "8px 20px", gap: 6 }}
+              variant="ghost"
+              size="sm"
+              onPress={() => setQuery("")}
+              style={{
+                position: "absolute",
+                right: 6,
+                top: "50%",
+                transform: "translateY(-50%)",
+                padding: "2px 6px",
+                fontSize: 12,
+                color: "#a1a1aa",
+              }}
             >
-              {searching ? (
-                <IconRefresh size={15} style={{ animation: "indeterminate 1.5s infinite linear" }} />
-              ) : (
-                <IconSearch size={15} />
-              )}
-              <span>{searching ? "Searching…" : "Search"}</span>
+              ✕
             </Button>
-          </div>
-
-          {tagsError && (
-            <p style={{ color: "var(--md-sys-color-error)", fontSize: 12, marginTop: 8, marginBottom: 0 }}>
-              Could not retrieve filter tags: {tagsError}
-            </p>
           )}
-        </Card.Content>
-      </Card>
+        </div>
+
+        <select
+          value={gameVersion}
+          onChange={(e) => setGameVersion(e.target.value)}
+          style={{ width: 140, fontSize: 12.5 }}
+          title="Minecraft Version"
+          disabled={allGameVersions.length === 0}
+        >
+          <option value="">Any Version</option>
+          {allGameVersions.map((v) => (
+            <option key={v.version} value={v.version}>
+              {v.version}
+            </option>
+          ))}
+        </select>
+
+        {tab === "mod" && (
+          <select
+            value={loader}
+            onChange={(e) => setLoader(e.target.value)}
+            style={{ width: 130, fontSize: 12.5 }}
+            title="Mod Loader"
+          >
+            <option value="any">Any Loader</option>
+            {loaderOptions.map((l) => (
+              <option key={l.name} value={l.name}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+        )}
+
+        <Button
+          variant="primary"
+          size="sm"
+          onPress={onSearch}
+          isDisabled={searching || !query.trim()}
+          style={{ padding: "6px 14px", gap: 5 }}
+        >
+          {searching ? (
+            <IconRefresh size={14} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+          ) : (
+            <IconSearch size={14} />
+          )}
+          <span>{searching ? "Searching…" : "Search"}</span>
+        </Button>
+      </div>
+
+      {tagsError && (
+        <p style={{ color: "#ef4444", fontSize: 12, margin: 0 }}>
+          Could not retrieve filter tags: {tagsError}
+        </p>
+      )}
 
       {error && (
-        <Card
+        <div
           style={{
-            background: "var(--md-sys-color-error-container)",
-            color: "var(--md-sys-color-error)",
+            background: "rgba(239, 68, 68, 0.1)",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            color: "#ef4444",
             fontSize: 13,
-            padding: "12px 16px",
+            padding: "10px 14px",
+            borderRadius: "8px",
           }}
         >
-          <Card.Content style={{ padding: 0 }}>
-            {error}
-          </Card.Content>
-        </Card>
+          {error}
+        </div>
       )}
 
       {/* Results View */}
       {searching ? (
         <div className="empty">
           <div className="icon">
-            <IconRefresh size={44} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+            <IconRefresh size={36} style={{ animation: "indeterminate 1.5s infinite linear" }} />
           </div>
-          <p style={{ fontSize: 16, fontWeight: 600 }}>Searching Modrinth database…</p>
+          <p style={{ fontSize: 16, fontWeight: 600, color: "#ffffff" }}>Searching Modrinth database…</p>
           <span className="muted" style={{ fontSize: 12 }}>
             Filtering compatible {tab} packages
           </span>
@@ -381,19 +344,19 @@ export function Content({ selected }: Props) {
       ) : hits.length === 0 ? (
         <div className="empty">
           <div className="icon">
-            <IconSearch size={44} />
+            <IconSearch size={36} />
           </div>
-          <p style={{ fontSize: 16, fontWeight: 600 }}>
+          <p style={{ fontSize: 16, fontWeight: 600, color: "#ffffff" }}>
             {hasSearched ? "No matching packages found" : "Ready to discover content"}
           </p>
-          <p className="faint" style={{ fontSize: 13, maxWidth: 440 }}>
+          <p className="faint" style={{ fontSize: 12.5, maxWidth: 420 }}>
             {hasSearched
-              ? "Try searching for a broader term or loosening your version and loader filters."
-              : `Type a name or keyword above to search through thousands of ${tab} packages on Modrinth.`}
+              ? "Try searching with broader terms or loosening your version and loader filters."
+              : `Type a name or keyword above to search through ${tab} packages on Modrinth.`}
           </p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {hits.map((h) => (
             <ModCard
               key={h.slug}
@@ -407,10 +370,6 @@ export function Content({ selected }: Props) {
     </div>
   );
 }
-
-/* ==========================================================================
-   Expressive Mod Card Component
-   ========================================================================== */
 
 function ModCard({
   hit,
@@ -426,37 +385,30 @@ function ModCard({
   const errored = status?.kind === "error";
   const description = stripHtml(hit.description);
   const truncated =
-    description.length > 180
-      ? description.slice(0, 180).trimEnd() + "…"
+    description.length > 160
+      ? description.slice(0, 160).trimEnd() + "…"
       : description;
 
   return (
-    <Card
-      className="mod-card"
-      style={{
-        padding: "16px 20px",
-        position: "relative",
-      }}
-    >
+    <Card className="mod-card" style={{ padding: "14px 16px" }}>
       <Card.Content
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 16,
+          gap: 14,
           padding: 0,
           width: "100%",
         }}
       >
-        {/* Icon */}
         {hit.icon_url ? (
           <img
             src={hit.icon_url}
             alt={hit.title}
-            width={52}
-            height={52}
+            width={44}
+            height={44}
             style={{
-              width: 52,
-              height: 52,
+              width: 44,
+              height: 44,
               borderRadius: "8px",
               objectFit: "cover",
               flexShrink: 0,
@@ -467,8 +419,8 @@ function ModCard({
         ) : (
           <div
             style={{
-              width: 52,
-              height: 52,
+              width: 44,
+              height: 44,
               borderRadius: "8px",
               background: "#18181b",
               border: "1px solid #27272a",
@@ -476,7 +428,7 @@ function ModCard({
               alignItems: "center",
               justifyContent: "center",
               color: "#a1a1aa",
-              fontSize: 22,
+              fontSize: 18,
               flexShrink: 0,
             }}
           >
@@ -484,32 +436,22 @@ function ModCard({
           </div>
         )}
 
-        {/* Info Section */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
-            <strong
-              style={{
-                fontSize: 15,
-                fontWeight: 700,
-                color: "#ffffff",
-              }}
-            >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3, flexWrap: "wrap" }}>
+            <strong style={{ fontSize: 14.5, fontWeight: 700, color: "#ffffff" }}>
               {hit.title}
             </strong>
-            <span className="muted" style={{ fontSize: 12 }}>
+            <span className="muted" style={{ fontSize: 11.5 }}>
               by {hit.author}
             </span>
-            <Chip size="sm">
-              {hit.project_type}
-            </Chip>
           </div>
 
           <p
             className="muted"
             style={{
-              fontSize: 12.5,
+              fontSize: 12,
               lineHeight: 1.4,
-              marginBottom: 8,
+              marginBottom: 6,
               overflow: "hidden",
               textOverflow: "ellipsis",
             }}
@@ -517,16 +459,15 @@ function ModCard({
             {truncated || "No description provided."}
           </p>
 
-          {/* Stats Row with HeroUI Badges/Chips */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11.5 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11 }}>
             <Chip size="sm">
-              <IconDownloads size={13} style={{ color: "#0070f3", marginRight: 4 }} />
-              {hit.downloads.toLocaleString()} downloads
+              <IconDownloads size={12} style={{ color: "#0070f3", marginRight: 4 }} />
+              {hit.downloads.toLocaleString()}
             </Chip>
 
             {hit.versions.length > 0 && (
               <Chip size="sm">
-                <IconCube size={13} style={{ color: "#10b981", marginRight: 4 }} />
+                <IconCube size={12} style={{ color: "#10b981", marginRight: 4 }} />
                 {hit.versions.slice(0, 3).join(", ")}
                 {hit.versions.length > 3 ? "…" : ""}
               </Chip>
@@ -534,83 +475,52 @@ function ModCard({
           </div>
         </div>
 
-        {/* Action / Install Button */}
         <div
           style={{
-            minWidth: 140,
+            minWidth: 120,
             display: "flex",
             flexDirection: "column",
             alignItems: "flex-end",
-            gap: 6,
+            gap: 4,
             flexShrink: 0,
           }}
         >
           {installing ? (
-            <Chip
-              color="warning"
-              size="sm"
-              style={{
-                fontSize: 12,
-                padding: "6px 14px",
-                gap: 6,
-              }}
-            >
-              <IconRefresh size={13} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+            <Chip color="warning" size="sm">
+              <IconRefresh size={12} style={{ animation: "indeterminate 1.5s infinite linear", marginRight: 4 }} />
               <span>Installing…</span>
             </Chip>
-          ) : installed && status?.kind === "installed" ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
-              <Chip
-                color="success"
-                size="sm"
-                style={{
-                  fontSize: 12,
-                  padding: "6px 14px",
-                  gap: 6,
-                }}
-                title={status.path}
-              >
-                <IconCheck size={14} />
-                <span>Installed</span>
-              </Chip>
-              <span className="faint" style={{ fontSize: 10, fontFamily: "var(--mono)" }}>
-                {formatBytes(status.size)}
-              </span>
-            </div>
-          ) : errored && status?.kind === "error" ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-              <Chip color="danger" size="sm" style={{ fontSize: 11, padding: "4px 8px" }}>
-                Install Failed
-              </Chip>
-              <Button
-                variant="secondary"
-                size="sm"
-                onPress={onInstall}
-                style={{ fontSize: 11, padding: "3px 10px" }}
-              >
-                Retry
-              </Button>
-              <span
-                className="faint"
-                style={{
-                  fontSize: 10,
-                  maxWidth: 160,
-                  textAlign: "right",
-                  color: "var(--md-sys-color-error)",
-                }}
-                title={status.message}
-              >
-                {truncate(status.message, 50)}
-              </span>
-            </div>
+          ) : installed ? (
+            <Chip color="success" size="sm">
+              <IconCheck size={12} style={{ marginRight: 4 }} />
+              <span>Installed</span>
+            </Chip>
           ) : (
             <Button
               variant="primary"
+              size="sm"
               onPress={onInstall}
-              style={{ minWidth: 100, padding: "6px 18px", fontSize: 12.5 }}
+              style={{ padding: "4px 14px", fontSize: 12 }}
             >
               Install
             </Button>
+          )}
+
+          {errored && (
+            <span
+              style={{
+                fontSize: 10.5,
+                color: "#ef4444",
+                maxWidth: 130,
+                textAlign: "right",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              title={status.message}
+            >
+              {status.message}
+            </span>
           )}
         </div>
       </Card.Content>
@@ -618,57 +528,36 @@ function ModCard({
   );
 }
 
-function pickLatest(versions: ProjectVersion[]): ProjectVersion {
-  let best = versions[0]!;
-  for (const v of versions) {
-    if (v.date_published > best.date_published) best = v;
-  }
-  return best;
-}
-
-function pickPrimaryFile(version: ProjectVersion): ProjectFile | undefined {
-  return version.files.find((f) => f.primary) ?? version.files[0];
-}
-
-function truncate(s: string, n: number): string {
-  if (s.length <= n) return s;
-  return s.slice(0, n - 1).trimEnd() + "…";
-}
-
 function stripHtml(s: string): string {
-  return s
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/\s+/g, " ")
-    .trim();
+  return s.replace(/<[^>]*>?/gm, "").trim();
+}
+
+function errMsg(e: unknown): string {
+  if (typeof e === "string") return e;
+  if (e && typeof e === "object" && "message" in e) {
+    return String((e as { message: unknown }).message);
+  }
+  return String(e);
+}
+
+function pickLatest(versions: ProjectVersion[]): ProjectVersion {
+  return versions[0]!;
+}
+
+function pickPrimaryFile(v: ProjectVersion): ProjectFile | null {
+  const p = v.files.find((f) => f.primary);
+  return p ?? v.files[0] ?? null;
 }
 
 function hexToBase64(hex: string): string {
-  const clean = hex.toLowerCase();
-  if (clean.length % 2 !== 0) {
-    throw new Error("Invalid SHA-1 length");
-  }
+  const clean = hex.trim();
   const bytes = new Uint8Array(clean.length / 2);
   for (let i = 0; i < clean.length; i += 2) {
     bytes[i / 2] = parseInt(clean.substring(i, i + 2), 16);
   }
   let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
+  for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]!);
   }
   return btoa(binary);
-}
-
-function errMsg(e: unknown): string {
-  if (typeof e === "string") return e;
-  if (e instanceof Error) return e.message;
-  try {
-    return JSON.stringify(e);
-  } catch {
-    return String(e);
-  }
 }

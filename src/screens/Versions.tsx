@@ -72,172 +72,146 @@ export function Versions({ onInstalled }: Props) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* Top Search & Filter Bar */}
       <div className="row between" style={{ flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em" }}>
-            Minecraft Versions
-          </h2>
-          <span className="muted" style={{ fontSize: 12 }}>
-            Official Mojang version manifest with SHA-1 asset hashes
-          </span>
-        </div>
+        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0, color: "#ffffff" }}>
+          Minecraft Versions
+        </h2>
 
-        <div style={{ position: "relative" }}>
-          <Input
-            type="text"
-            className="search-bar frosted-glass-input"
-            placeholder="Search versions (e.g. 1.21)…"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            style={{
-              width: 240,
-              fontSize: 13,
-              background: "var(--glass-bg-interactive)",
-              backdropFilter: "var(--glass-blur-sm)",
-              WebkitBackdropFilter: "var(--glass-blur-sm)",
-              borderColor: "var(--glass-border)",
-            }}
-          />
-          {filter && (
+        <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
+          {/* Version Filter Tabs */}
+          <ButtonGroup>
             <Button
-              variant="ghost"
+              variant={type === "release" ? "primary" : "secondary"}
               size="sm"
-              onPress={() => setFilter("")}
-              aria-label="Clear filter"
-              style={{
-                position: "absolute",
-                right: 8,
-                top: "50%",
-                transform: "translateY(-50%)",
-                padding: "2px 6px",
-                fontSize: 12,
-                color: "var(--md-sys-color-on-surface-variant)",
-              }}
+              onPress={() => setType("release")}
             >
-              ✕
+              <IconCheck size={13} style={{ opacity: type === "release" ? 1 : 0.4 }} />
+              <span>Releases</span>
             </Button>
-          )}
+
+            <Button
+              variant={type === "snapshot" ? "primary" : "secondary"}
+              size="sm"
+              onPress={() => setType("snapshot")}
+            >
+              <span>Snapshots</span>
+            </Button>
+
+            <Button
+              variant={type === "modded" ? "primary" : "secondary"}
+              size="sm"
+              onPress={() => setType("modded")}
+            >
+              <span>Modded</span>
+            </Button>
+
+            <Button
+              variant={type === "all" ? "primary" : "secondary"}
+              size="sm"
+              onPress={() => setType("all")}
+            >
+              <span>All</span>
+            </Button>
+          </ButtonGroup>
+
+          {/* Search Input */}
+          <div style={{ position: "relative" }}>
+            <Input
+              type="text"
+              className="search-bar"
+              placeholder="Filter versions (e.g. 1.21)…"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              style={{
+                width: 200,
+                fontSize: 13,
+              }}
+            />
+            {filter && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onPress={() => setFilter("")}
+                aria-label="Clear filter"
+                style={{
+                  position: "absolute",
+                  right: 6,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  padding: "2px 6px",
+                  fontSize: 12,
+                  color: "#a1a1aa",
+                }}
+              >
+                ✕
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ButtonGroup Filter */}
-      <div>
-        <ButtonGroup>
-          <Button
-            variant={type === "release" ? "primary" : "outline"}
-            size="sm"
-            onPress={() => setType("release")}
-          >
-            <IconCheck size={14} style={{ opacity: type === "release" ? 1 : 0.4 }} />
-            <span>Releases</span>
-          </Button>
-
-          <Button
-            variant={type === "snapshot" ? "primary" : "outline"}
-            size="sm"
-            onPress={() => setType("snapshot")}
-          >
-            <span style={{ fontSize: 12 }}>⚡</span>
-            <span>Snapshots</span>
-          </Button>
-
-          <Button
-            variant={type === "modded" ? "primary" : "outline"}
-            size="sm"
-            onPress={() => setType("modded")}
-          >
-            <span style={{ fontSize: 12 }}>✦</span>
-            <span>Modded (Popular)</span>
-          </Button>
-
-          <Button
-            variant={type === "all" ? "primary" : "outline"}
-            size="sm"
-            onPress={() => setType("all")}
-          >
-            <span>All Versions</span>
-          </Button>
-        </ButtonGroup>
-      </div>
-
-      {/* Spotlight Cards for Latest Release & Snapshot */}
+      {/* Sleek Spotlight Banner for Latest Versions */}
       {latest && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <Card
-            className="spotlight-card-release"
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div
             style={{
-              padding: "20px 24px",
+              padding: "12px 16px",
+              background: "#121215",
+              border: "1px solid #27272a",
+              borderLeft: "3px solid #10b981",
+              borderRadius: "10px",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              borderLeft: "4px solid #10b981",
-              position: "relative",
             }}
           >
-            <Card.Content style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <Chip color="success" size="sm">
-                    Latest Release
-                  </Chip>
-                  <strong style={{ fontSize: 17, color: "#ffffff" }}>
-                    {latest.release}
-                  </strong>
-                </div>
-                <span className="muted" style={{ fontSize: 12 }}>
-                  Stable production release recommended for all players
-                </span>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Chip color="success" size="sm">Latest Release</Chip>
+                <strong style={{ fontSize: 15, color: "#ffffff" }}>{latest.release}</strong>
               </div>
-              <Button
-                variant="primary"
-                size="sm"
-                onPress={() => handleCreateInstance(latest.release)}
-                style={{ padding: "6px 16px", fontSize: 12, gap: 6 }}
-              >
-                <IconPlus size={14} />
-                <span>Install</span>
-              </Button>
-            </Card.Content>
-          </Card>
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              onPress={() => handleCreateInstance(latest.release)}
+              style={{ padding: "4px 12px", fontSize: 12, gap: 5 }}
+            >
+              <IconPlus size={13} />
+              <span>Install</span>
+            </Button>
+          </div>
 
-          <Card
-            className="spotlight-card-snapshot"
+          <div
             style={{
-              padding: "20px 24px",
+              padding: "12px 16px",
+              background: "#121215",
+              border: "1px solid #27272a",
+              borderLeft: "3px solid #f59e0b",
+              borderRadius: "10px",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              borderLeft: "4px solid #f59e0b",
-              position: "relative",
             }}
           >
-            <Card.Content style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <Chip color="warning" size="sm">
-                    Latest Snapshot
-                  </Chip>
-                  <strong style={{ fontSize: 17, color: "var(--md-sys-color-on-surface)" }}>
-                    {latest.snapshot}
-                  </strong>
-                </div>
-                <span className="muted" style={{ fontSize: 12 }}>
-                  Development build previewing upcoming features
-                </span>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Chip color="warning" size="sm">Latest Snapshot</Chip>
+                <strong style={{ fontSize: 15, color: "#ffffff" }}>{latest.snapshot}</strong>
               </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onPress={() => handleCreateInstance(latest.snapshot)}
-                style={{ padding: "6px 16px", fontSize: 12, gap: 6 }}
-              >
-                <IconPlus size={14} />
-                <span>Install</span>
-              </Button>
-            </Card.Content>
-          </Card>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onPress={() => handleCreateInstance(latest.snapshot)}
+              style={{ padding: "4px 12px", fontSize: 12, gap: 5 }}
+            >
+              <IconPlus size={13} />
+              <span>Install</span>
+            </Button>
+          </div>
         </div>
       )}
 
@@ -245,9 +219,9 @@ export function Versions({ onInstalled }: Props) {
       {loading ? (
         <div className="empty">
           <div className="icon">
-            <IconRefresh size={40} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+            <IconRefresh size={36} style={{ animation: "indeterminate 1.5s infinite linear" }} />
           </div>
-          <p style={{ fontSize: 16, fontWeight: 600 }}>Fetching versions from Mojang…</p>
+          <p style={{ fontSize: 16, fontWeight: 600, color: "#ffffff" }}>Fetching versions from Mojang…</p>
           <span className="muted" style={{ fontSize: 12 }}>
             Parsing launch manifest & asset index
           </span>
@@ -255,11 +229,11 @@ export function Versions({ onInstalled }: Props) {
       ) : filtered.length === 0 ? (
         <div className="empty">
           <div className="icon">
-            <IconCube size={40} />
+            <IconCube size={36} />
           </div>
-          <p style={{ fontSize: 16, fontWeight: 600 }}>No versions match filters</p>
+          <p style={{ fontSize: 16, fontWeight: 600, color: "#ffffff" }}>No versions match filters</p>
           <p className="faint" style={{ fontSize: 12 }}>
-            Try clearing the search query or switching to "All Versions".
+            Try clearing the search query or switching to "All".
           </p>
         </div>
       ) : (
@@ -272,7 +246,6 @@ export function Versions({ onInstalled }: Props) {
                     <th>Version</th>
                     <th>Type</th>
                     <th>Release Date</th>
-                    <th>Estimated Size</th>
                     <th style={{ textAlign: "right" }}>Action</th>
                   </tr>
                 </thead>
@@ -285,8 +258,8 @@ export function Versions({ onInstalled }: Props) {
                       <tr key={v.id}>
                         <td>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <IconCube size={15} style={{ color: "var(--md-sys-color-primary)", opacity: 0.8 }} />
-                            <span style={{ fontWeight: 600, color: "var(--md-sys-color-on-surface)" }}>
+                            <IconCube size={14} style={{ color: "#0070f3", opacity: 0.9 }} />
+                            <span style={{ fontWeight: 600, color: "#ffffff" }}>
                               {v.id}
                             </span>
                           </div>
@@ -302,18 +275,15 @@ export function Versions({ onInstalled }: Props) {
                         <td className="muted" style={{ fontSize: 12 }}>
                           {formatReleaseDate(v.releaseTime)}
                         </td>
-                        <td className="muted" style={{ fontSize: 12, fontFamily: "var(--mono)" }}>
-                          {isRelease ? "~28–36 MB client" : "~35 MB snapshot"}
-                        </td>
                         <td style={{ textAlign: "right" }}>
                           <Button
                             variant="secondary"
                             size="sm"
                             onPress={() => handleCreateInstance(v.id)}
-                            style={{ padding: "4px 12px", fontSize: 12, gap: 5 }}
+                            style={{ padding: "3px 10px", fontSize: 11.5, gap: 5 }}
                           >
-                            <IconPlus size={13} />
-                            <span>Create Instance</span>
+                            <IconPlus size={12} />
+                            <span>Create</span>
                           </Button>
                         </td>
                       </tr>
@@ -324,8 +294,8 @@ export function Versions({ onInstalled }: Props) {
             </div>
 
             {filtered.length > 150 && (
-              <p className="faint" style={{ margin: "12px 0", fontSize: 12, textAlign: "center" }}>
-                Showing first 150 of {filtered.length} matching versions. Use search to find older builds.
+              <p className="faint" style={{ margin: "10px 0", fontSize: 11.5, textAlign: "center" }}>
+                Showing first 150 of {filtered.length} matching versions. Use search for older builds.
               </p>
             )}
           </Card.Content>

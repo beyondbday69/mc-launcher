@@ -152,10 +152,10 @@ export function App() {
         <div className="content" style={{ position: "relative", zIndex: 5 }}>
           <Card style={{ maxWidth: 500, margin: "60px auto" }}>
             <Card.Header>
-              <Card.Title style={{ color: "var(--md-sys-color-error)" }}>Launcher Error</Card.Title>
+              <Card.Title style={{ color: "#ef4444" }}>Launcher Error</Card.Title>
             </Card.Header>
             <Card.Content>
-              <p style={{ color: "var(--md-sys-color-on-surface)", marginBottom: 12 }}>
+              <p style={{ color: "#ffffff", marginBottom: 12 }}>
                 {error}
               </p>
               <p className="muted" style={{ fontSize: 12, marginBottom: 16 }}>

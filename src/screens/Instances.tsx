@@ -64,34 +64,30 @@ export function Instances({ instances, onChange, onSelect }: Props) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* Top Search & Actions Bar */}
       <div className="row between" style={{ flexWrap: "wrap", gap: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0, color: "#ffffff" }}>
             Instances
           </h2>
           <Chip size="sm">
-            {filtered.length} {filtered.length === 1 ? "instance" : "instances"}
+            {filtered.length}
           </Chip>
         </div>
 
-        <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
-          {/* Frosted Glass Search Bar */}
+        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+          {/* Search Input */}
           <div style={{ position: "relative" }}>
             <Input
               type="text"
-              className="search-bar frosted-glass-input"
+              className="search-bar"
               placeholder="Search instances…"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               style={{
-                width: 220,
+                width: 200,
                 fontSize: 13,
-                background: "var(--glass-bg-interactive)",
-                backdropFilter: "var(--glass-blur-sm)",
-                WebkitBackdropFilter: "var(--glass-blur-sm)",
-                borderColor: "var(--glass-border)",
               }}
             />
             {filter && (
@@ -101,12 +97,12 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                 onPress={() => setFilter("")}
                 style={{
                   position: "absolute",
-                  right: 8,
+                  right: 6,
                   top: "50%",
                   transform: "translateY(-50%)",
                   padding: "2px 6px",
                   fontSize: 12,
-                  color: "var(--md-sys-color-on-surface-variant)",
+                  color: "#a1a1aa",
                 }}
               >
                 ✕
@@ -114,10 +110,10 @@ export function Instances({ instances, onChange, onSelect }: Props) {
             )}
           </div>
 
-          {/* Frosted Glass View Mode Toggle */}
+          {/* View Mode Toggle */}
           <ButtonGroup>
             <Button
-              variant={viewMode === "grid" ? "primary" : "outline"}
+              variant={viewMode === "grid" ? "primary" : "secondary"}
               size="sm"
               onPress={() => setViewMode("grid")}
               aria-label="Grid View"
@@ -125,7 +121,7 @@ export function Instances({ instances, onChange, onSelect }: Props) {
               <IconGrid size={15} />
             </Button>
             <Button
-              variant={viewMode === "list" ? "primary" : "outline"}
+              variant={viewMode === "list" ? "primary" : "secondary"}
               size="sm"
               onPress={() => setViewMode("list")}
               aria-label="List View"
@@ -137,10 +133,11 @@ export function Instances({ instances, onChange, onSelect }: Props) {
           {/* Create Button */}
           <Button
             variant="primary"
+            size="sm"
             onPress={() => setCreating(true)}
-            style={{ padding: "8px 16px", gap: 6 }}
+            style={{ padding: "6px 14px", gap: 6 }}
           >
-            <IconPlus size={16} />
+            <IconPlus size={15} />
             <span>New Instance</span>
           </Button>
         </div>
@@ -150,9 +147,9 @@ export function Instances({ instances, onChange, onSelect }: Props) {
       {filtered.length === 0 ? (
         <div className="empty">
           <div className="icon">
-            <IconCube size={44} />
+            <IconCube size={40} />
           </div>
-          <p style={{ fontSize: 16, fontWeight: 600 }}>No instances found</p>
+          <p style={{ fontSize: 16, fontWeight: 600, color: "#ffffff" }}>No instances found</p>
           <p className="faint" style={{ fontSize: 13 }}>
             {instances.length === 0
               ? "Create an instance to start your Minecraft journey."
@@ -161,6 +158,7 @@ export function Instances({ instances, onChange, onSelect }: Props) {
           {instances.length === 0 && (
             <Button
               variant="primary"
+              size="sm"
               onPress={() => setCreating(true)}
               style={{ marginTop: 12 }}
             >
@@ -170,106 +168,95 @@ export function Instances({ instances, onChange, onSelect }: Props) {
           )}
         </div>
       ) : viewMode === "grid" ? (
-        /* Glass Cards Grid */
+        /* Clean Solid Cards Grid */
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))",
-            gap: 16,
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            gap: 14,
           }}
         >
           {filtered.map((i) => (
             <Card
               key={i.id}
-              className="instance-card glass-instance-card"
+              className="instance-card"
               style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                gap: 16,
                 cursor: "pointer",
-                borderLeft: `4px solid ${i.color || "#0070f3"}`,
-                position: "relative",
+                borderLeft: `3px solid ${i.color || "#0070f3"}`,
+                padding: "16px 18px",
               }}
               onClick={() => onSelect(i)}
             >
-              <Card.Content>
-                <div>
-                  {/* Header with Avatar & Title */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                    <Avatar
-                      size="md"
-                      style={{
-                        background: i.color || "#18181b",
-                        border: "1px solid #27272a",
-                        color: "#ffffff",
-                        fontWeight: 800,
-                        fontSize: 16,
-                      }}
-                    >
-                      <Avatar.Fallback>{i.name.charAt(0).toUpperCase()}</Avatar.Fallback>
-                    </Avatar>
-
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div
-                        style={{
-                          fontSize: 15,
-                          fontWeight: 700,
-                          color: "var(--md-sys-color-on-surface)",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                        title={i.name}
-                      >
-                        {i.name}
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-                        <Chip color="success" size="sm">
-                          {i.version}
-                        </Chip>
-                        {i.mod_loader && (
-                          <Chip
-                            variant="secondary"
-                            size="sm"
-                            style={{
-                              fontSize: 10.5,
-                              padding: "1px 7px",
-                              background: "rgba(167, 139, 250, 0.15)",
-                              borderColor: "rgba(167, 139, 250, 0.3)",
-                              color: "var(--md-sys-color-secondary)",
-                            }}
-                          >
-                            {i.mod_loader.kind}
-                          </Chip>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Instance Details Row */}
-                  <div
+              <Card.Content style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {/* Header with Avatar & Title */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Avatar
+                    size="sm"
                     style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 10,
-                      fontSize: 11.5,
-                      color: "var(--md-sys-color-on-surface-variant)",
-                      background: "var(--md-sys-color-surface-container-lowest)",
-                      padding: "8px 12px",
-                      borderRadius: "var(--md-sys-shape-corner-md)",
+                      background: i.color || "#18181b",
+                      border: "1px solid #27272a",
+                      color: "#ffffff",
+                      fontWeight: 800,
+                      fontSize: 14,
+                      flexShrink: 0,
                     }}
                   >
-                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <IconRam size={13} style={{ color: "var(--md-sys-color-primary)" }} />
-                      {i.ram_mb ?? 2048} MB
-                    </span>
-                    <span style={{ opacity: 0.4 }}>•</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <IconClock size={13} />
-                      {i.last_played ? formatDate(i.last_played) : "Never played"}
-                    </span>
+                    <Avatar.Fallback>{i.name.charAt(0).toUpperCase()}</Avatar.Fallback>
+                  </Avatar>
+
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div
+                      style={{
+                        fontSize: 15,
+                        fontWeight: 700,
+                        color: "#ffffff",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                      title={i.name}
+                    >
+                      {i.name}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
+                      <Chip color="success" size="sm" style={{ padding: "1px 6px", fontSize: 11 }}>
+                        {i.version}
+                      </Chip>
+                      {i.mod_loader && (
+                        <Chip
+                          variant="secondary"
+                          size="sm"
+                          style={{
+                            fontSize: 10.5,
+                            padding: "1px 6px",
+                          }}
+                        >
+                          {i.mod_loader.kind}
+                        </Chip>
+                      )}
+                    </div>
                   </div>
+                </div>
+
+                {/* Instance Details Row */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    fontSize: 11.5,
+                    color: "#a1a1aa",
+                  }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <IconRam size={13} style={{ color: "#0070f3" }} />
+                    <span>{i.ram_mb ?? 2048} MB</span>
+                  </span>
+                  <span>·</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <IconClock size={13} />
+                    <span>{i.last_played ? formatDate(i.last_played) : "Never played"}</span>
+                  </span>
                 </div>
 
                 {/* Quick Actions Footer */}
@@ -278,9 +265,8 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    paddingTop: 10,
-                    marginTop: 12,
-                    borderTop: "1px solid var(--md-sys-color-outline-variant)",
+                    paddingTop: 8,
+                    borderTop: "1px solid #27272a",
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -288,9 +274,9 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                     variant="primary"
                     size="sm"
                     onPress={() => onSelect(i)}
-                    style={{ padding: "4px 14px", fontSize: 12, gap: 5 }}
+                    style={{ padding: "3px 12px", fontSize: 12, gap: 5 }}
                   >
-                    <IconPlay size={13} />
+                    <IconPlay size={12} />
                     <span>Play</span>
                   </Button>
 
@@ -299,10 +285,10 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                       variant="ghost"
                       size="sm"
                       onPress={() => handleCopyFolder(i)}
-                      aria-label={copiedFolderId === i.id ? "Path copied!" : `Game Dir: ${i.game_dir}`}
+                      aria-label={copiedFolderId === i.id ? "Folder path copied!" : `Game Dir: ${i.game_dir}`}
                       style={{
-                        padding: "6px 8px",
-                        color: copiedFolderId === i.id ? "var(--md-sys-color-tertiary)" : undefined,
+                        padding: "5px 7px",
+                        color: copiedFolderId === i.id ? "#10b981" : "#a1a1aa",
                       }}
                     >
                       {copiedFolderId === i.id ? <IconCheck size={14} /> : <IconFolder size={14} />}
@@ -313,7 +299,7 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                       size="sm"
                       onPress={() => setEditing(i)}
                       aria-label="Edit instance settings"
-                      style={{ padding: "6px 8px" }}
+                      style={{ padding: "5px 7px", color: "#a1a1aa" }}
                     >
                       <IconEdit size={14} />
                     </Button>
@@ -332,7 +318,7 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                         }
                       }}
                       aria-label="Duplicate instance"
-                      style={{ padding: "6px 8px" }}
+                      style={{ padding: "5px 7px", color: "#a1a1aa" }}
                     >
                       <IconCopy size={14} />
                     </Button>
@@ -350,7 +336,7 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                         }
                       }}
                       aria-label="Delete instance"
-                      style={{ padding: "6px 8px", color: "var(--md-sys-color-error)" }}
+                      style={{ padding: "5px 7px", color: "#ef4444" }}
                     >
                       <IconTrash size={14} />
                     </Button>
@@ -376,20 +362,19 @@ export function Instances({ instances, onChange, onSelect }: Props) {
             </thead>
             <tbody>
               {filtered.map((i) => (
-                <tr key={i.id} onClick={() => onSelect(i)}>
+                <tr key={i.id} onClick={() => onSelect(i)} style={{ cursor: "pointer" }}>
                   <td>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <span
                         style={{
-                          width: 10,
-                          height: 10,
+                          width: 8,
+                          height: 8,
                           borderRadius: "50%",
-                          background: i.color || "var(--md-sys-color-primary)",
-                          boxShadow: `0 0 6px ${i.color || "var(--md-sys-color-primary)"}`,
+                          background: i.color || "#0070f3",
                           flexShrink: 0,
                         }}
                       />
-                      <span style={{ fontWeight: 600, color: "var(--md-sys-color-on-surface)" }}>
+                      <span style={{ fontWeight: 600, color: "#ffffff" }}>
                         {i.name}
                       </span>
                     </div>
@@ -408,7 +393,7 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                       <span className="muted">—</span>
                     )}
                   </td>
-                  <td style={{ fontFamily: "var(--mono)", fontSize: 12 }}>
+                  <td style={{ fontFamily: "var(--mono)", fontSize: 12, color: "#a1a1aa" }}>
                     {i.ram_mb ?? 2048} MB
                   </td>
                   <td className="muted" style={{ fontSize: 12 }}>
@@ -420,7 +405,7 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                         variant="primary"
                         size="sm"
                         onPress={() => onSelect(i)}
-                        style={{ padding: "3px 10px", fontSize: 12 }}
+                        style={{ padding: "2px 10px", fontSize: 12 }}
                       >
                         Play
                       </Button>
@@ -429,7 +414,7 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                         size="sm"
                         onPress={() => handleCopyFolder(i)}
                         aria-label="Copy game folder path"
-                        style={{ padding: "4px 8px" }}
+                        style={{ padding: "4px 6px" }}
                       >
                         {copiedFolderId === i.id ? <IconCheck size={14} /> : <IconFolder size={14} />}
                       </Button>
@@ -437,7 +422,8 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                         variant="ghost"
                         size="sm"
                         onPress={() => setEditing(i)}
-                        style={{ padding: "4px 8px" }}
+                        aria-label="Edit instance"
+                        style={{ padding: "4px 6px" }}
                       >
                         <IconEdit size={14} />
                       </Button>
@@ -454,7 +440,8 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                             alert(String(e));
                           }
                         }}
-                        style={{ padding: "4px 8px" }}
+                        aria-label="Duplicate"
+                        style={{ padding: "4px 6px" }}
                       >
                         <IconCopy size={14} />
                       </Button>
@@ -470,7 +457,8 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                             alert(String(e));
                           }
                         }}
-                        style={{ padding: "4px 8px", color: "var(--md-sys-color-error)" }}
+                        aria-label="Delete"
+                        style={{ padding: "4px 6px", color: "#ef4444" }}
                       >
                         <IconTrash size={14} />
                       </Button>
@@ -557,27 +545,25 @@ function CreateModal({ isOpen, onClose, onSave }: CreateProps) {
     <Modal isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <Modal.Backdrop>
         <Modal.Container>
-          <Modal.Dialog style={{ width: 500, maxWidth: "90vw", position: "relative" }}>
+          <Modal.Dialog style={{ width: 480, maxWidth: "90vw" }}>
             <Modal.Header>
               <Modal.Heading>Create New Instance</Modal.Heading>
             </Modal.Header>
 
             <Modal.Body>
-              {/* Instance Name */}
               <div className="field">
                 <label>Instance Name</label>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Modern Survival 1.21"
+                  placeholder="e.g. Survival 1.21"
                   autoFocus
                 />
               </div>
 
-              {/* Colored Avatar Picker */}
               <div className="field">
                 <label>Theme Color</label>
-                <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                   {COLOR_PALETTE.map((c) => {
                     const isSelected = color === c;
                     return (
@@ -586,30 +572,29 @@ function CreateModal({ isOpen, onClose, onSave }: CreateProps) {
                         type="button"
                         onClick={() => setColor(c)}
                         style={{
-                          width: 32,
-                          height: 32,
+                          width: 28,
+                          height: 28,
                           borderRadius: "50%",
                           background: c,
-                          border: isSelected ? "3px solid #ffffff" : "2px solid transparent",
-                          boxShadow: isSelected ? `0 0 12px ${c}` : "none",
+                          border: isSelected ? "2px solid #ffffff" : "2px solid transparent",
+                          boxShadow: isSelected ? `0 0 10px ${c}` : "none",
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           color: "#ffffff",
                           transition: "transform 0.15s ease",
-                          transform: isSelected ? "scale(1.15)" : "scale(1)",
+                          transform: isSelected ? "scale(1.1)" : "scale(1)",
                         }}
                         title={c}
                       >
-                        {isSelected && <IconCheck size={16} />}
+                        {isSelected && <IconCheck size={14} />}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Minecraft Version Dropdown */}
               <div className="field">
                 <label>Minecraft Version</label>
                 <select
@@ -625,7 +610,6 @@ function CreateModal({ isOpen, onClose, onSave }: CreateProps) {
                 </select>
               </div>
 
-              {/* RAM Slider */}
               <div className="field">
                 <Slider
                   className="w-full"
@@ -645,14 +629,13 @@ function CreateModal({ isOpen, onClose, onSave }: CreateProps) {
                     <Slider.Thumb />
                   </Slider.Track>
                 </Slider>
-                {/* Preset Buttons */}
-                <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ display: "flex", gap: 6 }}>
                   {[2048, 4096, 6144, 8192].map((mb) => (
                     <Chip
                       key={mb}
                       variant={ramMb === mb ? "primary" : "secondary"}
                       onClick={() => setRamMb(mb)}
-                      style={{ fontSize: 11, padding: "2px 10px", cursor: "pointer" }}
+                      style={{ fontSize: 11, padding: "2px 8px", cursor: "pointer" }}
                     >
                       {mb / 1024} GB
                     </Chip>
@@ -662,11 +645,12 @@ function CreateModal({ isOpen, onClose, onSave }: CreateProps) {
             </Modal.Body>
 
             <Modal.Footer>
-              <Button variant="ghost" onPress={onClose}>
+              <Button variant="ghost" size="sm" onPress={onClose}>
                 Cancel
               </Button>
               <Button
                 variant="primary"
+                size="sm"
                 isDisabled={!name.trim() || !version || busy}
                 onPress={async () => {
                   setBusy(true);
@@ -711,7 +695,7 @@ function EditModal({
     <Modal isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <Modal.Backdrop>
         <Modal.Container>
-          <Modal.Dialog style={{ width: 560, maxWidth: "90vw", position: "relative" }}>
+          <Modal.Dialog style={{ width: 520, maxWidth: "90vw" }}>
             <Modal.Header>
               <Modal.Heading>Edit Instance: {instance.name}</Modal.Heading>
             </Modal.Header>
@@ -735,10 +719,9 @@ function EditModal({
                 </div>
               </div>
 
-              {/* Color Avatar Picker */}
               <div className="field">
                 <label>Theme Color</label>
-                <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                   {COLOR_PALETTE.map((c) => {
                     const isSelected = draft.color === c;
                     return (
@@ -747,30 +730,29 @@ function EditModal({
                         type="button"
                         onClick={() => setDraft({ ...draft, color: c })}
                         style={{
-                          width: 32,
-                          height: 32,
+                          width: 28,
+                          height: 28,
                           borderRadius: "50%",
                           background: c,
-                          border: isSelected ? "3px solid #ffffff" : "2px solid transparent",
-                          boxShadow: isSelected ? `0 0 12px ${c}` : "none",
+                          border: isSelected ? "2px solid #ffffff" : "2px solid transparent",
+                          boxShadow: isSelected ? `0 0 10px ${c}` : "none",
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           color: "#ffffff",
-                          transform: isSelected ? "scale(1.15)" : "scale(1)",
                           transition: "transform 0.15s ease",
+                          transform: isSelected ? "scale(1.1)" : "scale(1)",
                         }}
                         title={c}
                       >
-                        {isSelected && <IconCheck size={16} />}
+                        {isSelected && <IconCheck size={14} />}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* RAM Slider */}
               <div className="field">
                 <Slider
                   className="w-full"
@@ -779,14 +761,11 @@ function EditModal({
                   step={512}
                   value={draft.ram_mb ?? 2048}
                   onChange={(v) =>
-                    setDraft({
-                      ...draft,
-                      ram_mb: Array.isArray(v) ? v[0] : v,
-                    })
+                    setDraft({ ...draft, ram_mb: Array.isArray(v) ? v[0] : v })
                   }
                   style={{ width: "100%", margin: "8px 0" }}
                 >
-                  <Label>Memory (RAM)</Label>
+                  <Label>Allocated RAM</Label>
                   <Slider.Output>
                     {({ state }) => `${state.values[0]} MB (${(state.values[0] / 1024).toFixed(1)} GB)`}
                   </Slider.Output>
@@ -795,79 +774,22 @@ function EditModal({
                     <Slider.Thumb />
                   </Slider.Track>
                 </Slider>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {[2048, 4096, 6144, 8192].map((mb) => (
-                    <Chip
-                      key={mb}
-                      variant={(draft.ram_mb ?? 2048) === mb ? "primary" : "secondary"}
-                      onClick={() => setDraft({ ...draft, ram_mb: mb })}
-                      style={{ fontSize: 11, padding: "2px 10px", cursor: "pointer" }}
-                    >
-                      {mb / 1024} GB
-                    </Chip>
-                  ))}
-                </div>
               </div>
 
-              <div className="form-grid">
-                <div className="field">
-                  <label>JVM Profile</label>
-                  <select
-                    value={draft.jvm_profile}
-                    onChange={(e) => setDraft({ ...draft, jvm_profile: e.target.value })}
-                  >
-                    <option value="default">Default</option>
-                    <option value="low_ram">Low RAM</option>
-                    <option value="balanced">Balanced</option>
-                    <option value="performance">Performance</option>
-                    <option value="custom">Custom</option>
-                  </select>
-                </div>
-
-                <div className="field">
-                  <label>Window Dimensions</label>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <Input
-                      type="number"
-                      placeholder="Width (854)"
-                      value={draft.resolution_width ? String(draft.resolution_width) : ""}
-                      onChange={(e) =>
-                        setDraft({
-                          ...draft,
-                          resolution_width: e.target.value ? parseInt(e.target.value, 10) : null,
-                        })
-                      }
-                      style={{ flex: 1 }}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Height (480)"
-                      value={draft.resolution_height ? String(draft.resolution_height) : ""}
-                      onChange={(e) =>
-                        setDraft({
-                          ...draft,
-                          resolution_height: e.target.value ? parseInt(e.target.value, 10) : null,
-                        })
-                      }
-                      style={{ flex: 1 }}
-                    />
-                  </div>
-                </div>
+              <div className="field">
+                <label>JVM Optimization Profile</label>
+                <select
+                  value={draft.jvm_profile}
+                  onChange={(e) => setDraft({ ...draft, jvm_profile: e.target.value })}
+                >
+                  <option value="default">Default JVM Arguments</option>
+                  <option value="low_ram">Low RAM Preset (Optimized for ≤ 2GB)</option>
+                  <option value="balanced">Balanced (Shenandoah/G1GC Optimized)</option>
+                  <option value="performance">High Performance (ZGC / High Heap)</option>
+                  <option value="custom">Custom Arguments</option>
+                </select>
               </div>
 
-              {/* Fullscreen Toggle */}
-              <div className="field" style={{ marginTop: 4 }}>
-                <label style={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
-                  <input
-                    type="checkbox"
-                    checked={draft.fullscreen}
-                    onChange={(e) => setDraft({ ...draft, fullscreen: e.target.checked })}
-                  />
-                  <span>Launch in Fullscreen</span>
-                </label>
-              </div>
-
-              {/* Custom JVM Args */}
               {draft.jvm_profile === "custom" && (
                 <div className="field">
                   <label>Custom JVM Arguments (one per line)</label>
@@ -882,19 +804,21 @@ function EditModal({
                           .filter(Boolean),
                       })
                     }
-                    rows={3}
+                    rows={4}
+                    style={{ fontFamily: "var(--mono)", fontSize: 12 }}
                   />
                 </div>
               )}
             </Modal.Body>
 
             <Modal.Footer>
-              <Button variant="ghost" onPress={onClose}>
+              <Button variant="ghost" size="sm" onPress={onClose}>
                 Cancel
               </Button>
               <Button
                 variant="primary"
-                isDisabled={busy}
+                size="sm"
+                isDisabled={!draft.name.trim() || !draft.version || busy}
                 onPress={async () => {
                   setBusy(true);
                   try {

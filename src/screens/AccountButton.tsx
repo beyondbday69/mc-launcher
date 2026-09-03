@@ -119,7 +119,7 @@ export function AccountButton() {
                 style={{
                   fontSize: 14,
                   fontWeight: 700,
-                  color: "var(--md-sys-color-on-surface)",
+                  color: "#ffffff",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
@@ -138,20 +138,21 @@ export function AccountButton() {
           {/* UUID Info */}
           <div
             style={{
-              background: "var(--md-sys-color-surface-container-lowest)",
-              padding: "8px 10px",
-              borderRadius: "var(--md-sys-shape-corner-md)",
+              background: "#18181b",
+              border: "1px solid #27272a",
+              padding: "6px 10px",
+              borderRadius: "6px",
               fontSize: 11,
               fontFamily: "var(--mono)",
-              color: "var(--md-sys-color-on-surface-variant)",
-              marginBottom: 12,
+              color: "#a1a1aa",
+              marginBottom: 10,
               wordBreak: "break-all",
             }}
           >
             UUID: {account.uuid ? account.uuid.slice(0, 18) + "…" : "Local session"}
           </div>
 
-          <div className="divider" style={{ margin: "8px 0 12px" }} />
+          <div className="divider" style={{ margin: "6px 0 10px" }} />
 
           {/* Actions */}
           <Dropdown.Menu aria-label="Account Actions" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -163,13 +164,13 @@ export function AccountButton() {
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                padding: "8px 12px",
-                borderRadius: "var(--md-sys-shape-corner-md)",
-                fontSize: 13,
+                padding: "6px 10px",
+                borderRadius: "6px",
+                fontSize: 12.5,
                 cursor: "pointer",
               }}
             >
-              <IconRefresh size={15} />
+              <IconRefresh size={14} />
               <span>Switch / Add Account</span>
             </Dropdown.Item>
 
@@ -181,14 +182,14 @@ export function AccountButton() {
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                padding: "8px 12px",
-                borderRadius: "var(--md-sys-shape-corner-md)",
-                fontSize: 13,
-                color: "var(--md-sys-color-error)",
+                padding: "6px 10px",
+                borderRadius: "6px",
+                fontSize: 12.5,
+                color: "#ef4444",
                 cursor: "pointer",
               }}
             >
-              <IconTrash size={15} />
+              <IconTrash size={14} />
               <span>Sign out</span>
             </Dropdown.Item>
           </Dropdown.Menu>
