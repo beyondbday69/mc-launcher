@@ -12,6 +12,8 @@ jobs:
     name: capture all screens (fast web preview)
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -54,3 +56,63 @@ jobs:
           path: /tmp/screenshots/*.png
           if-no-files-found: error
           retention-days: 7
+
+      - name: Display screenshots directly in Actions Summary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. Push screenshots to orphan 'screenshots' branch for fast raw CDN hosting
+          TEMP_DIR=$(mktemp -d)
+          cp /tmp/screenshots/*.png "$TEMP_DIR/"
+          cd "$TEMP_DIR"
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b screenshots
+          git add *.png
+          git commit -m "chore(screenshots): update screenshots for run ${{ github.run_id }}"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          git push origin screenshots --force || echo "Warning: git push to screenshots branch failed, continuing..."
+          cd "$GITHUB_WORKSPACE"
+
+          # 2. Append markdown gallery to $GITHUB_STEP_SUMMARY
+          REPO="${{ github.repository }}"
+          RUN_ID="${{ github.run_id }}"
+          BASE="https://raw.githubusercontent.com/${REPO}/screenshots"
+
+          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          # 📸 Live Screen Previews (HeroUI v3 Solid Black)
+
+          Screenshots captured directly inside this GitHub Actions run:
+
+          EOF
+
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          ### 1. Home Screen
+          ![01-home](${BASE}/01-home.png?v=${RUN_ID})
+
+          ---
+
+          ### 2. Instances Screen
+          ![02-instances](${BASE}/02-instances.png?v=${RUN_ID})
+
+          ---
+
+          ### 3. Versions Catalog
+          ![03-versions](${BASE}/03-versions.png?v=${RUN_ID})
+
+          ---
+
+          ### 4. Downloads & Queue
+          ![04-downloads](${BASE}/04-downloads.png?v=${RUN_ID})
+
+          ---
+
+          ### 5. Content & Mods
+          ![05-content](${BASE}/05-content.png?v=${RUN_ID})
+
+          ---
+
+          ### 6. Settings (HeroUI v3 Capsule Slider & Pill Knob)
+          ![06-settings](${BASE}/06-settings.png?v=${RUN_ID})
+          EOF
