@@ -548,7 +548,7 @@ textarea::placeholder {
 }
 
 /* ==========================================================================
-   Solid Sliders
+   Modern HeroUI v3 Capsule Slider & Pill Knob
    ========================================================================== */
 
 .slider,
@@ -558,7 +558,7 @@ textarea::placeholder {
     "label output"
     "track track" !important;
   grid-template-columns: 1fr auto !important;
-  row-gap: 8px !important;
+  row-gap: 10px !important;
   width: 100% !important;
 }
 
@@ -566,9 +566,11 @@ textarea::placeholder {
 [data-slot="slider"] [data-slot="label"],
 .slider label {
   grid-area: label !important;
-  font-size: 12.5px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
   color: var(--text-primary) !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .slider__output,
@@ -578,30 +580,83 @@ textarea::placeholder {
   font-weight: 700 !important;
   color: var(--solid-primary) !important;
   text-align: right !important;
+  font-variant-numeric: tabular-nums !important;
 }
 
 .slider__track,
 [data-slot="slider-track"] {
   grid-area: track !important;
-  height: 6px !important;
+  height: 22px !important;
   background: var(--bg-surface-elevated) !important;
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-full) !important;
   position: relative !important;
+  cursor: pointer !important;
+  overflow: hidden !important;
 }
 
+.slider__fill,
 [data-slot="slider-fill"] {
   background: var(--solid-primary) !important;
-  border-radius: var(--radius-full) !important;
+  height: 100% !important;
+  border-radius: var(--radius-full) 0 0 var(--radius-full) !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
 }
 
+.slider__thumb,
 [data-slot="slider-thumb"] {
-  width: 18px !important;
-  height: 18px !important;
+  position: absolute !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 26px !important;
+  height: 20px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: grab !important;
+  outline: none !important;
+  z-index: 10 !important;
+}
+
+/* HeroUI v3 Signature Pill Knob */
+.slider__thumb::after,
+[data-slot="slider-thumb"]::after {
+  content: "" !important;
+  display: block !important;
+  width: 22px !important;
+  height: 14px !important;
   background: #ffffff !important;
-  border: 2px solid var(--solid-primary) !important;
-  border-radius: 50% !important;
-  box-shadow: none !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.7), 0 0 1px rgba(0, 0, 0, 0.4) !important;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease !important;
+}
+
+.slider__thumb:hover::after,
+[data-slot="slider-thumb"]:hover::after {
+  background: #f4f4f5 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8) !important;
+}
+
+.slider__thumb[data-dragging="true"],
+[data-slot="slider-thumb"][data-dragging="true"] {
+  cursor: grabbing !important;
+}
+
+.slider__thumb[data-dragging="true"]::after,
+[data-slot="slider-thumb"][data-dragging="true"]::after {
+  transform: scale(0.86) !important;
+  background: #e4e4e7 !important;
+}
+
+.slider__thumb[data-focus-visible="true"]::after,
+[data-slot="slider-thumb"][data-focus-visible="true"]::after {
+  box-shadow: 0 0 0 2px var(--bg-canvas), 0 0 0 4px var(--solid-primary) !important;
 }
 
 /* ==========================================================================
