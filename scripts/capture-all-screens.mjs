@@ -21,7 +21,7 @@ async function main() {
   });
 
   const context = await browser.newContext({
-    viewport: { width: 1200, height: 750 },
+    viewport: { width: 1280, height: 860 },
     deviceScaleFactor: 2,
     colorScheme: "dark",
   });
