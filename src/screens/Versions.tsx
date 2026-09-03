@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Button, ButtonGroup, Card, Chip, Input } from "@heroui/react";
 import { api, VersionEntry } from "../lib/types";
 import {
   IconCube,
@@ -84,7 +85,7 @@ export function Versions({ onInstalled }: Props) {
         </div>
 
         <div style={{ position: "relative" }}>
-          <input
+          <Input
             type="text"
             className="search-bar frosted-glass-input"
             placeholder="Search versions (e.g. 1.21)…"
@@ -100,9 +101,11 @@ export function Versions({ onInstalled }: Props) {
             }}
           />
           {filter && (
-            <button
-              className="btn ghost"
-              onClick={() => setFilter("")}
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={() => setFilter("")}
+              aria-label="Clear filter"
               style={{
                 position: "absolute",
                 right: 8,
@@ -114,58 +117,56 @@ export function Versions({ onInstalled }: Props) {
               }}
             >
               ✕
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
-      {/* Glass Filter Chips */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <button
-          type="button"
-          className={`chip ${type === "release" ? "active" : ""}`}
-          onClick={() => setType("release")}
-          style={{ cursor: "pointer", padding: "6px 14px" }}
-        >
-          <IconCheck size={14} style={{ opacity: type === "release" ? 1 : 0.4 }} />
-          <span>Releases</span>
-        </button>
+      {/* ButtonGroup Filter */}
+      <div>
+        <ButtonGroup>
+          <Button
+            variant={type === "release" ? "primary" : "outline"}
+            size="sm"
+            onPress={() => setType("release")}
+          >
+            <IconCheck size={14} style={{ opacity: type === "release" ? 1 : 0.4 }} />
+            <span>Releases</span>
+          </Button>
 
-        <button
-          type="button"
-          className={`chip ${type === "snapshot" ? "active" : ""}`}
-          onClick={() => setType("snapshot")}
-          style={{ cursor: "pointer", padding: "6px 14px" }}
-        >
-          <span style={{ fontSize: 12 }}>⚡</span>
-          <span>Snapshots</span>
-        </button>
+          <Button
+            variant={type === "snapshot" ? "primary" : "outline"}
+            size="sm"
+            onPress={() => setType("snapshot")}
+          >
+            <span style={{ fontSize: 12 }}>⚡</span>
+            <span>Snapshots</span>
+          </Button>
 
-        <button
-          type="button"
-          className={`chip ${type === "modded" ? "active" : ""}`}
-          onClick={() => setType("modded")}
-          style={{ cursor: "pointer", padding: "6px 14px" }}
-        >
-          <span style={{ fontSize: 12 }}>✦</span>
-          <span>Modded (Popular)</span>
-        </button>
+          <Button
+            variant={type === "modded" ? "primary" : "outline"}
+            size="sm"
+            onPress={() => setType("modded")}
+          >
+            <span style={{ fontSize: 12 }}>✦</span>
+            <span>Modded (Popular)</span>
+          </Button>
 
-        <button
-          type="button"
-          className={`chip ${type === "all" ? "active" : ""}`}
-          onClick={() => setType("all")}
-          style={{ cursor: "pointer", padding: "6px 14px" }}
-        >
-          <span>All Versions</span>
-        </button>
+          <Button
+            variant={type === "all" ? "primary" : "outline"}
+            size="sm"
+            onPress={() => setType("all")}
+          >
+            <span>All Versions</span>
+          </Button>
+        </ButtonGroup>
       </div>
 
-      {/* Spotlight Glass Cards for Latest Release & Snapshot */}
+      {/* Spotlight Cards for Latest Release & Snapshot */}
       {latest && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <div
-            className="card spotlight-card-release"
+          <Card
+            className="spotlight-card-release"
             style={{
               padding: "20px 24px",
               display: "flex",
@@ -176,31 +177,34 @@ export function Versions({ onInstalled }: Props) {
             }}
           >
             <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.5 }} />
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <span className="tag success" style={{ fontSize: 11 }}>
-                  Latest Release
+            <Card.Content style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <Chip color="success" size="sm">
+                    Latest Release
+                  </Chip>
+                  <strong style={{ fontSize: 17, color: "var(--md-sys-color-on-surface)" }}>
+                    {latest.release}
+                  </strong>
+                </div>
+                <span className="muted" style={{ fontSize: 12 }}>
+                  Stable production release recommended for all players
                 </span>
-                <strong style={{ fontSize: 17, color: "var(--md-sys-color-on-surface)" }}>
-                  {latest.release}
-                </strong>
               </div>
-              <span className="muted" style={{ fontSize: 12 }}>
-                Stable production release recommended for all players
-              </span>
-            </div>
-            <button
-              className="btn primary"
-              onClick={() => handleCreateInstance(latest.release)}
-              style={{ padding: "6px 16px", fontSize: 12, gap: 6 }}
-            >
-              <IconPlus size={14} />
-              <span>Install</span>
-            </button>
-          </div>
+              <Button
+                variant="primary"
+                size="sm"
+                onPress={() => handleCreateInstance(latest.release)}
+                style={{ padding: "6px 16px", fontSize: 12, gap: 6 }}
+              >
+                <IconPlus size={14} />
+                <span>Install</span>
+              </Button>
+            </Card.Content>
+          </Card>
 
-          <div
-            className="card spotlight-card-snapshot"
+          <Card
+            className="spotlight-card-snapshot"
             style={{
               padding: "20px 24px",
               display: "flex",
@@ -211,28 +215,31 @@ export function Versions({ onInstalled }: Props) {
             }}
           >
             <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.5 }} />
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <span className="tag warning" style={{ fontSize: 11 }}>
-                  Latest Snapshot
+            <Card.Content style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <Chip color="warning" size="sm">
+                    Latest Snapshot
+                  </Chip>
+                  <strong style={{ fontSize: 17, color: "var(--md-sys-color-on-surface)" }}>
+                    {latest.snapshot}
+                  </strong>
+                </div>
+                <span className="muted" style={{ fontSize: 12 }}>
+                  Development build previewing upcoming features
                 </span>
-                <strong style={{ fontSize: 17, color: "var(--md-sys-color-on-surface)" }}>
-                  {latest.snapshot}
-                </strong>
               </div>
-              <span className="muted" style={{ fontSize: 12 }}>
-                Development build previewing upcoming features
-              </span>
-            </div>
-            <button
-              className="btn tonal"
-              onClick={() => handleCreateInstance(latest.snapshot)}
-              style={{ padding: "6px 16px", fontSize: 12, gap: 6 }}
-            >
-              <IconPlus size={14} />
-              <span>Install</span>
-            </button>
-          </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                onPress={() => handleCreateInstance(latest.snapshot)}
+                style={{ padding: "6px 16px", fontSize: 12, gap: 6 }}
+              >
+                <IconPlus size={14} />
+                <span>Install</span>
+              </Button>
+            </Card.Content>
+          </Card>
         </div>
       )}
 
@@ -258,72 +265,73 @@ export function Versions({ onInstalled }: Props) {
           </p>
         </div>
       ) : (
-        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          <div style={{ overflowX: "auto" }}>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Version</th>
-                  <th>Type</th>
-                  <th>Release Date</th>
-                  <th>Estimated Size</th>
-                  <th style={{ textAlign: "right" }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.slice(0, 150).map((v) => {
-                  const isRelease = v.type === "release";
-                  const isSnapshot = v.type === "snapshot";
+        <Card style={{ padding: 0, overflow: "hidden" }}>
+          <Card.Content style={{ padding: 0 }}>
+            <div style={{ overflowX: "auto" }}>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Version</th>
+                    <th>Type</th>
+                    <th>Release Date</th>
+                    <th>Estimated Size</th>
+                    <th style={{ textAlign: "right" }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.slice(0, 150).map((v) => {
+                    const isRelease = v.type === "release";
+                    const isSnapshot = v.type === "snapshot";
 
-                  return (
-                    <tr key={v.id}>
-                      <td>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <IconCube size={15} style={{ color: "var(--md-sys-color-primary)", opacity: 0.8 }} />
-                          <span style={{ fontWeight: 600, color: "var(--md-sys-color-on-surface)" }}>
-                            {v.id}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <span
-                          className={`tag ${
-                            isRelease ? "success" : isSnapshot ? "warning" : ""
-                          }`}
-                          style={{ fontSize: 11 }}
-                        >
-                          {v.type}
-                        </span>
-                      </td>
-                      <td className="muted" style={{ fontSize: 12 }}>
-                        {formatReleaseDate(v.releaseTime)}
-                      </td>
-                      <td className="muted" style={{ fontSize: 12, fontFamily: "var(--mono)" }}>
-                        {isRelease ? "~28–36 MB client" : "~35 MB snapshot"}
-                      </td>
-                      <td style={{ textAlign: "right" }}>
-                        <button
-                          className="btn tonal"
-                          onClick={() => handleCreateInstance(v.id)}
-                          style={{ padding: "4px 12px", fontSize: 12, gap: 5 }}
-                        >
-                          <IconPlus size={13} />
-                          <span>Create Instance</span>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                    return (
+                      <tr key={v.id}>
+                        <td>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <IconCube size={15} style={{ color: "var(--md-sys-color-primary)", opacity: 0.8 }} />
+                            <span style={{ fontWeight: 600, color: "var(--md-sys-color-on-surface)" }}>
+                              {v.id}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <Chip
+                            color={isRelease ? "success" : isSnapshot ? "warning" : "default"}
+                            size="sm"
+                          >
+                            {v.type}
+                          </Chip>
+                        </td>
+                        <td className="muted" style={{ fontSize: 12 }}>
+                          {formatReleaseDate(v.releaseTime)}
+                        </td>
+                        <td className="muted" style={{ fontSize: 12, fontFamily: "var(--mono)" }}>
+                          {isRelease ? "~28–36 MB client" : "~35 MB snapshot"}
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onPress={() => handleCreateInstance(v.id)}
+                            style={{ padding: "4px 12px", fontSize: 12, gap: 5 }}
+                          >
+                            <IconPlus size={13} />
+                            <span>Create Instance</span>
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-          {filtered.length > 150 && (
-            <p className="faint" style={{ marginTop: 12, fontSize: 12, textAlign: "center" }}>
-              Showing first 150 of {filtered.length} matching versions. Use search to find older builds.
-            </p>
-          )}
-        </div>
+            {filtered.length > 150 && (
+              <p className="faint" style={{ margin: "12px 0", fontSize: 12, textAlign: "center" }}>
+                Showing first 150 of {filtered.length} matching versions. Use search to find older builds.
+              </p>
+            )}
+          </Card.Content>
+        </Card>
       )}
     </div>
   );

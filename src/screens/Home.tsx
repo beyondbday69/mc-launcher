@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, ReactNode } from "react";
+import { Button, Card, Chip, ProgressBar } from "@heroui/react";
 import {
   api,
   Config,
@@ -150,206 +151,212 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Welcome / Empty state if no instance */}
       {instances.length === 0 ? (
-        <div className="card" style={{ padding: "36px 32px", textAlign: "center" }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: "50%",
-              background: "var(--md-sys-color-primary-container)",
-              color: "var(--md-sys-color-primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 16px",
-            }}
-          >
-            <IconCube size={28} />
-          </div>
-          <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
-            Welcome to MC Launcher
-          </h2>
-          <p className="muted" style={{ maxWidth: 460, margin: "0 auto 24px", fontSize: 14 }}>
-            Create your first Minecraft instance to get started. Choose your preferred
-            version, configure RAM, and jump straight into the game.
-          </p>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <button
-              className="btn primary large"
-              onClick={() => {
-                onSelect({} as Instance);
-                onRefresh();
-              }}
-            >
-              <IconPlus size={18} />
-              <span>Create First Instance</span>
-            </button>
-          </div>
-        </div>
-      ) : (
-        /* Heroic Liquid Glass Showcase Card */
-        <div className="home-hero hero-card">
-          <div className="liquid-refraction-line" aria-hidden="true" />
-          <div className="info">
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              {selected?.color && (
-                <span
-                  style={{
-                    width: 12,
-                    height: 12,
-                    borderRadius: "50%",
-                    background: selected.color,
-                    boxShadow: `0 0 12px ${selected.color}`,
-                    display: "inline-block",
-                  }}
-                />
-              )}
-              <h1>{selected ? selected.name : "No instance selected"}</h1>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-              {selected && (
-                <>
-                  <span className="chip success">
-                    <IconCube size={13} />
-                    Minecraft {selected.version}
-                  </span>
-
-                  {selected.mod_loader && (
-                    <span className="chip" style={{ background: "rgba(139, 92, 246, 0.18)", borderColor: "rgba(139, 92, 246, 0.35)", color: "var(--liquid-violet)" }}>
-                      {selected.mod_loader.kind} {selected.mod_loader.version}
-                    </span>
-                  )}
-
-                  <span className="chip">
-                    <IconRam size={13} />
-                    {selected.ram_mb ?? config.default_ram_mb} MB
-                  </span>
-
-                  <span className="chip">
-                    JVM: {selected.jvm_profile}
-                  </span>
-                </>
-              )}
-            </div>
-
-            {error && (
-              <div
-                style={{
-                  marginTop: 16,
-                  padding: "10px 14px",
-                  borderRadius: "var(--md-sys-shape-corner-md)",
-                  background: "var(--md-sys-color-error-container)",
-                  color: "var(--md-sys-color-error)",
-                  fontSize: 13,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                }}
-              >
-                <span>{error}</span>
-                <button
-                  className="btn ghost"
-                  onClick={() => setError(null)}
-                  style={{ fontSize: 11, padding: "2px 8px", color: "inherit" }}
-                >
-                  Dismiss
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Heroic Play FAB */}
-          <div className="play">
-            {state === "running" ? (
-              <button
-                className="play-button"
-                onClick={kill}
-                title="Stop the running game"
-                style={{
-                  background: "linear-gradient(135deg, var(--md-sys-color-error) 0%, #b91c1c 100%)",
-                  color: "#ffffff",
-                  boxShadow: "0 4px 20px rgba(248, 113, 113, 0.5), 0 0 32px rgba(248, 113, 113, 0.3)",
-                }}
-              >
-                <IconStop size={28} />
-                <span style={{ fontSize: 12, fontWeight: 700, marginTop: 2 }}>STOP</span>
-              </button>
-            ) : (
-              <button
-                className="play-button"
-                onClick={play}
-                disabled={!selected || state === "preparing" || state === "launching"}
-                title={!selected ? "Select an instance first" : "Launch Minecraft"}
-              >
-                {state === "preparing" ? (
-                  <>
-                    <IconRefresh size={26} style={{ animation: "indeterminate 1.5s infinite linear" }} />
-                    <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>PREP…</span>
-                  </>
-                ) : state === "launching" ? (
-                  <>
-                    <IconPlay size={26} style={{ opacity: 0.7 }} />
-                    <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>LAUNCH…</span>
-                  </>
-                ) : (
-                  <>
-                    <IconPlay size={32} />
-                    <span style={{ fontSize: 13, fontWeight: 800, marginTop: 2, letterSpacing: "0.5px" }}>PLAY</span>
-                  </>
-                )}
-              </button>
-            )}
-
+        <Card style={{ padding: "36px 32px", textAlign: "center" }}>
+          <Card.Content>
             <div
               style={{
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                background: "var(--md-sys-color-primary-container)",
+                color: "var(--md-sys-color-primary)",
                 display: "flex",
                 alignItems: "center",
-                gap: 6,
-                fontSize: 12,
-                fontWeight: 600,
-                color:
-                  state === "running"
-                    ? "var(--md-sys-color-tertiary)"
-                    : state === "preparing"
-                      ? "var(--md-sys-color-warning)"
-                      : state === "launching"
-                        ? "var(--md-sys-color-primary)"
-                        : "var(--md-sys-color-on-surface-variant)",
+                justifyContent: "center",
+                margin: "0 auto 16px",
               }}
             >
-              <span
+              <IconCube size={28} />
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
+              Welcome to MC Launcher
+            </h2>
+            <p className="muted" style={{ maxWidth: 460, margin: "0 auto 24px", fontSize: 14 }}>
+              Create your first Minecraft instance to get started. Choose your preferred
+              version, configure RAM, and jump straight into the game.
+            </p>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Button
+                variant="primary"
+                size="lg"
+                onPress={() => {
+                  onSelect({} as Instance);
+                  onRefresh();
+                }}
+              >
+                <IconPlus size={18} />
+                <span>Create First Instance</span>
+              </Button>
+            </div>
+          </Card.Content>
+        </Card>
+      ) : (
+        /* Heroic Liquid Glass Showcase Card */
+        <Card className="home-hero hero-card">
+          <Card.Content style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
+            <div className="liquid-refraction-line" aria-hidden="true" />
+            <div className="info">
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                {selected?.color && (
+                  <span
+                    style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: "50%",
+                      background: selected.color,
+                      boxShadow: `0 0 12px ${selected.color}`,
+                      display: "inline-block",
+                    }}
+                  />
+                )}
+                <h1>{selected ? selected.name : "No instance selected"}</h1>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+                {selected && (
+                  <>
+                    <Chip color="success">
+                      <IconCube size={13} />
+                      Minecraft {selected.version}
+                    </Chip>
+
+                    {selected.mod_loader && (
+                      <Chip variant="secondary" style={{ background: "rgba(139, 92, 246, 0.18)", borderColor: "rgba(139, 92, 246, 0.35)", color: "var(--liquid-violet)" }}>
+                        {selected.mod_loader.kind} {selected.mod_loader.version}
+                      </Chip>
+                    )}
+
+                    <Chip>
+                      <IconRam size={13} />
+                      {selected.ram_mb ?? config.default_ram_mb} MB
+                    </Chip>
+
+                    <Chip>
+                      JVM: {selected.jvm_profile}
+                    </Chip>
+                  </>
+                )}
+              </div>
+
+              {error && (
+                <div
+                  style={{
+                    marginTop: 16,
+                    padding: "10px 14px",
+                    borderRadius: "var(--md-sys-shape-corner-md)",
+                    background: "var(--md-sys-color-error-container)",
+                    color: "var(--md-sys-color-error)",
+                    fontSize: 13,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                  }}
+                >
+                  <span>{error}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onPress={() => setError(null)}
+                    style={{ fontSize: 11, padding: "2px 8px", color: "inherit" }}
+                  >
+                    Dismiss
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Heroic Play FAB */}
+            <div className="play">
+              {state === "running" ? (
+                <button
+                  className="play-button"
+                  onClick={kill}
+                  title="Stop the running game"
+                  style={{
+                    background: "linear-gradient(135deg, var(--md-sys-color-error) 0%, #b91c1c 100%)",
+                    color: "#ffffff",
+                    boxShadow: "0 4px 20px rgba(248, 113, 113, 0.5), 0 0 32px rgba(248, 113, 113, 0.3)",
+                  }}
+                >
+                  <IconStop size={28} />
+                  <span style={{ fontSize: 12, fontWeight: 700, marginTop: 2 }}>STOP</span>
+                </button>
+              ) : (
+                <button
+                  className="play-button"
+                  onClick={play}
+                  disabled={!selected || state === "preparing" || state === "launching"}
+                  title={!selected ? "Select an instance first" : "Launch Minecraft"}
+                >
+                  {state === "preparing" ? (
+                    <>
+                      <IconRefresh size={26} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+                      <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>PREP…</span>
+                    </>
+                  ) : state === "launching" ? (
+                    <>
+                      <IconPlay size={26} style={{ opacity: 0.7 }} />
+                      <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>LAUNCH…</span>
+                    </>
+                  ) : (
+                    <>
+                      <IconPlay size={32} />
+                      <span style={{ fontSize: 13, fontWeight: 800, marginTop: 2, letterSpacing: "0.5px" }}>PLAY</span>
+                    </>
+                  )}
+                </button>
+              )}
+
+              <div
                 style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: "50%",
-                  background:
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color:
                     state === "running"
                       ? "var(--md-sys-color-tertiary)"
                       : state === "preparing"
                         ? "var(--md-sys-color-warning)"
                         : state === "launching"
                           ? "var(--md-sys-color-primary)"
-                          : "var(--md-sys-color-outline)",
-                  boxShadow:
-                    state === "running"
-                      ? "0 0 8px var(--md-sys-color-tertiary)"
-                      : state === "preparing"
-                        ? "0 0 8px var(--md-sys-color-warning)"
-                        : "none",
+                          : "var(--md-sys-color-on-surface-variant)",
                 }}
-              />
-              {state === "running"
-                ? "Running"
-                : state === "preparing"
-                  ? "Preparing files…"
-                  : state === "launching"
-                    ? "Starting JVM…"
-                    : "Ready"}
+              >
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background:
+                      state === "running"
+                        ? "var(--md-sys-color-tertiary)"
+                        : state === "preparing"
+                          ? "var(--md-sys-color-warning)"
+                          : state === "launching"
+                            ? "var(--md-sys-color-primary)"
+                            : "var(--md-sys-color-outline)",
+                    boxShadow:
+                      state === "running"
+                        ? "0 0 8px var(--md-sys-color-tertiary)"
+                        : state === "preparing"
+                          ? "0 0 8px var(--md-sys-color-warning)"
+                          : "none",
+                  }}
+                />
+                {state === "running"
+                  ? "Running"
+                  : state === "preparing"
+                    ? "Preparing files…"
+                    : state === "launching"
+                      ? "Starting JVM…"
+                      : "Ready"}
+              </div>
             </div>
-          </div>
-        </div>
+          </Card.Content>
+        </Card>
       )}
 
       {/* Expressive KPI Cards */}
@@ -380,124 +387,132 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
 
       {/* Live Download & Prepare Progress Bar */}
       {state === "preparing" && (
-        <div className="card" style={{ animation: "m3-fade-in var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard)" }}>
-          <div className="row between" style={{ marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: "50%",
-                  background: "var(--md-sys-color-primary-container)",
-                  color: "var(--md-sys-color-primary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <IconRefresh size={16} style={{ animation: "indeterminate 1.5s infinite linear" }} />
-              </div>
-              <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
-                Downloading & Preparing Game Files…
-              </h3>
-            </div>
-            <button
-              className="btn outlined"
-              onClick={cancelPrepare}
-              style={{ fontSize: 12, padding: "4px 12px" }}
-            >
-              Cancel
-            </button>
-          </div>
-
-          {progress ? (
-            <PrepareProgress p={progress} />
-          ) : (
-            <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-              Connecting to Mojang & metadata repositories…
-            </p>
-          )}
-
-          <p className="faint" style={{ fontSize: 11.5, marginTop: 12, marginBottom: 0 }}>
-            Files are validated with SHA-1 hashes and cached locally. Subsequent launches bypass unchanged files.
-          </p>
-        </div>
-      )}
-
-      {/* Switch Instance Selector with M3 Chips */}
-      {instances.length > 1 && (
-        <div className="card">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <h3 style={{ margin: 0 }}>Switch instance</h3>
-            <span className="muted" style={{ fontSize: 12 }}>
-              {instances.length} instances installed
-            </span>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {instances.map((i) => {
-              const isCur = selected?.id === i.id;
-              return (
-                <button
-                  key={i.id}
-                  className={`chip ${isCur ? "active" : ""}`}
-                  onClick={() => onSelect(i)}
+        <Card style={{ animation: "m3-fade-in var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard)" }}>
+          <Card.Content>
+            <div className="row between" style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div
                   style={{
-                    cursor: "pointer",
-                    padding: "6px 14px",
-                    gap: 8,
-                    fontSize: 12.5,
-                    fontWeight: isCur ? 700 : 500,
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    background: "var(--md-sys-color-primary-container)",
+                    color: "var(--md-sys-color-primary)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  <span
+                  <IconRefresh size={16} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+                </div>
+                <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
+                  Downloading & Preparing Game Files…
+                </h3>
+              </div>
+              <Button
+                variant="outline"
+                onPress={cancelPrepare}
+                style={{ fontSize: 12, padding: "4px 12px" }}
+              >
+                Cancel
+              </Button>
+            </div>
+
+            {progress ? (
+              <PrepareProgress p={progress} />
+            ) : (
+              <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+                Connecting to Mojang & metadata repositories…
+              </p>
+            )}
+
+            <p className="faint" style={{ fontSize: 11.5, marginTop: 12, marginBottom: 0 }}>
+              Files are validated with SHA-1 hashes and cached locally. Subsequent launches bypass unchanged files.
+            </p>
+          </Card.Content>
+        </Card>
+      )}
+
+      {/* Switch Instance Selector with HeroUI Chips */}
+      {instances.length > 1 && (
+        <Card>
+          <Card.Content>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <h3 style={{ margin: 0 }}>Switch instance</h3>
+              <span className="muted" style={{ fontSize: 12 }}>
+                {instances.length} instances installed
+              </span>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {instances.map((i) => {
+                const isCur = selected?.id === i.id;
+                return (
+                  <Chip
+                    key={i.id}
+                    variant={isCur ? "primary" : "secondary"}
+                    onClick={() => onSelect(i)}
                     style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: "50%",
-                      background: i.color || "var(--md-sys-color-primary)",
+                      cursor: "pointer",
+                      padding: "6px 14px",
+                      gap: 8,
+                      fontSize: 12.5,
+                      fontWeight: isCur ? 700 : 500,
                     }}
-                  />
-                  <span>{i.name}</span>
-                  <span style={{ fontSize: 11, opacity: 0.75 }}>
-                    ({i.version})
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+                  >
+                    <span
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: i.color || "var(--md-sys-color-primary)",
+                      }}
+                    />
+                    <span>{i.name}</span>
+                    <span style={{ fontSize: 11, opacity: 0.75 }}>
+                      ({i.version})
+                    </span>
+                  </Chip>
+                );
+              })}
+            </div>
+          </Card.Content>
+        </Card>
       )}
 
       {/* Game Output / Logs */}
       {showLogs && logs.length > 0 && (
-        <div className="card">
-          <div className="row between" style={{ marginBottom: 10 }}>
-            <h3 style={{ margin: 0 }}>Game output</h3>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                className="btn ghost"
-                style={{ fontSize: 12, padding: "4px 10px" }}
-                onClick={() => setLogs([])}
-              >
-                Clear
-              </button>
-              <button
-                className="btn ghost"
-                style={{ fontSize: 12, padding: "4px 10px" }}
-                onClick={() => setShowLogs(false)}
-              >
-                Hide
-              </button>
-            </div>
-          </div>
-          <div className="log-view" ref={logBox} style={{ height: 260 }}>
-            {logs.map((l, idx) => (
-              <div key={idx} className={`log-line ${l.stream}`}>
-                {l.text}
+        <Card>
+          <Card.Content>
+            <div className="row between" style={{ marginBottom: 10 }}>
+              <h3 style={{ margin: 0 }}>Game output</h3>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  style={{ fontSize: 12, padding: "4px 10px" }}
+                  onPress={() => setLogs([])}
+                >
+                  Clear
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  style={{ fontSize: 12, padding: "4px 10px" }}
+                  onPress={() => setShowLogs(false)}
+                >
+                  Hide
+                </Button>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+            <div className="log-view" ref={logBox} style={{ height: 260 }}>
+              {logs.map((l, idx) => (
+                <div key={idx} className={`log-line ${l.stream}`}>
+                  {l.text}
+                </div>
+              ))}
+            </div>
+          </Card.Content>
+        </Card>
       )}
     </div>
   );
@@ -515,29 +530,31 @@ function KpiCard({
   accent?: string;
 }) {
   return (
-    <div className="kpi">
-      <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.5 }} />
-      <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--md-sys-color-on-surface-variant)" }}>
-        <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 26,
-            height: 26,
-            borderRadius: "var(--glass-radius-sm)",
-            background: "rgba(255, 255, 255, 0.05)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            color: accent,
-            boxShadow: `0 0 10px ${accent}33`,
-          }}
-        >
-          {icon}
-        </span>
-        <div className="label" style={{ margin: 0 }}>{label}</div>
-      </div>
-      <div className="value" style={{ marginTop: 8 }}>{value}</div>
-    </div>
+    <Card className="kpi">
+      <Card.Content>
+        <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.5 }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--md-sys-color-on-surface-variant)" }}>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 26,
+              height: 26,
+              borderRadius: "var(--glass-radius-sm)",
+              background: "rgba(255, 255, 255, 0.05)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              color: accent,
+              boxShadow: `0 0 10px ${accent}33`,
+            }}
+          >
+            {icon}
+          </span>
+          <div className="label" style={{ margin: 0 }}>{label}</div>
+        </div>
+        <div className="value" style={{ marginTop: 8 }}>{value}</div>
+      </Card.Content>
+    </Card>
   );
 }
 
@@ -571,14 +588,15 @@ function PrepareProgress({ p }: { p: ProgressSnapshot }) {
         </span>
       </div>
 
-      <div className={`progress ${indeterminate ? "indeterminate" : ""} liquid-progress`}>
-        <div
-          className="bar"
-          style={{
-            width: indeterminate ? "40%" : `${Math.min(100, pct)}%`,
-          }}
-        />
-      </div>
+      <ProgressBar
+        value={pct}
+        isIndeterminate={indeterminate}
+        className="liquid-progress"
+      >
+        <ProgressBar.Track>
+          <ProgressBar.Fill />
+        </ProgressBar.Track>
+      </ProgressBar>
     </div>
   );
 }

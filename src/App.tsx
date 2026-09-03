@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, ReactNode } from "react";
+import { Breadcrumbs, Card, Chip, Button } from "@heroui/react";
 import { api, Config, Instance } from "./lib/types";
 import { Home } from "./screens/Home";
 import { Instances } from "./screens/Instances";
@@ -155,24 +156,28 @@ export function App() {
           <div className="liquid-mesh-grain" />
         </div>
         <div className="content" style={{ position: "relative", zIndex: 5 }}>
-          <div className="card" style={{ maxWidth: 500, margin: "60px auto" }}>
-            <h3 style={{ color: "var(--md-sys-color-error)" }}>Launcher Error</h3>
-            <p style={{ color: "var(--md-sys-color-on-surface)", marginBottom: 12 }}>
-              {error}
-            </p>
-            <p className="muted" style={{ fontSize: 12, marginBottom: 16 }}>
-              Check the launcher logs for technical details. You can retry now or restart the launcher.
-            </p>
-            <button
-              className="btn primary"
-              onClick={() => {
-                setError(null);
-                refresh();
-              }}
-            >
-              Retry
-            </button>
-          </div>
+          <Card style={{ maxWidth: 500, margin: "60px auto" }}>
+            <Card.Header>
+              <Card.Title style={{ color: "var(--md-sys-color-error)" }}>Launcher Error</Card.Title>
+            </Card.Header>
+            <Card.Content>
+              <p style={{ color: "var(--md-sys-color-on-surface)", marginBottom: 12 }}>
+                {error}
+              </p>
+              <p className="muted" style={{ fontSize: 12, marginBottom: 16 }}>
+                Check the launcher logs for technical details. You can retry now or restart the launcher.
+              </p>
+              <Button
+                variant="primary"
+                onPress={() => {
+                  setError(null);
+                  refresh();
+                }}
+              >
+                Retry
+              </Button>
+            </Card.Content>
+          </Card>
         </div>
       </div>
     );
@@ -249,7 +254,7 @@ export function App() {
                 </span>
                 <span>{s.label}</span>
                 {s.id === "instances" && instances.length > 0 && (
-                  <span className="badge frosted-badge">{instances.length}</span>
+                  <Chip size="sm" className="frosted-badge">{instances.length}</Chip>
                 )}
               </div>
             );
@@ -305,23 +310,20 @@ export function App() {
       <main className="main">
         {/* Floating Glass Top App Bar */}
         <header className="titlebar top-bar">
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontWeight: 700, letterSpacing: "-0.01em", color: "var(--md-sys-color-on-surface)" }}>MC Launcher</span>
-            <span style={{ color: "rgba(255, 255, 255, 0.2)", fontSize: 13 }}>/</span>
-            <span style={{ color: "var(--liquid-sky)", textTransform: "capitalize", fontWeight: 600 }}>
-              {screen}
-            </span>
-          </div>
+          <Breadcrumbs>
+            <Breadcrumbs.Item>MC Launcher</Breadcrumbs.Item>
+            <Breadcrumbs.Item>{screen}</Breadcrumbs.Item>
+          </Breadcrumbs>
 
           <div className="user">
             {/* Selected Instance Status Chip */}
             {selected ? (
-              <button
-                className="chip"
+              <Chip
+                size="sm"
                 onClick={() => setScreen("home")}
                 style={{
                   cursor: "pointer",
-                  display: "flex",
+                  display: "inline-flex",
                   alignItems: "center",
                   gap: 8,
                   background: "var(--glass-bg-card)",
@@ -348,8 +350,8 @@ export function App() {
                   · {selected.version}
                 </span>
                 {selected.mod_loader && (
-                  <span
-                    className="tag"
+                  <Chip
+                    size="sm"
                     style={{
                       fontSize: 10,
                       padding: "1px 6px",
@@ -359,12 +361,12 @@ export function App() {
                     }}
                   >
                     {selected.mod_loader.kind}
-                  </span>
+                  </Chip>
                 )}
-              </button>
+              </Chip>
             ) : (
-              <span
-                className="chip"
+              <Chip
+                size="sm"
                 style={{
                   color: "var(--md-sys-color-on-surface-variant)",
                   fontSize: 11.5,
@@ -373,7 +375,7 @@ export function App() {
                 }}
               >
                 No instance
-              </span>
+              </Chip>
             )}
 
             {/* Account Chip & Menu */}

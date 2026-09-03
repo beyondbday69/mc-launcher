@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Button, Card, Chip, Input, Tabs } from "@heroui/react";
 import {
   api,
   formatBytes,
@@ -207,8 +208,8 @@ export function Content({ selected }: Props) {
         </div>
 
         {/* Target Instance Indicator */}
-        <div
-          className="chip"
+        <Chip
+          size="sm"
           style={{
             background: "var(--md-sys-color-surface-container-high)",
             padding: "4px 12px",
@@ -230,136 +231,129 @@ export function Content({ selected }: Props) {
           <span style={{ fontSize: 11, color: "var(--md-sys-color-on-surface-variant)" }}>
             ({selected.version}{selected.mod_loader ? ` · ${selected.mod_loader.kind}` : ""})
           </span>
-        </div>
+        </Chip>
       </div>
 
-      {/* Category Filter Chips */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {TABS.map((t) => {
-          const isActive = tab === t.id;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              className={`chip ${isActive ? "active" : ""}`}
-              onClick={() => setTab(t.id)}
-              style={{
-                cursor: "pointer",
-                padding: "8px 16px",
-                fontSize: 13,
-                fontWeight: isActive ? 700 : 500,
-              }}
-            >
-              <span>{t.icon}</span>
-              <span>{t.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {/* Category Tabs */}
+      <Tabs
+        selectedKey={tab}
+        onSelectionChange={(key) => setTab(key as ContentTab)}
+      >
+        <Tabs.List>
+          {TABS.map((t) => (
+            <Tabs.Tab key={t.id} id={t.id}>
+              <span>{t.icon}</span> {t.label}
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
+      </Tabs>
 
       {/* Frosted Glass Search & Filters Bar */}
-      <div className="card" style={{ padding: "16px 20px" }}>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          {/* Pill Glass Search Input */}
-          <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
-            <input
-              type="text"
-              className="search-bar frosted-glass-input"
-              placeholder={`Search ${tab === "mod" ? "mods" : tab === "shader" ? "shaders" : "content"} (e.g. Sodium, Iris, Complementary)…`}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") onSearch();
-              }}
-              style={{
-                width: "100%",
-                fontSize: 13,
-                background: "var(--glass-bg-interactive)",
-                backdropFilter: "var(--glass-blur-sm)",
-                WebkitBackdropFilter: "var(--glass-blur-sm)",
-                borderColor: "var(--glass-border)",
-                borderRadius: "var(--glass-radius-full)",
-                paddingLeft: 16,
-              }}
-            />
-            {query && (
-              <button
-                className="btn ghost"
-                onClick={() => setQuery("")}
-                style={{
-                  position: "absolute",
-                  right: 8,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  padding: "2px 6px",
-                  fontSize: 12,
-                  color: "var(--md-sys-color-on-surface-variant)",
+      <Card style={{ padding: "16px 20px" }}>
+        <Card.Content style={{ padding: 0 }}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            {/* Pill Glass Search Input */}
+            <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
+              <Input
+                type="text"
+                className="search-bar frosted-glass-input"
+                placeholder={`Search ${tab === "mod" ? "mods" : tab === "shader" ? "shaders" : "content"} (e.g. Sodium, Iris, Complementary)…`}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") onSearch();
                 }}
-              >
-                ✕
-              </button>
-            )}
-          </div>
+                style={{
+                  width: "100%",
+                  fontSize: 13,
+                  background: "var(--glass-bg-interactive)",
+                  backdropFilter: "var(--glass-blur-sm)",
+                  WebkitBackdropFilter: "var(--glass-blur-sm)",
+                  borderColor: "var(--glass-border)",
+                  borderRadius: "var(--glass-radius-full)",
+                  paddingLeft: 16,
+                }}
+              />
+              {query && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onPress={() => setQuery("")}
+                  aria-label="Clear query"
+                  style={{
+                    position: "absolute",
+                    right: 8,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    padding: "2px 6px",
+                    fontSize: 12,
+                    color: "var(--md-sys-color-on-surface-variant)",
+                  }}
+                >
+                  ✕
+                </Button>
+              )}
+            </div>
 
-          {/* Version Filter */}
-          <select
-            value={gameVersion}
-            onChange={(e) => setGameVersion(e.target.value)}
-            style={{ width: 150, fontSize: 13 }}
-            title="Minecraft Version filter"
-            disabled={allGameVersions.length === 0}
-          >
-            <option value="">Any Version</option>
-            {allGameVersions.map((v) => (
-              <option key={v.version} value={v.version}>
-                {v.version} {v.version_type === "snapshot" ? "(snap)" : ""}
-              </option>
-            ))}
-          </select>
-
-          {/* Loader Filter */}
-          {tab === "mod" && (
+            {/* Version Filter */}
             <select
-              value={loader}
-              onChange={(e) => setLoader(e.target.value)}
-              style={{ width: 140, fontSize: 13 }}
-              title="Mod Loader filter"
+              value={gameVersion}
+              onChange={(e) => setGameVersion(e.target.value)}
+              style={{ width: 150, fontSize: 13 }}
+              title="Minecraft Version filter"
+              disabled={allGameVersions.length === 0}
             >
-              <option value="any">Any Loader</option>
-              {loaderOptions.map((l) => (
-                <option key={l.name} value={l.name}>
-                  {l.name}
+              <option value="">Any Version</option>
+              {allGameVersions.map((v) => (
+                <option key={v.version} value={v.version}>
+                  {v.version} {v.version_type === "snapshot" ? "(snap)" : ""}
                 </option>
               ))}
             </select>
-          )}
 
-          {/* Search Button */}
-          <button
-            className="btn primary"
-            onClick={onSearch}
-            disabled={searching || !query.trim()}
-            style={{ padding: "8px 20px", gap: 6 }}
-          >
-            {searching ? (
-              <IconRefresh size={15} style={{ animation: "indeterminate 1.5s infinite linear" }} />
-            ) : (
-              <IconSearch size={15} />
+            {/* Loader Filter */}
+            {tab === "mod" && (
+              <select
+                value={loader}
+                onChange={(e) => setLoader(e.target.value)}
+                style={{ width: 140, fontSize: 13 }}
+                title="Mod Loader filter"
+              >
+                <option value="any">Any Loader</option>
+                {loaderOptions.map((l) => (
+                  <option key={l.name} value={l.name}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
             )}
-            <span>{searching ? "Searching…" : "Search"}</span>
-          </button>
-        </div>
 
-        {tagsError && (
-          <p style={{ color: "var(--md-sys-color-error)", fontSize: 12, marginTop: 8, marginBottom: 0 }}>
-            Could not retrieve filter tags: {tagsError}
-          </p>
-        )}
-      </div>
+            {/* Search Button */}
+            <Button
+              variant="primary"
+              onPress={onSearch}
+              isDisabled={searching || !query.trim()}
+              style={{ padding: "8px 20px", gap: 6 }}
+            >
+              {searching ? (
+                <IconRefresh size={15} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+              ) : (
+                <IconSearch size={15} />
+              )}
+              <span>{searching ? "Searching…" : "Search"}</span>
+            </Button>
+          </div>
+
+          {tagsError && (
+            <p style={{ color: "var(--md-sys-color-error)", fontSize: 12, marginTop: 8, marginBottom: 0 }}>
+              Could not retrieve filter tags: {tagsError}
+            </p>
+          )}
+        </Card.Content>
+      </Card>
 
       {error && (
-        <div
-          className="card"
+        <Card
           style={{
             background: "var(--md-sys-color-error-container)",
             color: "var(--md-sys-color-error)",
@@ -367,8 +361,10 @@ export function Content({ selected }: Props) {
             padding: "12px 16px",
           }}
         >
-          {error}
-        </div>
+          <Card.Content style={{ padding: 0 }}>
+            {error}
+          </Card.Content>
+        </Card>
       )}
 
       {/* Results View */}
@@ -435,182 +431,192 @@ function ModCard({
       : description;
 
   return (
-    <div
+    <Card
       className="mod-card"
       style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 16,
         padding: "16px 20px",
         position: "relative",
       }}
     >
-      <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.35 }} />
-      {/* Icon */}
-      {hit.icon_url ? (
-        <img
-          src={hit.icon_url}
-          alt={hit.title}
-          width={52}
-          height={52}
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: "var(--glass-radius-md)",
-            background: "var(--glass-bg-interactive)",
-            objectFit: "cover",
-            flexShrink: 0,
-            border: "var(--glass-border-subtle)",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.35)",
-          }}
-        />
-      ) : (
-        <div
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: "var(--glass-radius-md)",
-            background: "var(--glass-bg-interactive)",
-            border: "var(--glass-border-subtle)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "var(--liquid-sky)",
-            fontSize: 22,
-            flexShrink: 0,
-          }}
-        >
-          ✦
-        </div>
-      )}
-
-      {/* Info Section */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
-          <strong
-            style={{
-              fontSize: 15,
-              fontWeight: 700,
-              color: "var(--md-sys-color-on-surface)",
-            }}
-          >
-            {hit.title}
-          </strong>
-          <span className="muted" style={{ fontSize: 12 }}>
-            by {hit.author}
-          </span>
-          <span className="tag" style={{ fontSize: 10.5, padding: "1px 6px" }}>
-            {hit.project_type}
-          </span>
-        </div>
-
-        <p
-          className="muted"
-          style={{
-            fontSize: 12.5,
-            lineHeight: 1.4,
-            marginBottom: 8,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {truncated || "No description provided."}
-        </p>
-
-        {/* Stats Row with Glass Download Badges */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11.5 }}>
-          <span className="glass-badge">
-            <IconDownloads size={13} style={{ color: "var(--liquid-sky)" }} />
-            {hit.downloads.toLocaleString()} downloads
-          </span>
-
-          {hit.versions.length > 0 && (
-            <span className="glass-badge">
-              <IconCube size={13} style={{ color: "var(--liquid-mint)" }} />
-              {hit.versions.slice(0, 3).join(", ")}
-              {hit.versions.length > 3 ? "…" : ""}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Action / Install Button */}
-      <div
+      <Card.Content
         style={{
-          minWidth: 140,
           display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: 6,
-          flexShrink: 0,
+          alignItems: "center",
+          gap: 16,
+          padding: 0,
+          width: "100%",
         }}
       >
-        {installing ? (
-          <span
-            className="chip warning"
+        <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.35 }} />
+        {/* Icon */}
+        {hit.icon_url ? (
+          <img
+            src={hit.icon_url}
+            alt={hit.title}
+            width={52}
+            height={52}
             style={{
-              fontSize: 12,
-              padding: "6px 14px",
-              gap: 6,
+              width: 52,
+              height: 52,
+              borderRadius: "var(--glass-radius-md)",
+              background: "var(--glass-bg-interactive)",
+              objectFit: "cover",
+              flexShrink: 0,
+              border: "var(--glass-border-subtle)",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.35)",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: "var(--glass-radius-md)",
+              background: "var(--glass-bg-interactive)",
+              border: "var(--glass-border-subtle)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--liquid-sky)",
+              fontSize: 22,
+              flexShrink: 0,
             }}
           >
-            <IconRefresh size={13} style={{ animation: "indeterminate 1.5s infinite linear" }} />
-            <span>Installing…</span>
-          </span>
-        ) : installed && status?.kind === "installed" ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
-            <span
-              className="chip success"
+            ✦
+          </div>
+        )}
+
+        {/* Info Section */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
+            <strong
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: "var(--md-sys-color-on-surface)",
+              }}
+            >
+              {hit.title}
+            </strong>
+            <span className="muted" style={{ fontSize: 12 }}>
+              by {hit.author}
+            </span>
+            <Chip size="sm">
+              {hit.project_type}
+            </Chip>
+          </div>
+
+          <p
+            className="muted"
+            style={{
+              fontSize: 12.5,
+              lineHeight: 1.4,
+              marginBottom: 8,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {truncated || "No description provided."}
+          </p>
+
+          {/* Stats Row with HeroUI Badges/Chips */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11.5 }}>
+            <Chip size="sm">
+              <IconDownloads size={13} style={{ color: "var(--liquid-sky)", marginRight: 4 }} />
+              {hit.downloads.toLocaleString()} downloads
+            </Chip>
+
+            {hit.versions.length > 0 && (
+              <Chip size="sm">
+                <IconCube size={13} style={{ color: "var(--liquid-mint)", marginRight: 4 }} />
+                {hit.versions.slice(0, 3).join(", ")}
+                {hit.versions.length > 3 ? "…" : ""}
+              </Chip>
+            )}
+          </div>
+        </div>
+
+        {/* Action / Install Button */}
+        <div
+          style={{
+            minWidth: 140,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: 6,
+            flexShrink: 0,
+          }}
+        >
+          {installing ? (
+            <Chip
+              color="warning"
+              size="sm"
               style={{
                 fontSize: 12,
                 padding: "6px 14px",
                 gap: 6,
               }}
-              title={status.path}
             >
-              <IconCheck size={14} />
-              <span>Installed</span>
-            </span>
-            <span className="faint" style={{ fontSize: 10, fontFamily: "var(--mono)" }}>
-              {formatBytes(status.size)}
-            </span>
-          </div>
-        ) : errored && status?.kind === "error" ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-            <span className="chip danger" style={{ fontSize: 11, padding: "4px 8px" }}>
-              Install Failed
-            </span>
-            <button
-              className="btn tonal"
-              onClick={onInstall}
-              style={{ fontSize: 11, padding: "3px 10px" }}
+              <IconRefresh size={13} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+              <span>Installing…</span>
+            </Chip>
+          ) : installed && status?.kind === "installed" ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+              <Chip
+                color="success"
+                size="sm"
+                style={{
+                  fontSize: 12,
+                  padding: "6px 14px",
+                  gap: 6,
+                }}
+                title={status.path}
+              >
+                <IconCheck size={14} />
+                <span>Installed</span>
+              </Chip>
+              <span className="faint" style={{ fontSize: 10, fontFamily: "var(--mono)" }}>
+                {formatBytes(status.size)}
+              </span>
+            </div>
+          ) : errored && status?.kind === "error" ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+              <Chip color="danger" size="sm" style={{ fontSize: 11, padding: "4px 8px" }}>
+                Install Failed
+              </Chip>
+              <Button
+                variant="secondary"
+                size="sm"
+                onPress={onInstall}
+                style={{ fontSize: 11, padding: "3px 10px" }}
+              >
+                Retry
+              </Button>
+              <span
+                className="faint"
+                style={{
+                  fontSize: 10,
+                  maxWidth: 160,
+                  textAlign: "right",
+                  color: "var(--md-sys-color-error)",
+                }}
+                title={status.message}
+              >
+                {truncate(status.message, 50)}
+              </span>
+            </div>
+          ) : (
+            <Button
+              variant="primary"
+              onPress={onInstall}
+              style={{ minWidth: 100, padding: "6px 18px", fontSize: 12.5 }}
             >
-              Retry
-            </button>
-            <span
-              className="faint"
-              style={{
-                fontSize: 10,
-                maxWidth: 160,
-                textAlign: "right",
-                color: "var(--md-sys-color-error)",
-              }}
-              title={status.message}
-            >
-              {truncate(status.message, 50)}
-            </span>
-          </div>
-        ) : (
-          <button
-            className="btn primary"
-            onClick={onInstall}
-            style={{ minWidth: 100, padding: "6px 18px", fontSize: 12.5 }}
-          >
-            Install
-          </button>
-        )}
-      </div>
-    </div>
+              Install
+            </Button>
+          )}
+        </div>
+      </Card.Content>
+    </Card>
   );
 }
 
