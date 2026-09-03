@@ -167,8 +167,6 @@ def annotate_screenshot(
         # Title
         "-fill",
         "#38bdf8",
-        "-font",
-        "Helvetica-Bold",
         "-pointsize",
         "15",
         "-draw",
@@ -186,8 +184,6 @@ def annotate_screenshot(
         "none",
         "-fill",
         "#34d399",
-        "-font",
-        "Helvetica-Bold",
         "-pointsize",
         "11",
         "-draw",
@@ -195,8 +191,6 @@ def annotate_screenshot(
         # Stats Row 1: FPS and Memory
         "-fill",
         "#f1f5f9",
-        "-font",
-        "Helvetica-Bold",
         "-pointsize",
         "13",
         "-draw",
@@ -204,8 +198,6 @@ def annotate_screenshot(
         # Stats Row 2: CPU, Threads, Display
         "-fill",
         "#94a3b8",
-        "-font",
-        "Helvetica",
         "-pointsize",
         "12",
         "-draw",
