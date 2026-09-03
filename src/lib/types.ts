@@ -205,74 +205,309 @@ export interface VersionFileLookup {
   file: ProjectFile | null;
 }
 
+const isTauri = typeof window !== "undefined" && Boolean((window as any).__TAURI_INTERNALS__);
+
+const SAMPLE_INSTANCES: Instance[] = [
+  {
+    id: "fabric-1-21-4",
+    name: "Fabric 1.21.4 (Main)",
+    version: "1.21.4",
+    mod_loader: { kind: "fabric", version: "0.16.9" },
+    ram_mb: 4096,
+    color: "#0070f3",
+    created_at: "2026-09-01T00:00:00Z",
+    play_time_seconds: 14400,
+    java_path: null,
+    custom_jvm_args: [],
+  },
+  {
+    id: "vanilla-1-21-4",
+    name: "Vanilla Survival",
+    version: "1.21.4",
+    mod_loader: null,
+    ram_mb: 2048,
+    color: "#10b981",
+    created_at: "2026-09-02T00:00:00Z",
+    play_time_seconds: 3600,
+    java_path: null,
+    custom_jvm_args: [],
+  },
+  {
+    id: "snapshot-testing",
+    name: "Snapshot Testing",
+    version: "24w45a",
+    mod_loader: null,
+    ram_mb: 2048,
+    color: "#f59e0b",
+    created_at: "2026-09-03T00:00:00Z",
+    play_time_seconds: 600,
+    java_path: null,
+    custom_jvm_args: [],
+  },
+];
+
+const SAMPLE_VERSIONS: VersionEntry[] = [
+  { id: "1.21.4", type: "release", url: "", time: "2024-12-03", releaseTime: "2024-12-03", sha1: "" },
+  { id: "1.21.3", type: "release", url: "", time: "2024-10-22", releaseTime: "2024-10-22", sha1: "" },
+  { id: "1.21.1", type: "release", url: "", time: "2024-08-08", releaseTime: "2024-08-08", sha1: "" },
+  { id: "1.21", type: "release", url: "", time: "2024-06-13", releaseTime: "2024-06-13", sha1: "" },
+  { id: "1.20.4", type: "release", url: "", time: "2023-12-07", releaseTime: "2023-12-07", sha1: "" },
+  { id: "24w45a", type: "snapshot", url: "", time: "2024-11-06", releaseTime: "2024-11-06", sha1: "" },
+  { id: "24w44a", type: "snapshot", url: "", time: "2024-10-30", releaseTime: "2024-10-30", sha1: "" },
+];
+
+const SAMPLE_MODS: ProjectHit[] = [
+  {
+    project_id: "AANobbMI",
+    slug: "sodium",
+    author: "jellysquid3",
+    title: "Sodium",
+    description: "A modern rendering engine and optimization mod for Minecraft.",
+    categories: ["optimization"],
+    client_side: "required",
+    server_side: "unsupported",
+    project_type: "mod",
+    downloads: 38491204,
+    follows: 142050,
+    icon_url: "https://cdn.modrinth.com/data/AANobbMI/icon.png",
+    versions: ["1.21.4", "1.21.1", "1.20.4"],
+    loaders: ["fabric", "neoforge"],
+  },
+  {
+    project_id: "YL57xq9U",
+    slug: "iris",
+    author: "coderbot",
+    title: "Iris Shaders",
+    description: "A modern shaders mod for Minecraft compatible with existing shaders.",
+    categories: ["shaders", "optimization"],
+    client_side: "required",
+    server_side: "unsupported",
+    project_type: "mod",
+    downloads: 24190812,
+    follows: 98120,
+    icon_url: "https://cdn.modrinth.com/data/YL57xq9U/icon.png",
+    versions: ["1.21.4", "1.21.1", "1.20.4"],
+    loaders: ["fabric", "quilt"],
+  },
+  {
+    project_id: "gvQqBUqZ",
+    slug: "lithium",
+    author: "jellysquid3",
+    title: "Lithium",
+    description: "General-purpose optimization mod for Minecraft physics, mob AI, and world gen.",
+    categories: ["optimization"],
+    client_side: "optional",
+    server_side: "required",
+    project_type: "mod",
+    downloads: 19820411,
+    follows: 81200,
+    icon_url: "https://cdn.modrinth.com/data/gvQqBUqZ/icon.png",
+    versions: ["1.21.4", "1.21.1", "1.20.4"],
+    loaders: ["fabric", "neoforge"],
+  },
+  {
+    project_id: "P7dR8mSH",
+    slug: "fabric-api",
+    author: "modmuss50",
+    title: "Fabric API",
+    description: "Lightweight and modular API providing common hooks and interop for Fabric mods.",
+    categories: ["library"],
+    client_side: "optional",
+    server_side: "optional",
+    project_type: "mod",
+    downloads: 72109482,
+    follows: 240100,
+    icon_url: "https://cdn.modrinth.com/data/P7dR8mSH/icon.png",
+    versions: ["1.21.4", "1.21.1", "1.20.4"],
+    loaders: ["fabric"],
+  },
+];
+
 export const api = {
-  ping: () => invoke<string>("ping"),
-  initialScreen: () => invoke<string>("initial_screen"),
-  configGet: () => invoke<Config>("config_get"),
-  configUpdate: (c: Config) => invoke<void>("config_update", { new: c }),
+  ping: () => (isTauri ? invoke<string>("ping") : Promise.resolve("pong")),
+  initialScreen: () =>
+    isTauri
+      ? invoke<string>("initial_screen")
+      : Promise.resolve(new URLSearchParams(window.location.search).get("screen") || "home"),
+  configGet: () =>
+    isTauri
+      ? invoke<Config>("config_get")
+      : Promise.resolve({ ...DEFAULT_CONFIG, selected_instance: "fabric-1-21-4" }),
+  configUpdate: (c: Config) => (isTauri ? invoke<void>("config_update", { new: c }) : Promise.resolve()),
 
   versionsList: (showSnapshots: boolean, showHistorical: boolean) =>
-    invoke<VersionEntry[]>("versions_list", {
-      showSnapshots,
-      showHistorical,
-    }),
-  versionsLatest: () => invoke<LatestPair>("versions_latest"),
+    isTauri
+      ? invoke<VersionEntry[]>("versions_list", { showSnapshots, showHistorical })
+      : Promise.resolve(SAMPLE_VERSIONS.filter((v) => (v.type === "snapshot" ? showSnapshots : true))),
+  versionsLatest: () =>
+    isTauri ? invoke<LatestPair>("versions_latest") : Promise.resolve({ release: "1.21.4", snapshot: "24w45a" }),
 
-  javaDetect: () => invoke<JavaInstallation[]>("java_detect"),
-  javaList: () => invoke<JavaInstallation[]>("java_list"),
+  javaDetect: () =>
+    isTauri
+      ? invoke<JavaInstallation[]>("java_detect")
+      : Promise.resolve([
+          {
+            path: "/usr/lib/jvm/java-21-openjdk/bin/java",
+            major_version: 21,
+            version_string: "21.0.5+11",
+            vendor: "Eclipse Adoptium",
+            arch: "x86_64",
+            is_valid: true,
+            is_recommended: true,
+          },
+        ]),
+  javaList: () =>
+    isTauri
+      ? invoke<JavaInstallation[]>("java_list")
+      : Promise.resolve([
+          {
+            path: "/usr/lib/jvm/java-21-openjdk/bin/java",
+            major_version: 21,
+            version_string: "21.0.5+11",
+            vendor: "Eclipse Adoptium",
+            arch: "x86_64",
+            is_valid: true,
+            is_recommended: true,
+          },
+        ]),
   javaAdd: (path: string) =>
-    invoke<JavaInstallation>("java_add", { path }),
+    isTauri
+      ? invoke<JavaInstallation>("java_add", { path })
+      : Promise.resolve({
+          path,
+          major_version: 21,
+          version_string: "21.0.5",
+          vendor: "Custom",
+          arch: "x86_64",
+          is_valid: true,
+          is_recommended: true,
+        }),
   javaRecommend: (minecraftMajor: number) =>
-    invoke<JavaInstallation>("java_recommend", { minecraftMajor }),
+    isTauri
+      ? invoke<JavaInstallation>("java_recommend", { minecraftMajor })
+      : Promise.resolve({
+          path: "/usr/lib/jvm/java-21-openjdk/bin/java",
+          major_version: 21,
+          version_string: "21.0.5",
+          vendor: "Adoptium",
+          arch: "x86_64",
+          is_valid: true,
+          is_recommended: true,
+        }),
 
-  instancesList: () => invoke<Instance[]>("instances_list"),
-  instancesGet: (id: string) => invoke<Instance>("instances_get", { id }),
+  instancesList: () => (isTauri ? invoke<Instance[]>("instances_list") : Promise.resolve(SAMPLE_INSTANCES)),
+  instancesGet: (id: string) =>
+    isTauri
+      ? invoke<Instance>("instances_get", { id })
+      : Promise.resolve(SAMPLE_INSTANCES.find((i) => i.id === id) || SAMPLE_INSTANCES[0]),
   instancesCreate: (name: string, version: string) =>
-    invoke<Instance>("instances_create", { name, version }),
+    isTauri
+      ? invoke<Instance>("instances_create", { name, version })
+      : Promise.resolve({
+          id: `inst-${Date.now()}`,
+          name,
+          version,
+          mod_loader: null,
+          ram_mb: 2048,
+          color: "#0070f3",
+          created_at: new Date().toISOString(),
+          play_time_seconds: 0,
+          java_path: null,
+          custom_jvm_args: [],
+        }),
   instancesUpdate: (instance: Instance) =>
-    invoke<void>("instances_update", { instance }),
-  instancesDelete: (id: string) =>
-    invoke<void>("instances_delete", { id }),
+    isTauri ? invoke<void>("instances_update", { instance }) : Promise.resolve(),
+  instancesDelete: (id: string) => (isTauri ? invoke<void>("instances_delete", { id }) : Promise.resolve()),
   instancesDuplicate: (id: string, newName: string) =>
-    invoke<Instance>("instances_duplicate", { id, newName }),
-  instancesSelect: (id: string) =>
-    invoke<void>("instances_select", { id }),
-  instancesListMods: (instanceId: string) =>
-    invoke<ModInfo[]>("instances_list_mods", { instanceId }),
+    isTauri
+      ? invoke<Instance>("instances_duplicate", { id, newName })
+      : Promise.resolve({ ...SAMPLE_INSTANCES[0], id: `inst-${Date.now()}`, name: newName }),
+  instancesSelect: (id: string) => (isTauri ? invoke<void>("instances_select", { id }) : Promise.resolve()),
+  instancesListMods: (_instanceId: string) =>
+    isTauri
+      ? invoke<ModInfo[]>("instances_list_mods", { instanceId: _instanceId })
+      : Promise.resolve([
+          {
+            file_name: "sodium-mc1.21.4-0.6.0.jar",
+            display_name: "Sodium",
+            version: "0.6.0",
+            description: "Rendering optimization engine",
+            enabled: true,
+            icon_url: "https://cdn.modrinth.com/data/AANobbMI/icon.png",
+          },
+        ]),
   instancesSetModEnabled: (
     instanceId: string,
     fileName: string,
     enabled: boolean,
   ) =>
-    invoke<void>("instances_set_mod_enabled", {
-      instanceId,
-      fileName,
-      enabled,
-    }),
+    isTauri
+      ? invoke<void>("instances_set_mod_enabled", {
+          instanceId,
+          fileName,
+          enabled,
+        })
+      : Promise.resolve(),
 
-  downloadsProgress: () => invoke<ProgressSnapshot>("downloads_progress"),
-  downloadsCancel: () => invoke<void>("downloads_cancel"),
+  downloadsProgress: () =>
+    isTauri
+      ? invoke<ProgressSnapshot>("downloads_progress")
+      : Promise.resolve({
+          active: 0,
+          completed: 48,
+          failed: 0,
+          bytes_downloaded: 245000000,
+          bytes_total: 245000000,
+          speed_bps: 0,
+          current_files: [],
+        }),
+  downloadsCancel: () => (isTauri ? invoke<void>("downloads_cancel") : Promise.resolve()),
 
   prepareLaunch: (instanceId: string) =>
-    invoke<void>("prepare_launch", { instanceId }),
+    isTauri ? invoke<void>("prepare_launch", { instanceId }) : Promise.resolve(),
   launchInstance: (instanceId: string) =>
-    invoke<void>("launch_instance", { instanceId }),
+    isTauri ? invoke<void>("launch_instance", { instanceId }) : Promise.resolve(),
   launchKill: (instanceId: string) =>
-    invoke<void>("launch_kill", { instanceId }),
-  launchList: () => invoke<[string, number][]>("launch_list"),
+    isTauri ? invoke<void>("launch_kill", { instanceId }) : Promise.resolve(),
+  launchList: () => (isTauri ? invoke<[string, number][]>("launch_list") : Promise.resolve([])),
   launchNextLog: (instanceId: string) =>
-    invoke<LogLine | null>("launch_next_log", { instanceId }),
+    isTauri ? invoke<LogLine | null>("launch_next_log", { instanceId }) : Promise.resolve(null),
 
-  authBegin: () => invoke<Account>("auth_begin"),
-  authAccounts: () => invoke<Account[]>("auth_accounts"),
-  authRemove: (id: string) => invoke<void>("auth_remove", { id }),
+  authBegin: () =>
+    isTauri
+      ? invoke<Account>("auth_begin")
+      : Promise.resolve({
+          id: "acc-1",
+          username: "Player",
+          uuid: "00000000-0000-0000-0000-000000000000",
+          account_type: "offline",
+          active: true,
+        }),
+  authAccounts: () =>
+    isTauri
+      ? invoke<Account[]>("auth_accounts")
+      : Promise.resolve([
+          {
+            id: "acc-1",
+            username: "Player",
+            uuid: "00000000-0000-0000-0000-000000000000",
+            account_type: "offline",
+            active: true,
+          },
+        ]),
+  authRemove: (id: string) => (isTauri ? invoke<void>("auth_remove", { id }) : Promise.resolve()),
 
   loaderVersions: (kind: string, minecraftVersion: string) =>
-    invoke<string[]>("loader_versions", { kind, minecraftVersion }),
+    isTauri
+      ? invoke<string[]>("loader_versions", { kind, minecraftVersion })
+      : Promise.resolve(["0.16.9", "0.16.8", "0.16.7"]),
   loaderInstall: (instanceId: string) =>
-    invoke<void>("loader_install", { instanceId }),
+    isTauri ? invoke<void>("loader_install", { instanceId }) : Promise.resolve(),
 
-  updateCheck: () => invoke<UpdateInfo>("update_check"),
+  updateCheck: () =>
+    isTauri
+      ? invoke<UpdateInfo>("update_check")
+      : Promise.resolve({ has_update: false, latest_version: "0.1.0", release_notes: "", download_url: "" }),
 
   modrinthSearch: (
     query: string,
@@ -281,39 +516,68 @@ export const api = {
     loader?: string,
     limit = 20,
   ) =>
-    invoke<ProjectHit[]>("modrinth_search", {
-      query,
-      projectType,
-      gameVersion,
-      loader,
-      limit,
-    }),
+    isTauri
+      ? invoke<ProjectHit[]>("modrinth_search", {
+          query,
+          projectType,
+          gameVersion,
+          loader,
+          limit,
+        })
+      : Promise.resolve(SAMPLE_MODS),
   modrinthProject: (slugOrId: string) =>
-    invoke<ProjectHit>("modrinth_project", { slugOrId }),
+    isTauri
+      ? invoke<ProjectHit>("modrinth_project", { slugOrId })
+      : Promise.resolve(SAMPLE_MODS[0]),
   modrinthVersions: (
     slugOrId: string,
     gameVersion?: string,
     loader?: string,
   ) =>
-    invoke<ProjectVersion[]>("modrinth_versions", {
-      slugOrId,
-      gameVersion,
-      loader,
-    }),
+    isTauri
+      ? invoke<ProjectVersion[]>("modrinth_versions", {
+          slugOrId,
+          gameVersion,
+          loader,
+        })
+      : Promise.resolve([]),
   modrinthGetVersion: (versionId: string) =>
-    invoke<ProjectVersion>("modrinth_get_version", { versionId }),
+    isTauri
+      ? invoke<ProjectVersion>("modrinth_get_version", { versionId })
+      : Promise.resolve({} as any),
   modrinthGetVersionByHash: (hash: string, algorithm = "sha1") =>
-    invoke<VersionFileLookup | null>("modrinth_get_version_by_hash", {
-      hash,
-      algorithm,
-    }),
+    isTauri
+      ? invoke<VersionFileLookup | null>("modrinth_get_version_by_hash", {
+          hash,
+          algorithm,
+        })
+      : Promise.resolve(null),
   modrinthProjectDependencies: (slugOrId: string) =>
-    invoke<ProjectDependency[]>("modrinth_project_dependencies", {
-      slugOrId,
-    }),
-  modrinthLoaders: () => invoke<LoaderTag[]>("modrinth_loaders"),
-  modrinthGameVersions: () => invoke<GameVersionTag[]>("modrinth_game_versions"),
-  modrinthCategories: () => invoke<CategoryTag[]>("modrinth_categories"),
+    isTauri
+      ? invoke<ProjectDependency[]>("modrinth_project_dependencies", {
+          slugOrId,
+        })
+      : Promise.resolve([]),
+  modrinthLoaders: () =>
+    isTauri
+      ? invoke<LoaderTag[]>("modrinth_loaders")
+      : Promise.resolve([
+          { icon: "", name: "fabric", supported_project_types: ["mod"] },
+          { icon: "", name: "neoforge", supported_project_types: ["mod"] },
+        ]),
+  modrinthGameVersions: () =>
+    isTauri
+      ? invoke<GameVersionTag[]>("modrinth_game_versions")
+      : Promise.resolve([
+          { version: "1.21.4", version_type: "release", date: "2024-12-03", major: true },
+          { version: "1.21.1", version_type: "release", date: "2024-08-08", major: true },
+        ]),
+  modrinthCategories: () =>
+    isTauri
+      ? invoke<CategoryTag[]>("modrinth_categories")
+      : Promise.resolve([
+          { icon: "", name: "optimization", project_type: "mod", header: "Performance" },
+        ]),
   instanceInstallContent: (
     instanceId: string,
     projectType: string,
@@ -322,14 +586,16 @@ export const api = {
     fileSize: number,
     sha1Base64: string,
   ) =>
-    invoke<string>("instance_install_content", {
-      instanceId,
-      projectType,
-      fileUrl,
-      fileName,
-      fileSize,
-      sha1Base64,
-    }),
+    isTauri
+      ? invoke<string>("instance_install_content", {
+          instanceId,
+          projectType,
+          fileUrl,
+          fileName,
+          fileSize,
+          sha1Base64,
+        })
+      : Promise.resolve("ok"),
 };
 
 /** Format bytes for display. */
