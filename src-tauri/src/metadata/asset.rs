@@ -46,9 +46,14 @@ pub fn assets_root(runtime_dir: &Path) -> PathBuf {
     runtime_dir.join("assets")
 }
 
-/// Resolve the on-disk directory for a specific asset index.
+/// Resolve the on-disk file path for a specific asset index JSON.
 pub fn index_dir(runtime_dir: &Path, index_id: &str) -> PathBuf {
-    assets_root(runtime_dir).join("indexes").join(index_id)
+    let filename = if index_id.ends_with(".json") {
+        index_id.to_string()
+    } else {
+        format!("{index_id}.json")
+    };
+    assets_root(runtime_dir).join("indexes").join(filename)
 }
 
 /// Resolve the on-disk directory for asset objects.
@@ -120,5 +125,18 @@ mod tests {
             objects,
         };
         assert!(validate(&idx).is_err());
+    }
+
+    #[test]
+    fn index_dir_appends_json_extension() {
+        let root = Path::new("/tmp/game");
+        assert_eq!(
+            index_dir(root, "19"),
+            PathBuf::from("/tmp/game/assets/indexes/19.json")
+        );
+        assert_eq!(
+            index_dir(root, "19.json"),
+            PathBuf::from("/tmp/game/assets/indexes/19.json")
+        );
     }
 }
