@@ -187,8 +187,9 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
           </div>
         </div>
       ) : (
-        /* Material 3 Expressive Hero Card */
-        <div className="home-hero">
+        /* Heroic Liquid Glass Showcase Card */
+        <div className="home-hero hero-card">
+          <div className="liquid-refraction-line" aria-hidden="true" />
           <div className="info">
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
               {selected?.color && (
@@ -198,7 +199,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                     height: 12,
                     borderRadius: "50%",
                     background: selected.color,
-                    boxShadow: `0 0 10px ${selected.color}`,
+                    boxShadow: `0 0 12px ${selected.color}`,
                     display: "inline-block",
                   }}
                 />
@@ -215,7 +216,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                   </span>
 
                   {selected.mod_loader && (
-                    <span className="chip" style={{ background: "rgba(167, 139, 250, 0.15)", borderColor: "rgba(167, 139, 250, 0.3)", color: "var(--md-sys-color-secondary)" }}>
+                    <span className="chip" style={{ background: "rgba(139, 92, 246, 0.18)", borderColor: "rgba(139, 92, 246, 0.35)", color: "var(--liquid-violet)" }}>
                       {selected.mod_loader.kind} {selected.mod_loader.version}
                     </span>
                   )}
@@ -506,18 +507,36 @@ function KpiCard({
   icon,
   label,
   value,
+  accent = "var(--liquid-sky)",
 }: {
   icon: ReactNode;
   label: string;
   value: string;
+  accent?: string;
 }) {
   return (
     <div className="kpi">
-      <div style={{ display: "flex", alignItems: "center", gap: 7, color: "var(--md-sys-color-on-surface-variant)" }}>
-        <span style={{ color: "var(--md-sys-color-primary)", opacity: 0.9 }}>{icon}</span>
+      <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.5 }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--md-sys-color-on-surface-variant)" }}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 26,
+            height: 26,
+            borderRadius: "var(--glass-radius-sm)",
+            background: "rgba(255, 255, 255, 0.05)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            color: accent,
+            boxShadow: `0 0 10px ${accent}33`,
+          }}
+        >
+          {icon}
+        </span>
         <div className="label" style={{ margin: 0 }}>{label}</div>
       </div>
-      <div className="value" style={{ marginTop: 6 }}>{value}</div>
+      <div className="value" style={{ marginTop: 8 }}>{value}</div>
     </div>
   );
 }
@@ -533,26 +552,26 @@ function PrepareProgress({ p }: { p: ProgressSnapshot }) {
   return (
     <div>
       <div className="kpi-row" style={{ marginBottom: 14 }}>
-        <KpiCard icon={<IconRefresh size={14} />} label="Active" value={String(p.active)} />
-        <KpiCard icon={<IconCube size={14} />} label="Completed" value={String(p.completed)} />
-        <KpiCard icon={<IconStop size={14} />} label="Failed" value={String(p.failed)} />
-        <KpiCard icon={<IconSpeed size={14} />} label="Speed" value={formatSpeed(p.speed_bps)} />
+        <KpiCard icon={<IconRefresh size={14} />} label="Active" value={String(p.active)} accent="var(--liquid-sky)" />
+        <KpiCard icon={<IconCube size={14} />} label="Completed" value={String(p.completed)} accent="var(--liquid-mint)" />
+        <KpiCard icon={<IconStop size={14} />} label="Failed" value={String(p.failed)} accent="var(--liquid-coral)" />
+        <KpiCard icon={<IconSpeed size={14} />} label="Speed" value={formatSpeed(p.speed_bps)} accent="var(--liquid-violet)" />
       </div>
 
       <div className="row between" style={{ marginBottom: 8 }}>
-        <span className="muted" style={{ fontSize: 12.5, fontWeight: 500 }}>
+        <span className="muted" style={{ fontSize: 12.5, fontWeight: 500, fontFamily: "var(--mono)" }}>
           {indeterminate
             ? `${formatBytes(p.bytes_downloaded)} downloaded…`
             : `${formatBytes(p.bytes_downloaded)} of ${formatBytes(p.bytes_total)}`}
         </span>
-        <span className="muted" style={{ fontSize: 12.5, fontWeight: 600, color: "var(--md-sys-color-primary)" }}>
+        <span className="muted" style={{ fontSize: 12.5, fontWeight: 600, color: "var(--liquid-sky)" }}>
           {indeterminate
             ? `${p.completed} files done`
             : `${pct.toFixed(1)}%${eta != null ? ` · ${formatDuration(eta)} left` : ""}`}
         </span>
       </div>
 
-      <div className={`progress ${indeterminate ? "indeterminate" : ""}`}>
+      <div className={`progress ${indeterminate ? "indeterminate" : ""} liquid-progress`}>
         <div
           className="bar"
           style={{

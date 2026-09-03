@@ -58,21 +58,25 @@ export function AccountButton() {
 
     return (
       <div ref={containerRef} style={{ position: "relative" }}>
-        {/* Material 3 Account Chip */}
+        {/* Glass Account Chip */}
         <button
-          className="chip"
+          className="chip glass-account-chip"
           onClick={() => setMenuOpen(!menuOpen)}
           style={{
             cursor: "pointer",
-            padding: "3px 10px 3px 4px",
+            padding: "4px 12px 4px 5px",
             gap: 8,
             backgroundColor: menuOpen
-              ? "var(--md-sys-color-surface-container-highest)"
-              : "var(--md-sys-color-surface-container-high)",
+              ? "var(--glass-bg-base)"
+              : "var(--glass-bg-interactive)",
+            backdropFilter: "var(--glass-blur-sm)",
+            WebkitBackdropFilter: "var(--glass-blur-sm)",
             borderColor: menuOpen
-              ? "var(--md-sys-color-primary)"
-              : "var(--md-sys-color-outline-variant)",
-            boxShadow: menuOpen ? "0 0 10px rgba(56, 189, 248, 0.25)" : undefined,
+              ? "rgba(56, 189, 248, 0.45)"
+              : "var(--glass-border)",
+            boxShadow: menuOpen
+              ? "0 0 14px rgba(6, 182, 212, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.25)"
+              : "var(--glass-sheen)",
           }}
           title="Account profile"
         >
@@ -83,30 +87,25 @@ export function AccountButton() {
                 width: 24,
                 height: 24,
                 borderRadius: "50%",
-                background: "linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-secondary) 100%)",
-                color: "var(--md-sys-color-on-primary)",
+                background: "linear-gradient(135deg, var(--liquid-cyan) 0%, var(--liquid-violet) 100%)",
+                color: "#ffffff",
                 fontWeight: 700,
                 fontSize: 12,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 0 8px rgba(56, 189, 248, 0.3)",
+                boxShadow: "0 0 10px rgba(6, 182, 212, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.5)",
               }}
             >
               {initial}
             </div>
-            {/* Online Status Badge */}
+            {/* Fluid Online Status Indicator */}
             <span
+              className="liquid-online-indicator"
               style={{
                 position: "absolute",
                 bottom: -1,
                 right: -1,
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                background: "var(--md-sys-color-tertiary)",
-                border: "1.5px solid var(--md-sys-color-surface)",
-                boxShadow: "0 0 6px var(--md-sys-color-tertiary)",
               }}
               title="Online"
             />
@@ -127,28 +126,32 @@ export function AccountButton() {
             style={{
               color: "var(--md-sys-color-on-surface-variant)",
               transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard)",
+              transition: "transform var(--glass-motion-duration-sm) var(--glass-ease-standard)",
             }}
           />
         </button>
 
-        {/* Smooth Material 3 Dropdown Menu */}
+        {/* Floating Frosted Dropdown Sheet */}
         {menuOpen && (
           <div
             style={{
               position: "absolute",
               top: "calc(100% + 8px)",
               right: 0,
-              minWidth: 260,
-              background: "var(--md-sys-color-surface-container)",
-              border: "1px solid var(--md-sys-color-outline-variant)",
-              borderRadius: "var(--md-sys-shape-corner-xl)",
+              minWidth: 268,
+              background: "rgba(15, 23, 42, 0.88)",
+              backdropFilter: "var(--glass-blur-lg)",
+              WebkitBackdropFilter: "var(--glass-blur-lg)",
+              border: "var(--glass-border)",
+              borderRadius: "var(--glass-radius-xl)",
               padding: "16px",
-              boxShadow: "var(--md-sys-elevation-3)",
+              boxShadow: "var(--glass-sheen-elevated), 0 0 32px rgba(6, 182, 212, 0.15)",
               zIndex: 100,
-              animation: "m3-dialog-enter var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-emphasized)",
+              animation: "liquid-dialog-enter var(--glass-motion-duration-sm) var(--glass-ease-spring)",
+              overflow: "hidden",
             }}
           >
+            <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.5 }} />
             {/* Account Header */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
               <div
@@ -156,14 +159,14 @@ export function AccountButton() {
                   width: 44,
                   height: 44,
                   borderRadius: "50%",
-                  background: "linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-secondary) 100%)",
-                  color: "var(--md-sys-color-on-primary)",
+                  background: "linear-gradient(135deg, var(--liquid-cyan) 0%, var(--liquid-violet) 100%)",
+                  color: "#ffffff",
                   fontWeight: 700,
                   fontSize: 18,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  boxShadow: "0 0 14px rgba(56, 189, 248, 0.4)",
+                  boxShadow: "0 0 16px rgba(6, 182, 212, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.6)",
                   flexShrink: 0,
                 }}
               >

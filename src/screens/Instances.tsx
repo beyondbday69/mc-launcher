@@ -66,14 +66,22 @@ export function Instances({ instances, onChange, onSelect }: Props) {
         </div>
 
         <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
-          {/* Material 3 Search Bar */}
+          {/* Frosted Glass Search Bar */}
           <div style={{ position: "relative" }}>
             <input
               type="text"
+              className="search-bar frosted-glass-input"
               placeholder="Search instances…"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              style={{ width: 220, fontSize: 13 }}
+              style={{
+                width: 220,
+                fontSize: 13,
+                background: "var(--glass-bg-interactive)",
+                backdropFilter: "var(--glass-blur-sm)",
+                WebkitBackdropFilter: "var(--glass-blur-sm)",
+                borderColor: "var(--glass-border)",
+              }}
             />
             {filter && (
               <button
@@ -94,38 +102,18 @@ export function Instances({ instances, onChange, onSelect }: Props) {
             )}
           </div>
 
-          {/* View Mode Toggle */}
-          <div
-            style={{
-              display: "flex",
-              background: "var(--md-sys-color-surface-container)",
-              borderRadius: "var(--md-sys-shape-corner-full)",
-              padding: 2,
-              border: "1px solid var(--md-sys-color-outline-variant)",
-            }}
-          >
+          {/* Frosted Glass View Mode Toggle */}
+          <div className="glass-toggle-group">
             <button
-              className="btn ghost"
+              className={`glass-toggle-btn ${viewMode === "grid" ? "active" : ""}`}
               onClick={() => setViewMode("grid")}
-              style={{
-                padding: "6px 10px",
-                borderRadius: "var(--md-sys-shape-corner-full)",
-                background: viewMode === "grid" ? "var(--md-sys-color-surface-container-highest)" : "transparent",
-                color: viewMode === "grid" ? "var(--md-sys-color-primary)" : "var(--md-sys-color-on-surface-variant)",
-              }}
               title="Grid View"
             >
               <IconGrid size={15} />
             </button>
             <button
-              className="btn ghost"
+              className={`glass-toggle-btn ${viewMode === "list" ? "active" : ""}`}
               onClick={() => setViewMode("list")}
-              style={{
-                padding: "6px 10px",
-                borderRadius: "var(--md-sys-shape-corner-full)",
-                background: viewMode === "list" ? "var(--md-sys-color-surface-container-highest)" : "transparent",
-                color: viewMode === "list" ? "var(--md-sys-color-primary)" : "var(--md-sys-color-on-surface-variant)",
-              }}
               title="List View"
             >
               <IconList size={15} />
@@ -168,7 +156,7 @@ export function Instances({ instances, onChange, onSelect }: Props) {
           )}
         </div>
       ) : viewMode === "grid" ? (
-        /* Expressive Cards Grid */
+        /* Glass Cards Grid */
         <div
           style={{
             display: "grid",
@@ -179,33 +167,36 @@ export function Instances({ instances, onChange, onSelect }: Props) {
           {filtered.map((i) => (
             <div
               key={i.id}
-              className="instance-card"
+              className="instance-card glass-instance-card"
               style={{
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
                 gap: 16,
                 cursor: "pointer",
-                borderLeft: `4px solid ${i.color || "var(--md-sys-color-primary)"}`,
+                borderLeft: `4px solid ${i.color || "var(--liquid-sky)"}`,
+                position: "relative",
               }}
               onClick={() => onSelect(i)}
             >
+              <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
               <div>
-                {/* Header with Avatar & Title */}
+                {/* Header with Fluid Gradient Avatar & Title */}
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                   <div
                     style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: "var(--md-sys-shape-corner-md)",
-                      background: i.color || "var(--md-sys-color-primary)",
+                      width: 42,
+                      height: 42,
+                      borderRadius: "var(--glass-radius-md)",
+                      background: `linear-gradient(135deg, ${i.color || "var(--liquid-sky)"} 0%, ${i.color ? i.color + "99" : "var(--liquid-cyan)"} 100%)`,
                       color: "#ffffff",
                       fontWeight: 800,
                       fontSize: 16,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      boxShadow: `0 2px 10px ${i.color ? i.color + "55" : "rgba(56, 189, 248, 0.35)"}`,
+                      border: "1px solid rgba(255, 255, 255, 0.4)",
+                      boxShadow: `0 4px 16px ${i.color ? i.color + "45" : "rgba(6, 182, 212, 0.4)"}, inset 0 1px 2px rgba(255, 255, 255, 0.6)`,
                       flexShrink: 0,
                     }}
                   >
@@ -541,7 +532,8 @@ function CreateModal({ onClose, onSave }: CreateProps) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: 500 }}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: 500, position: "relative" }}>
+        <div className="liquid-refraction-line" aria-hidden="true" />
         <h2>Create New Instance</h2>
 
         {/* Instance Name */}
@@ -681,7 +673,8 @@ function EditModal({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: 560 }}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: 560, position: "relative" }}>
+        <div className="liquid-refraction-line" aria-hidden="true" />
         <h2>Edit Instance: {instance.name}</h2>
 
         <div className="form-grid">

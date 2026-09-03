@@ -86,10 +86,18 @@ export function Versions({ onInstalled }: Props) {
         <div style={{ position: "relative" }}>
           <input
             type="text"
+            className="search-bar frosted-glass-input"
             placeholder="Search versions (e.g. 1.21)…"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            style={{ width: 240, fontSize: 13 }}
+            style={{
+              width: 240,
+              fontSize: 13,
+              background: "var(--glass-bg-interactive)",
+              backdropFilter: "var(--glass-blur-sm)",
+              WebkitBackdropFilter: "var(--glass-blur-sm)",
+              borderColor: "var(--glass-border)",
+            }}
           />
           {filter && (
             <button
@@ -111,7 +119,7 @@ export function Versions({ onInstalled }: Props) {
         </div>
       </div>
 
-      {/* Material 3 Filter Chips */}
+      {/* Glass Filter Chips */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <button
           type="button"
@@ -153,25 +161,27 @@ export function Versions({ onInstalled }: Props) {
         </button>
       </div>
 
-      {/* Latest Version Cards */}
+      {/* Spotlight Glass Cards for Latest Release & Snapshot */}
       {latest && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           <div
-            className="card"
+            className="card spotlight-card-release"
             style={{
-              padding: "16px 20px",
+              padding: "20px 24px",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              borderLeft: "4px solid var(--md-sys-color-tertiary)",
+              borderLeft: "4px solid var(--liquid-mint)",
+              position: "relative",
             }}
           >
+            <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.5 }} />
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                 <span className="tag success" style={{ fontSize: 11 }}>
                   Latest Release
                 </span>
-                <strong style={{ fontSize: 16, color: "var(--md-sys-color-on-surface)" }}>
+                <strong style={{ fontSize: 17, color: "var(--md-sys-color-on-surface)" }}>
                   {latest.release}
                 </strong>
               </div>
@@ -182,7 +192,7 @@ export function Versions({ onInstalled }: Props) {
             <button
               className="btn primary"
               onClick={() => handleCreateInstance(latest.release)}
-              style={{ padding: "6px 14px", fontSize: 12, gap: 5 }}
+              style={{ padding: "6px 16px", fontSize: 12, gap: 6 }}
             >
               <IconPlus size={14} />
               <span>Install</span>
@@ -190,21 +200,23 @@ export function Versions({ onInstalled }: Props) {
           </div>
 
           <div
-            className="card"
+            className="card spotlight-card-snapshot"
             style={{
-              padding: "16px 20px",
+              padding: "20px 24px",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              borderLeft: "4px solid var(--md-sys-color-warning)",
+              borderLeft: "4px solid var(--liquid-amber)",
+              position: "relative",
             }}
           >
+            <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.5 }} />
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                 <span className="tag warning" style={{ fontSize: 11 }}>
                   Latest Snapshot
                 </span>
-                <strong style={{ fontSize: 16, color: "var(--md-sys-color-on-surface)" }}>
+                <strong style={{ fontSize: 17, color: "var(--md-sys-color-on-surface)" }}>
                   {latest.snapshot}
                 </strong>
               </div>
@@ -215,7 +227,7 @@ export function Versions({ onInstalled }: Props) {
             <button
               className="btn tonal"
               onClick={() => handleCreateInstance(latest.snapshot)}
-              style={{ padding: "6px 14px", fontSize: 12, gap: 5 }}
+              style={{ padding: "6px 16px", fontSize: 12, gap: 6 }}
             >
               <IconPlus size={14} />
               <span>Install</span>
@@ -246,7 +258,7 @@ export function Versions({ onInstalled }: Props) {
           </p>
         </div>
       ) : (
-        <div>
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
           <div style={{ overflowX: "auto" }}>
             <table className="table">
               <thead>

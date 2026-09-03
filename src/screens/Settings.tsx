@@ -126,7 +126,8 @@ function GeneralTab({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Memory Allocation Card */}
-      <div className="card">
+      <div className="card" style={{ position: "relative" }}>
+        <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
         <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
           Default Memory Allocation
         </h3>
@@ -134,7 +135,7 @@ function GeneralTab({
         <div className="field">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <label>RAM allocated to new instances</label>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--md-sys-color-primary)" }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--liquid-sky)" }}>
               {ramMb} MB ({(ramMb / 1024).toFixed(1)} GB)
             </span>
           </div>
@@ -171,7 +172,8 @@ function GeneralTab({
       </div>
 
       {/* Interface & Theme Card */}
-      <div className="card">
+      <div className="card" style={{ position: "relative" }}>
+        <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
         <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
           Interface & Appearance
         </h3>
@@ -183,7 +185,8 @@ function GeneralTab({
               value={config.theme}
               onChange={(e) => onChange({ ...config, theme: e.target.value })}
             >
-              <option value="dark">Material 3 Dark Tonal (Expressive)</option>
+              <option value="dark">Liquid Glass (Frosted Glassmorphism)</option>
+              <option value="m3">Material 3 Dark Tonal (Expressive)</option>
             </select>
           </div>
 
@@ -294,7 +297,8 @@ function JavaTab({
   const [detecting, setDetecting] = useState(false);
 
   return (
-    <div className="card">
+    <div className="card" style={{ position: "relative" }}>
+      <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
       <div className="row between" style={{ marginBottom: 14 }}>
         <div>
           <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
@@ -447,7 +451,8 @@ function JvmTab({
   onChange: (c: Config) => void;
 }) {
   return (
-    <div className="card">
+    <div className="card" style={{ position: "relative" }}>
+      <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
       <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 8 }}>
         Java Virtual Machine Profiles
       </h3>
@@ -506,7 +511,8 @@ function DownloadsTab({
   onChange: (c: Config) => void;
 }) {
   return (
-    <div className="card">
+    <div className="card" style={{ position: "relative" }}>
+      <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
       <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
         Network & Download Manager
       </h3>
@@ -514,7 +520,7 @@ function DownloadsTab({
       <div className="field">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <label>Parallel Worker Concurrency</label>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--md-sys-color-primary)" }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--liquid-sky)" }}>
             {config.download_concurrency} threads
           </span>
         </div>
@@ -559,7 +565,8 @@ function DownloadsTab({
 
 function AboutTab() {
   return (
-    <div className="card">
+    <div className="card" style={{ position: "relative" }}>
+      <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
         <div
           style={{

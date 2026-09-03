@@ -82,20 +82,23 @@ export function Downloads() {
       </div>
 
       {/* Active Transfer Card */}
-      <div className="card">
+      <div className="card" style={{ position: "relative" }}>
+        <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.45 }} />
         <div className="row between" style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: "50%",
+                width: 38,
+                height: 38,
+                borderRadius: "var(--glass-radius-md)",
                 background: isActive
-                  ? "var(--md-sys-color-primary-container)"
-                  : "var(--md-sys-color-surface-container-high)",
+                  ? "linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(139, 92, 246, 0.25) 100%)"
+                  : "var(--glass-bg-interactive)",
                 color: isActive
-                  ? "var(--md-sys-color-primary)"
+                  ? "var(--liquid-sky)"
                   : "var(--md-sys-color-on-surface-variant)",
+                border: "var(--glass-border)",
+                boxShadow: isActive ? "0 0 16px rgba(6, 182, 212, 0.35)" : "none",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -164,7 +167,7 @@ export function Downloads() {
             style={{
               fontSize: 12.5,
               fontWeight: 600,
-              color: isActive ? "var(--md-sys-color-primary)" : "var(--md-sys-color-on-surface-variant)",
+              color: isActive ? "var(--liquid-sky)" : "var(--md-sys-color-on-surface-variant)",
             }}
           >
             {indeterminate
@@ -173,7 +176,7 @@ export function Downloads() {
           </span>
         </div>
 
-        <div className={`progress ${indeterminate ? "indeterminate" : ""}`}>
+        <div className={`progress ${indeterminate ? "indeterminate" : ""} liquid-progress`}>
           <div
             className="bar"
             style={{
@@ -185,9 +188,10 @@ export function Downloads() {
 
       {/* Cache & Local Verification Card */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <div className="card">
+        <div className="card" style={{ position: "relative" }}>
+          <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.3 }} />
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <IconCheck size={18} style={{ color: "var(--md-sys-color-tertiary)" }} />
+            <IconCheck size={18} style={{ color: "var(--liquid-mint)" }} />
             <h3 style={{ margin: 0, textTransform: "none", fontSize: 14, fontWeight: 700 }}>
               SHA-1 Integrity Verification
             </h3>
@@ -199,9 +203,10 @@ export function Downloads() {
           </p>
         </div>
 
-        <div className="card">
+        <div className="card" style={{ position: "relative" }}>
+          <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.3 }} />
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <IconFolder size={18} style={{ color: "var(--md-sys-color-primary)" }} />
+            <IconFolder size={18} style={{ color: "var(--liquid-sky)" }} />
             <h3 style={{ margin: 0, textTransform: "none", fontSize: 14, fontWeight: 700 }}>
               Smart Local Cache
             </h3>
@@ -230,20 +235,36 @@ function KpiTile({
 }) {
   const accentColor =
     highlight === "primary"
-      ? "var(--md-sys-color-primary)"
+      ? "var(--liquid-sky)"
       : highlight === "tertiary"
-        ? "var(--md-sys-color-tertiary)"
+        ? "var(--liquid-mint)"
         : highlight === "error"
-          ? "var(--md-sys-color-error)"
+          ? "var(--liquid-coral)"
           : "var(--md-sys-color-on-surface-variant)";
 
   return (
     <div className="kpi">
-      <div style={{ display: "flex", alignItems: "center", gap: 7, color: "var(--md-sys-color-on-surface-variant)" }}>
-        <span style={{ color: accentColor, opacity: 0.9 }}>{icon}</span>
+      <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.35 }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--md-sys-color-on-surface-variant)" }}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 26,
+            height: 26,
+            borderRadius: "var(--glass-radius-sm)",
+            background: "rgba(255, 255, 255, 0.05)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            color: accentColor,
+            boxShadow: `0 0 10px ${accentColor}33`,
+          }}
+        >
+          {icon}
+        </span>
         <div className="label" style={{ margin: 0 }}>{label}</div>
       </div>
-      <div className="value" style={{ marginTop: 6, color: highlight ? accentColor : undefined }}>
+      <div className="value" style={{ marginTop: 8, color: highlight ? accentColor : undefined }}>
         {value}
       </div>
     </div>

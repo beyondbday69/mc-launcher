@@ -233,7 +233,7 @@ export function Content({ selected }: Props) {
         </div>
       </div>
 
-      {/* Material 3 Category Filter Chips */}
+      {/* Category Filter Chips */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {TABS.map((t) => {
           const isActive = tab === t.id;
@@ -257,20 +257,30 @@ export function Content({ selected }: Props) {
         })}
       </div>
 
-      {/* Material 3 Search & Filters Bar */}
+      {/* Frosted Glass Search & Filters Bar */}
       <div className="card" style={{ padding: "16px 20px" }}>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          {/* M3 Pill Search Input */}
+          {/* Pill Glass Search Input */}
           <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
             <input
               type="text"
+              className="search-bar frosted-glass-input"
               placeholder={`Search ${tab === "mod" ? "mods" : tab === "shader" ? "shaders" : "content"} (e.g. Sodium, Iris, Complementary)…`}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") onSearch();
               }}
-              style={{ width: "100%", fontSize: 13 }}
+              style={{
+                width: "100%",
+                fontSize: 13,
+                background: "var(--glass-bg-interactive)",
+                backdropFilter: "var(--glass-blur-sm)",
+                WebkitBackdropFilter: "var(--glass-blur-sm)",
+                borderColor: "var(--glass-border)",
+                borderRadius: "var(--glass-radius-full)",
+                paddingLeft: 16,
+              }}
             />
             {query && (
               <button
@@ -432,8 +442,10 @@ function ModCard({
         alignItems: "center",
         gap: 16,
         padding: "16px 20px",
+        position: "relative",
       }}
     >
+      <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.35 }} />
       {/* Icon */}
       {hit.icon_url ? (
         <img
@@ -444,11 +456,12 @@ function ModCard({
           style={{
             width: 52,
             height: 52,
-            borderRadius: "var(--md-sys-shape-corner-md)",
-            background: "var(--md-sys-color-surface-container-high)",
+            borderRadius: "var(--glass-radius-md)",
+            background: "var(--glass-bg-interactive)",
             objectFit: "cover",
             flexShrink: 0,
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
+            border: "var(--glass-border-subtle)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.35)",
           }}
         />
       ) : (
@@ -456,12 +469,13 @@ function ModCard({
           style={{
             width: 52,
             height: 52,
-            borderRadius: "var(--md-sys-shape-corner-md)",
-            background: "var(--md-sys-color-surface-container-high)",
+            borderRadius: "var(--glass-radius-md)",
+            background: "var(--glass-bg-interactive)",
+            border: "var(--glass-border-subtle)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "var(--md-sys-color-primary)",
+            color: "var(--liquid-sky)",
             fontSize: 22,
             flexShrink: 0,
           }}
@@ -503,30 +517,16 @@ function ModCard({
           {truncated || "No description provided."}
         </p>
 
-        {/* Stats Row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 11.5 }}>
-          <span
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              color: "var(--md-sys-color-on-surface-variant)",
-            }}
-          >
-            <IconDownloads size={13} style={{ color: "var(--md-sys-color-primary)" }} />
+        {/* Stats Row with Glass Download Badges */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11.5 }}>
+          <span className="glass-badge">
+            <IconDownloads size={13} style={{ color: "var(--liquid-sky)" }} />
             {hit.downloads.toLocaleString()} downloads
           </span>
 
           {hit.versions.length > 0 && (
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                color: "var(--md-sys-color-on-surface-variant)",
-              }}
-            >
-              <IconCube size={13} />
+            <span className="glass-badge">
+              <IconCube size={13} style={{ color: "var(--liquid-mint)" }} />
               {hit.versions.slice(0, 3).join(", ")}
               {hit.versions.length > 3 ? "…" : ""}
             </span>
