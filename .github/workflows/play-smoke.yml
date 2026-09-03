@@ -52,7 +52,7 @@ jobs:
             libdrm2 libxkbcommon0 libgbm1 libpango-1.0-0 libpangocairo-1.0-0 \
             libgtk-3-dev libwebkit2gtk-4.1-dev \
             libayatana-appindicator3-dev librsvg2-dev libsoup-3.0-dev \
-            libjavascriptcoregtk-4.1-dev
+            libjavascriptcoregtk-4.1-dev xdotool
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -132,10 +132,14 @@ jobs:
         env:
           DISPLAY: :99
           LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_HUD: "fps"
+          GALLIUM_HUD_DUMP_DIR: "/tmp/gallium_hud"
           XDG_DATA_HOME: /tmp/play-smoke-data
           MC_LAUNCHER_JAVA: ${{ env.JAVA }}
         run: |
           set +e
+          mkdir -p /tmp/gallium_hud
+
           # launch-cli prints lines like "PID_FILE=/tmp/launch-cli.pid".
           # Run it in the background and capture its log.
           ./src-tauri/target/debug/launch-cli \
@@ -171,10 +175,17 @@ jobs:
             exit 1
           fi
 
-          # Give Minecraft time to init JVM + LWJGL + assets and render
-          # the main menu. Most of this happens in the first 60s.
-          echo "Waiting 90s for Minecraft to fully render..."
-          sleep 90
+          # Monitor process stats (FPS, memory usage, CPU, threads) over 90s.
+          echo "Monitoring Minecraft performance stats (FPS, RAM, CPU) over 90s..."
+          python3 scripts/smoke-stats.py \
+            --pid "$MC_PID" \
+            --duration 90 \
+            --interval 2 \
+            --max-ram 1536 \
+            --display :99 \
+            --hud-dir /tmp/gallium_hud \
+            --output-json /tmp/play-smoke-stats.json \
+            --output-md /tmp/play-smoke-stats.md || true
 
           # Confirm the Java process is still alive before screenshot.
           if ! kill -0 "$MC_PID" 2>/dev/null; then
@@ -185,11 +196,19 @@ jobs:
             exit 1
           fi
 
+          # Focus Minecraft window and send F3 key to toggle debug HUD
+          xdotool key --window "$(xdotool search --name "Minecraft" 2>/dev/null | head -n 1)" F3 2>/dev/null || xdotool key F3 2>/dev/null || true
+          sleep 1
+
           # Take the screenshot of the entire X display.
           echo "Capturing screenshot..."
           import -window root /tmp/play-smoke.png
           ls -la /tmp/play-smoke.png
           file /tmp/play-smoke.png
+
+          # Annotate screenshot with Material 3 stats HUD overlay directly onto /tmp/play-smoke.png
+          echo "Generating annotated HUD screenshot..."
+          python3 scripts/smoke-stats.py --annotate /tmp/play-smoke.png /tmp/play-smoke.png || true
 
           # Cleanly tear down: kill the Java process (launch-cli exits
           # when its child exits), then kill launch-cli itself if needed.
@@ -204,14 +223,27 @@ jobs:
           echo "--- launch-cli.log (last 60 lines) ---"
           tail -60 /tmp/launch-cli.log || true
 
-      # Step 4: upload the screenshot artifact so a human can eyeball
-      # it. The CI log is also uploaded for debugging.
-      - name: Upload game screenshot
+      # Step 4: upload the screenshot artifacts (raw + HUD overlay)
+      - name: Upload game screenshots
         uses: actions/upload-artifact@v4
         with:
-          name: play-smoke-screenshot
-          path: /tmp/play-smoke.png
+          name: play-smoke-screenshots
+          path: |
+            /tmp/play-smoke.png
+            /tmp/play-smoke-hud.png
           if-no-files-found: error
+          retention-days: 7
+
+      # Step 5: upload runtime performance stats (JSON + Markdown)
+      - name: Upload performance stats
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: play-smoke-stats
+          path: |
+            /tmp/play-smoke-stats.json
+            /tmp/play-smoke-stats.md
+          if-no-files-found: ignore
           retention-days: 7
 
       - name: Upload launch-cli log

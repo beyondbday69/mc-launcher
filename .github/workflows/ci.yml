@@ -195,7 +195,7 @@ jobs:
     name: tauri linux smoke (xvfb + screenshot)
     runs-on: ubuntu-22.04
     needs: backend-tauri-linux
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - name: Install Xvfb + screenshot tooling
@@ -284,9 +284,22 @@ jobs:
         run: |
           set +e
           capture_screen() {
-            local out=$1
+            local out
+            local screen
+            if [ -n "$2" ]; then
+              screen="$1"
+              out="$2"
+            else
+              out="$1"
+              screen="${MC_LAUNCHER_INITIAL_SCREEN:-home}"
+            fi
+            echo "=== Capturing screen '$screen' to $out (MC_LAUNCHER_INITIAL_SCREEN=$screen) ==="
+            if [ -f /tmp/tauri.log ]; then
+              cat /tmp/tauri.log >> /tmp/tauri-combined.log
+              rm -f /tmp/tauri.log
+            fi
             # Start the app in the background, capture PID + logs.
-            src-tauri/target/debug/mc-launcher >/tmp/tauri.log 2>&1 &
+            MC_LAUNCHER_INITIAL_SCREEN="$screen" src-tauri/target/debug/mc-launcher >/tmp/tauri.log 2>&1 &
             local app_pid=$!
             echo "APP_PID=$app_pid"
             # Wait up to 30s for the window to appear.
@@ -305,8 +318,9 @@ jobs:
                 return 1
               fi
             done
-            # Give the WebView a few more seconds to paint the screen.
-            sleep 5
+            # Give WebKitGTK and CSS animations sufficient time (6s) to settle so
+            # the screenshot shows the full Material 3 Expressive UI.
+            sleep 6
             echo "Capturing screenshot to $out"
             import -window root "$out"
             ls -la "$out"
@@ -317,10 +331,23 @@ jobs:
             # Give Xvfb a moment to release the window before the next launch.
             sleep 2
           }
-          # 1. Home screen (default).
-          capture_screen /tmp/launcher-home.png
-          # 2. Mods (Content) screen — re-launch with the env var.
-          MC_LAUNCHER_INITIAL_SCREEN=content capture_screen /tmp/launcher-mods.png
+          # 1. Home screen (Home Screen)
+          MC_LAUNCHER_INITIAL_SCREEN=home capture_screen /tmp/launcher-home.png
+          # 2. Instances screen (Instances Screen)
+          MC_LAUNCHER_INITIAL_SCREEN=instances capture_screen /tmp/launcher-instances.png
+          # 3. Versions screen (Versions Screen)
+          MC_LAUNCHER_INITIAL_SCREEN=versions capture_screen /tmp/launcher-versions.png
+          # 4. Downloads screen (Downloads Screen)
+          MC_LAUNCHER_INITIAL_SCREEN=downloads capture_screen /tmp/launcher-downloads.png
+          # 5. Content screen (Content / Mods Screen)
+          MC_LAUNCHER_INITIAL_SCREEN=content capture_screen /tmp/launcher-content.png
+          # 6. Settings screen (Settings Screen)
+          MC_LAUNCHER_INITIAL_SCREEN=settings capture_screen /tmp/launcher-settings.png
+          # Consolidate logs for artifact upload
+          if [ -f /tmp/tauri.log ]; then
+            cat /tmp/tauri.log >> /tmp/tauri-combined.log
+            mv /tmp/tauri-combined.log /tmp/tauri.log
+          fi
           echo "--- tauri.log (last 40 lines, from final run) ---"
           tail -40 /tmp/tauri.log || true
       - name: Upload home screenshot
@@ -330,11 +357,46 @@ jobs:
           path: /tmp/launcher-home.png
           if-no-files-found: error
           retention-days: 7
-      - name: Upload mods screenshot
+      - name: Upload instances screenshot
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-linux-smoke-mods
-          path: /tmp/launcher-mods.png
+          name: tauri-linux-smoke-instances
+          path: /tmp/launcher-instances.png
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload versions screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-linux-smoke-versions
+          path: /tmp/launcher-versions.png
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload downloads screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-linux-smoke-downloads
+          path: /tmp/launcher-downloads.png
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload content screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-linux-smoke-content
+          path: /tmp/launcher-content.png
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload settings screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-linux-smoke-settings
+          path: /tmp/launcher-settings.png
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload all screenshots (gallery)
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-linux-smoke-all-screens
+          path: /tmp/launcher-*.png
           if-no-files-found: error
           retention-days: 7
       - name: Upload tauri log
