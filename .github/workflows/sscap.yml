@@ -115,4 +115,9 @@ jobs:
 
           ### 6. Settings (HeroUI v3 Capsule Slider & Pill Knob)
           ![06-settings](${BASE}/06-settings.png?v=${RUN_ID})
+
+          ---
+
+          ### 7. MorphSlider WebGL Demo (OGL + GSAP Melt Transitions)
+          ![07-morph-slider](${BASE}/07-morph-slider.png?v=${RUN_ID})
           EOF

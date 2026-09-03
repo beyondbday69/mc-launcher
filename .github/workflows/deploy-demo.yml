@@ -1,0 +1,58 @@
+name: Deploy Web Demo
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "pages-demo"
+  cancel-in-progress: true
+
+jobs:
+  deploy-demo:
+    name: Deploy Demo to GitHub Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web preview
+        run: npm run build
+
+      - name: Deploy to GitHub Pages (gh-pages branch)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          force_orphan: true
+
+      - name: Output Demo URL in Actions Summary
+        run: |
+          REPO="${{ github.repository }}"
+          OWNER="${{ github.repository_owner }}"
+          REPO_NAME="${REPO#*/}"
+          DEMO_URL="https://${OWNER}.github.io/${REPO_NAME}/"
+          MORPH_DEMO_URL="https://${OWNER}.github.io/${REPO_NAME}/?screen=demo"
+
+          echo "## 🌐 Live Web Demo URLs" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The live web demo of our app has been built and published to GitHub Pages:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **App Demo URL:** [${DEMO_URL}](${DEMO_URL})" >> $GITHUB_STEP_SUMMARY
+          echo "- **MorphSlider WebGL Demo URL:** [${MORPH_DEMO_URL}](${MORPH_DEMO_URL})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "*(Note: If visiting for the first time, make sure GitHub Pages is enabled in repository Settings -> Pages -> Source: Deploy from branch 'gh-pages'.)*" >> $GITHUB_STEP_SUMMARY

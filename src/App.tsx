@@ -8,6 +8,7 @@ import { Downloads } from "./screens/Downloads";
 import { Content } from "./screens/Content";
 import { Settings } from "./screens/Settings";
 import { AccountButton } from "./screens/AccountButton";
+import MorphSliderDemo from "./components/ui/MorphSliderDemo";
 import {
   IconHome,
   IconInstances,
@@ -23,7 +24,8 @@ type Screen =
   | "versions"
   | "downloads"
   | "content"
-  | "settings";
+  | "settings"
+  | "demo";
 
 interface NavScreen {
   id: Screen;
@@ -62,6 +64,11 @@ const SCREENS: NavScreen[] = [
     label: "Settings",
     icon: () => <IconSettings size={18} />,
   },
+  {
+    id: "demo",
+    label: "Morph Demo",
+    icon: () => <span style={{ fontSize: 16 }}>✦</span>,
+  },
 ];
 
 export function App() {
@@ -70,6 +77,21 @@ export function App() {
   const [screen, setScreen] = useState<Screen>("home");
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paramScreen = params.get("screen");
+    if (
+      paramScreen === "home" ||
+      paramScreen === "instances" ||
+      paramScreen === "versions" ||
+      paramScreen === "downloads" ||
+      paramScreen === "content" ||
+      paramScreen === "settings" ||
+      paramScreen === "demo"
+    ) {
+      setScreen(paramScreen);
+      return;
+    }
+
     api.initialScreen()
       .then((s) => {
         if (
@@ -78,7 +100,8 @@ export function App() {
           s === "versions" ||
           s === "downloads" ||
           s === "content" ||
-          s === "settings"
+          s === "settings" ||
+          s === "demo"
         ) {
           setScreen(s);
         }
@@ -383,6 +406,19 @@ export function App() {
           {screen === "content" && <Content selected={selected} />}
           {screen === "settings" && (
             <Settings config={config} onChange={onConfigChange} />
+          )}
+          {screen === "demo" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0, color: "#ffffff" }}>
+                  MorphSlider WebGL Demo
+                </h2>
+                <span className="muted" style={{ fontSize: 12 }}>
+                  GPU-accelerated image morphing with OGL and GSAP displacement transitions
+                </span>
+              </div>
+              <MorphSliderDemo />
+            </div>
           )}
         </div>
       </main>
