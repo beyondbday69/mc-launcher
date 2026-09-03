@@ -592,18 +592,17 @@ textarea::placeholder {
   border-radius: var(--radius-full) !important;
   position: relative !important;
   cursor: pointer !important;
-  overflow: hidden !important;
 }
 
 .slider__fill,
 [data-slot="slider-fill"] {
   background: var(--solid-primary) !important;
   height: 100% !important;
-  border-radius: var(--radius-full) 0 0 var(--radius-full) !important;
+  border-radius: var(--radius-full) !important;
   position: absolute !important;
   top: 0 !important;
-  left: 0 !important;
   bottom: 0 !important;
+  pointer-events: none !important;
 }
 
 .slider__thumb,
