@@ -9,27 +9,30 @@ import {
   ProjectHit,
   ProjectVersion,
 } from "../lib/types";
+import {
+  IconSearch,
+  IconCheck,
+  IconDownloads,
+  IconRefresh,
+  IconCube,
+  IconContent,
+} from "../lib/icons";
 
 type ContentTab = "mod" | "modpack" | "resourcepack" | "shader";
 
 interface TabDef {
   id: ContentTab;
   label: string;
+  icon: string;
 }
 
 const TABS: TabDef[] = [
-  { id: "mod", label: "Mods" },
-  { id: "resourcepack", label: "Resource Packs" },
-  { id: "shader", label: "Shaders" },
-  { id: "modpack", label: "Modpacks" },
+  { id: "mod", label: "Mods", icon: "✦" },
+  { id: "resourcepack", label: "Resource Packs", icon: "▤" },
+  { id: "shader", label: "Shaders", icon: "☀" },
+  { id: "modpack", label: "Modpacks", icon: "📦" },
 ];
 
-/**
- * Loaders the Modrinth /v2/tag/loader response is filtered to. The full
- * list has ~30 entries (bukkit, paper, velocity, etc.) that are irrelevant
- * for the mod install path. We only show loaders that the launcher's
- * installer pipeline knows about.
- */
 const ALLOWED_LOADER_PREFIXES = ["fabric", "forge", "neoforge", "quilt", "legacy-fabric"];
 
 type InstallStatus =
@@ -55,9 +58,6 @@ export function Content({ selected }: Props) {
   const [status, setStatus] = useState<Record<string, InstallStatus>>({});
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Real tag data, fetched lazily once per session. We don't refetch when
-  // the user changes instance; the tag list is global to Modrinth and
-  // changes at most a few times a month.
   const [allLoaders, setAllLoaders] = useState<LoaderTag[]>([]);
   const [allGameVersions, setAllGameVersions] = useState<GameVersionTag[]>([]);
   const [tagsError, setTagsError] = useState<string | null>(null);
@@ -82,9 +82,6 @@ export function Content({ selected }: Props) {
     };
   }, []);
 
-  /** Loaders the user can pick for the current tab, filtered to the
-   *  loaders the install pipeline actually supports and that Modrinth
-   *  associates with the current project type. */
   const loaderOptions = useMemo(() => {
     const projectType = tab;
     return allLoaders.filter(
@@ -94,22 +91,18 @@ export function Content({ selected }: Props) {
     );
   }, [allLoaders, tab]);
 
-  // If the current loader selection is no longer in the option list
-  // (e.g. the user picked "paper" for a server), fall back to "any".
   useEffect(() => {
     if (loader !== "any" && !loaderOptions.some((l) => l.name === loader)) {
       setLoader("any");
     }
   }, [loaderOptions, loader]);
 
-  // Sync filters with the currently selected instance.
   useEffect(() => {
     if (!selected) return;
     setGameVersion(selected.version);
     setLoader(selected.mod_loader?.kind ?? "any");
   }, [selected?.id, selected?.version, selected?.mod_loader?.kind]);
 
-  // Reset results when the user switches tab.
   useEffect(() => {
     setHits([]);
     setError(null);
@@ -129,7 +122,7 @@ export function Content({ selected }: Props) {
         tab,
         gameVersion.trim() || undefined,
         tab === "mod" && loader !== "any" ? loader : undefined,
-        20,
+        24,
       );
       setHits(res);
       setHasSearched(true);
@@ -154,13 +147,13 @@ export function Content({ selected }: Props) {
       );
       if (versions.length === 0) {
         throw new Error(
-          "No matching version found for the selected game version/loader.",
+          "No matching version found for selected Minecraft version and mod loader.",
         );
       }
       const version = pickLatest(versions);
       const file = pickPrimaryFile(version);
       if (!file) {
-        throw new Error("Version has no downloadable files.");
+        throw new Error("Target version has no downloadable files.");
       }
       const sha1Base64 = hexToBase64(file.hashes.sha1);
       const path = await api.instanceInstallContent(
@@ -182,16 +175,18 @@ export function Content({ selected }: Props) {
 
   if (!selected) {
     return (
-      <div>
-        <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
-          Content
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em" }}>
+          Content & Mods
         </h2>
         <div className="empty">
-          <div className="icon">✦</div>
-          <p>No instance selected.</p>
-          <p className="faint" style={{ fontSize: 12 }}>
-            Create or select an instance first, then come back here to browse
-            and install mods, resource packs, and shaders from Modrinth.
+          <div className="icon">
+            <IconContent size={44} />
+          </div>
+          <p style={{ fontSize: 16, fontWeight: 600 }}>No instance selected</p>
+          <p className="faint" style={{ fontSize: 13, maxWidth: 440 }}>
+            Please select or create a Minecraft instance in the sidebar before
+            installing mods, resource packs, shaders, or modpacks.
           </p>
         </div>
       </div>
@@ -199,85 +194,128 @@ export function Content({ selected }: Props) {
   }
 
   return (
-    <div>
-      <div className="row between" style={{ marginBottom: 16 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 600 }}>Content</h2>
-        <span className="muted" style={{ fontSize: 12 }}>
-          Installing into: <strong>{selected.name}</strong> ·{" "}
-          {selected.version}
-          {selected.mod_loader ? ` · ${selected.mod_loader.kind}` : ""}
-        </span>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Top Header */}
+      <div className="row between" style={{ flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em" }}>
+            Content & Mods
+          </h2>
+          <span className="muted" style={{ fontSize: 12 }}>
+            Browse and install community packages directly from Modrinth
+          </span>
+        </div>
+
+        {/* Target Instance Indicator */}
+        <div
+          className="chip"
+          style={{
+            background: "var(--md-sys-color-surface-container-high)",
+            padding: "4px 12px",
+            gap: 8,
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: selected.color || "var(--md-sys-color-primary)",
+              boxShadow: `0 0 6px ${selected.color || "var(--md-sys-color-primary)"}`,
+            }}
+          />
+          <span style={{ fontWeight: 600, color: "var(--md-sys-color-on-surface)" }}>
+            {selected.name}
+          </span>
+          <span style={{ fontSize: 11, color: "var(--md-sys-color-on-surface-variant)" }}>
+            ({selected.version}{selected.mod_loader ? ` · ${selected.mod_loader.kind}` : ""})
+          </span>
+        </div>
       </div>
 
-      <div
-        className="row"
-        style={{
-          gap: 4,
-          marginBottom: 16,
-          borderBottom: "1px solid var(--border)",
-        }}
-      >
+      {/* Material 3 Category Filter Chips */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {TABS.map((t) => {
-          const active = tab === t.id;
+          const isActive = tab === t.id;
           return (
             <button
               key={t.id}
+              type="button"
+              className={`chip ${isActive ? "active" : ""}`}
               onClick={() => setTab(t.id)}
               style={{
-                background: "transparent",
-                border: "none",
-                color: active ? "var(--accent)" : "var(--text-dim)",
-                padding: "8px 14px",
-                fontSize: 13,
-                fontWeight: 500,
                 cursor: "pointer",
-                borderBottom: active
-                  ? "2px solid var(--accent)"
-                  : "2px solid transparent",
-                marginBottom: -1,
-                borderRadius: 0,
+                padding: "8px 16px",
+                fontSize: 13,
+                fontWeight: isActive ? 700 : 500,
               }}
             >
-              {t.label}
+              <span>{t.icon}</span>
+              <span>{t.label}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-          <input
-            placeholder="Search Modrinth…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") onSearch();
-            }}
-            style={{ flex: 1, minWidth: 200 }}
-          />
+      {/* Material 3 Search & Filters Bar */}
+      <div className="card" style={{ padding: "16px 20px" }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          {/* M3 Pill Search Input */}
+          <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
+            <input
+              type="text"
+              placeholder={`Search ${tab === "mod" ? "mods" : tab === "shader" ? "shaders" : "content"} (e.g. Sodium, Iris, Complementary)…`}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onSearch();
+              }}
+              style={{ width: "100%", fontSize: 13 }}
+            />
+            {query && (
+              <button
+                className="btn ghost"
+                onClick={() => setQuery("")}
+                style={{
+                  position: "absolute",
+                  right: 8,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  padding: "2px 6px",
+                  fontSize: 12,
+                  color: "var(--md-sys-color-on-surface-variant)",
+                }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Version Filter */}
           <select
             value={gameVersion}
             onChange={(e) => setGameVersion(e.target.value)}
-            style={{ width: 160 }}
-            title="Minecraft version"
+            style={{ width: 150, fontSize: 13 }}
+            title="Minecraft Version filter"
             disabled={allGameVersions.length === 0}
           >
-            <option value="">Any version</option>
+            <option value="">Any Version</option>
             {allGameVersions.map((v) => (
               <option key={v.version} value={v.version}>
-                {v.version}
-                {v.version_type === "snapshot" ? " (snap)" : ""}
+                {v.version} {v.version_type === "snapshot" ? "(snap)" : ""}
               </option>
             ))}
           </select>
+
+          {/* Loader Filter */}
           {tab === "mod" && (
             <select
               value={loader}
               onChange={(e) => setLoader(e.target.value)}
-              style={{ width: 160 }}
-              title="Mod loader"
+              style={{ width: 140, fontSize: 13 }}
+              title="Mod Loader filter"
             >
-              <option value="any">Any loader</option>
+              <option value="any">Any Loader</option>
               {loaderOptions.map((l) => (
                 <option key={l.name} value={l.name}>
                   {l.name}
@@ -285,55 +323,73 @@ export function Content({ selected }: Props) {
               ))}
             </select>
           )}
+
+          {/* Search Button */}
           <button
             className="btn primary"
             onClick={onSearch}
             disabled={searching || !query.trim()}
+            style={{ padding: "8px 20px", gap: 6 }}
           >
-            {searching ? "Searching…" : "Search"}
+            {searching ? (
+              <IconRefresh size={15} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+            ) : (
+              <IconSearch size={15} />
+            )}
+            <span>{searching ? "Searching…" : "Search"}</span>
           </button>
         </div>
-        <p className="faint" style={{ fontSize: 11, marginTop: 8 }}>
-          Files are downloaded from Modrinth, verified by SHA-1, and placed in
-          the instance's {tabDir(tab)} folder.
-          {tagsError && (
-            <>
-              {" "}
-              <span style={{ color: "var(--danger)" }}>
-                Could not load filter lists from Modrinth: {tagsError}
-              </span>
-            </>
-          )}
-        </p>
+
+        {tagsError && (
+          <p style={{ color: "var(--md-sys-color-error)", fontSize: 12, marginTop: 8, marginBottom: 0 }}>
+            Could not retrieve filter tags: {tagsError}
+          </p>
+        )}
       </div>
 
       {error && (
         <div
           className="card"
-          style={{ marginBottom: 16, color: "var(--danger)" }}
+          style={{
+            background: "var(--md-sys-color-error-container)",
+            color: "var(--md-sys-color-error)",
+            fontSize: 13,
+            padding: "12px 16px",
+          }}
         >
           {error}
         </div>
       )}
 
+      {/* Results View */}
       {searching ? (
         <div className="empty">
-          <div className="icon">⟳</div>
-          <p>Searching Modrinth…</p>
+          <div className="icon">
+            <IconRefresh size={44} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+          </div>
+          <p style={{ fontSize: 16, fontWeight: 600 }}>Searching Modrinth database…</p>
+          <span className="muted" style={{ fontSize: 12 }}>
+            Filtering compatible {tab} packages
+          </span>
         </div>
       ) : hits.length === 0 ? (
         <div className="empty">
-          <div className="icon">—</div>
-          <p>
+          <div className="icon">
+            <IconSearch size={44} />
+          </div>
+          <p style={{ fontSize: 16, fontWeight: 600 }}>
+            {hasSearched ? "No matching packages found" : "Ready to discover content"}
+          </p>
+          <p className="faint" style={{ fontSize: 13, maxWidth: 440 }}>
             {hasSearched
-              ? "No results. Try a different query or relax filters."
-              : "Run a search to see results from Modrinth."}
+              ? "Try searching for a broader term or loosening your version and loader filters."
+              : `Type a name or keyword above to search through thousands of ${tab} packages on Modrinth.`}
           </p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {hits.map((h) => (
-            <ResultRow
+            <ModCard
               key={h.slug}
               hit={h}
               status={status[h.slug]}
@@ -346,7 +402,11 @@ export function Content({ selected }: Props) {
   );
 }
 
-function ResultRow({
+/* ==========================================================================
+   Expressive Mod Card Component
+   ========================================================================== */
+
+function ModCard({
   hit,
   status,
   onInstall,
@@ -360,126 +420,191 @@ function ResultRow({
   const errored = status?.kind === "error";
   const description = stripHtml(hit.description);
   const truncated =
-    description.length > 200
-      ? description.slice(0, 200).trimEnd() + "…"
+    description.length > 180
+      ? description.slice(0, 180).trimEnd() + "…"
       : description;
 
   return (
     <div
-      className="card"
+      className="mod-card"
       style={{
         display: "flex",
-        flexDirection: "row",
-        gap: 12,
         alignItems: "center",
-        padding: 12,
+        gap: 16,
+        padding: "16px 20px",
       }}
     >
+      {/* Icon */}
       {hit.icon_url ? (
         <img
           src={hit.icon_url}
-          alt=""
-          width={48}
-          height={48}
+          alt={hit.title}
+          width={52}
+          height={52}
           style={{
-            width: 48,
-            height: 48,
-            borderRadius: 6,
-            background: "var(--bg-2)",
+            width: 52,
+            height: 52,
+            borderRadius: "var(--md-sys-shape-corner-md)",
+            background: "var(--md-sys-color-surface-container-high)",
             objectFit: "cover",
             flexShrink: 0,
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
           }}
         />
       ) : (
         <div
           style={{
-            width: 48,
-            height: 48,
-            borderRadius: 6,
-            background: "var(--bg-2)",
+            width: 52,
+            height: 52,
+            borderRadius: "var(--md-sys-shape-corner-md)",
+            background: "var(--md-sys-color-surface-container-high)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "var(--text-faint)",
-            fontSize: 18,
+            color: "var(--md-sys-color-primary)",
+            fontSize: 22,
             flexShrink: 0,
           }}
         >
           ✦
         </div>
       )}
+
+      {/* Info Section */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          className="row"
-          style={{ gap: 8, marginBottom: 4, flexWrap: "wrap" }}
-        >
-          <strong style={{ fontWeight: 600 }}>{hit.title}</strong>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
+          <strong
+            style={{
+              fontSize: 15,
+              fontWeight: 700,
+              color: "var(--md-sys-color-on-surface)",
+            }}
+          >
+            {hit.title}
+          </strong>
           <span className="muted" style={{ fontSize: 12 }}>
             by {hit.author}
           </span>
+          <span className="tag" style={{ fontSize: 10.5, padding: "1px 6px" }}>
+            {hit.project_type}
+          </span>
         </div>
+
         <p
           className="muted"
           style={{
-            fontSize: 12,
+            fontSize: 12.5,
+            lineHeight: 1.4,
+            marginBottom: 8,
             overflow: "hidden",
             textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
           }}
-          title={description}
         >
-          {truncated}
+          {truncated || "No description provided."}
         </p>
-        <p className="faint" style={{ fontSize: 11, marginTop: 4 }}>
-          {hit.downloads.toLocaleString()} downloads
-        </p>
+
+        {/* Stats Row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 11.5 }}>
+          <span
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              color: "var(--md-sys-color-on-surface-variant)",
+            }}
+          >
+            <IconDownloads size={13} style={{ color: "var(--md-sys-color-primary)" }} />
+            {hit.downloads.toLocaleString()} downloads
+          </span>
+
+          {hit.versions.length > 0 && (
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                color: "var(--md-sys-color-on-surface-variant)",
+              }}
+            >
+              <IconCube size={13} />
+              {hit.versions.slice(0, 3).join(", ")}
+              {hit.versions.length > 3 ? "…" : ""}
+            </span>
+          )}
+        </div>
       </div>
+
+      {/* Action / Install Button */}
       <div
         style={{
-          minWidth: 150,
-          textAlign: "right",
+          minWidth: 140,
           display: "flex",
           flexDirection: "column",
           alignItems: "flex-end",
-          gap: 4,
+          gap: 6,
+          flexShrink: 0,
         }}
       >
         {installing ? (
-          <span className="tag warning">Installing…</span>
+          <span
+            className="chip warning"
+            style={{
+              fontSize: 12,
+              padding: "6px 14px",
+              gap: 6,
+            }}
+          >
+            <IconRefresh size={13} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+            <span>Installing…</span>
+          </span>
         ) : installed && status?.kind === "installed" ? (
-          <>
-            <span className="tag success" title={status.path}>
-              Installed
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+            <span
+              className="chip success"
+              style={{
+                fontSize: 12,
+                padding: "6px 14px",
+                gap: 6,
+              }}
+              title={status.path}
+            >
+              <IconCheck size={14} />
+              <span>Installed</span>
             </span>
-            <span className="faint" style={{ fontSize: 10 }}>
+            <span className="faint" style={{ fontSize: 10, fontFamily: "var(--mono)" }}>
               {formatBytes(status.size)}
             </span>
-          </>
+          </div>
         ) : errored && status?.kind === "error" ? (
-          <>
-            <span className="tag danger" title={status.message}>
-              Error
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+            <span className="chip danger" style={{ fontSize: 11, padding: "4px 8px" }}>
+              Install Failed
             </span>
             <button
-              className="btn"
+              className="btn tonal"
               onClick={onInstall}
-              style={{ fontSize: 11, padding: "2px 8px" }}
+              style={{ fontSize: 11, padding: "3px 10px" }}
             >
               Retry
             </button>
             <span
               className="faint"
-              style={{ fontSize: 10, maxWidth: 150, textAlign: "right" }}
+              style={{
+                fontSize: 10,
+                maxWidth: 160,
+                textAlign: "right",
+                color: "var(--md-sys-color-error)",
+              }}
               title={status.message}
             >
-              {truncate(status.message, 60)}
+              {truncate(status.message, 50)}
             </span>
-          </>
+          </div>
         ) : (
           <button
             className="btn primary"
             onClick={onInstall}
-            style={{ minWidth: 90 }}
+            style={{ minWidth: 100, padding: "6px 18px", fontSize: 12.5 }}
           >
             Install
           </button>
@@ -490,7 +615,6 @@ function ResultRow({
 }
 
 function pickLatest(versions: ProjectVersion[]): ProjectVersion {
-  // Prefer the most recently published matching version.
   let best = versions[0]!;
   for (const v of versions) {
     if (v.date_published > best.date_published) best = v;
@@ -500,19 +624,6 @@ function pickLatest(versions: ProjectVersion[]): ProjectVersion {
 
 function pickPrimaryFile(version: ProjectVersion): ProjectFile | undefined {
   return version.files.find((f) => f.primary) ?? version.files[0];
-}
-
-function tabDir(tab: ContentTab): string {
-  switch (tab) {
-    case "mod":
-      return "mods";
-    case "modpack":
-      return "modpacks";
-    case "resourcepack":
-      return "resourcepacks";
-    case "shader":
-      return "shaderpacks";
-  }
 }
 
 function truncate(s: string, n: number): string {

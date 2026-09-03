@@ -1,6 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, ReactNode } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { api, Config, JavaInstallation } from "../lib/types";
+import {
+  IconSettings,
+  IconCube,
+  IconRam,
+  IconDownloads,
+  IconRefresh,
+  IconCheck,
+  IconFolder,
+} from "../lib/icons";
 
 interface Props {
   config: Config;
@@ -9,12 +18,18 @@ interface Props {
 
 type Tab = "general" | "java" | "jvm" | "downloads" | "about";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "general", label: "General" },
-  { id: "java", label: "Java" },
-  { id: "jvm", label: "JVM" },
-  { id: "downloads", label: "Downloads" },
-  { id: "about", label: "About" },
+interface SettingTabDef {
+  id: Tab;
+  label: string;
+  icon: ReactNode;
+}
+
+const TABS: SettingTabDef[] = [
+  { id: "general", label: "General", icon: <IconSettings size={16} /> },
+  { id: "java", label: "Java Runtimes", icon: <IconCube size={16} /> },
+  { id: "jvm", label: "JVM Tuning", icon: <IconRam size={16} /> },
+  { id: "downloads", label: "Downloads", icon: <IconDownloads size={16} /> },
+  { id: "about", label: "About", icon: <span style={{ fontSize: 14 }}>ℹ</span> },
 ];
 
 export function Settings({ config, onChange }: Props) {
@@ -26,22 +41,52 @@ export function Settings({ config, onChange }: Props) {
   }, []);
 
   return (
-    <div>
-      <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
-        Settings
-      </h2>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Header */}
+      <div>
+        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em" }}>
+          Launcher Settings
+        </h2>
+        <span className="muted" style={{ fontSize: 12 }}>
+          Customize performance, Java environments, runtime preferences, and storage
+        </span>
+      </div>
+
       <div className="settings">
+        {/* Navigation Rail for Settings */}
         <div className="settings-nav">
-          {TABS.map((t) => (
-            <div
-              key={t.id}
-              className={`settings-nav-item ${tab === t.id ? "active" : ""}`}
-              onClick={() => setTab(t.id)}
-            >
-              {t.label}
-            </div>
-          ))}
+          {TABS.map((t) => {
+            const isActive = tab === t.id;
+            return (
+              <div
+                key={t.id}
+                className={`settings-nav-item ${isActive ? "active" : ""}`}
+                onClick={() => setTab(t.id)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  cursor: "pointer",
+                }}
+              >
+                <span
+                  style={{
+                    color: isActive
+                      ? "var(--md-sys-color-primary)"
+                      : "var(--md-sys-color-on-surface-variant)",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  {t.icon}
+                </span>
+                <span>{t.label}</span>
+              </div>
+            );
+          })}
         </div>
+
+        {/* Tab Content Cards */}
         <div className="settings-content">
           {tab === "general" && (
             <GeneralTab config={config} onChange={onChange} />
@@ -65,6 +110,10 @@ export function Settings({ config, onChange }: Props) {
   );
 }
 
+/* ==========================================================================
+   General Preferences Tab
+   ========================================================================== */
+
 function GeneralTab({
   config,
   onChange,
@@ -72,81 +121,164 @@ function GeneralTab({
   config: Config;
   onChange: (c: Config) => void;
 }) {
+  const ramMb = config.default_ram_mb || 2048;
+
   return (
-    <div className="card">
-      <h3>General</h3>
-      <div className="field">
-        <label>Default RAM (MB)</label>
-        <input
-          type="number"
-          min={512}
-          step={256}
-          value={config.default_ram_mb}
-          onChange={(e) =>
-            onChange({
-              ...config,
-              default_ram_mb: parseInt(e.target.value, 10) || 2048,
-            })
-          }
-        />
-      </div>
-      <div className="field">
-        <label>Theme</label>
-        <select
-          value={config.theme}
-          onChange={(e) => onChange({ ...config, theme: e.target.value })}
-        >
-          <option value="dark">Dark</option>
-        </select>
-      </div>
-      <div className="field">
-        <label>Language</label>
-        <select
-          value={config.language}
-          onChange={(e) => onChange({ ...config, language: e.target.value })}
-        >
-          <option value="en-US">English (US)</option>
-        </select>
-      </div>
-      <div className="field">
-        <label>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Memory Allocation Card */}
+      <div className="card">
+        <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
+          Default Memory Allocation
+        </h3>
+
+        <div className="field">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <label>RAM allocated to new instances</label>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--md-sys-color-primary)" }}>
+              {ramMb} MB ({(ramMb / 1024).toFixed(1)} GB)
+            </span>
+          </div>
+
           <input
-            type="checkbox"
-            checked={config.close_on_launch}
+            type="range"
+            min={1024}
+            max={16384}
+            step={512}
+            value={ramMb}
             onChange={(e) =>
-              onChange({ ...config, close_on_launch: e.target.checked })
+              onChange({
+                ...config,
+                default_ram_mb: parseInt(e.target.value, 10) || 2048,
+              })
             }
-          />{" "}
-          Close launcher when the game starts
-        </label>
+            style={{ width: "100%", margin: "8px 0" }}
+          />
+
+          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+            {[2048, 4096, 6144, 8192, 12288].map((mb) => (
+              <button
+                key={mb}
+                type="button"
+                className={`chip ${ramMb === mb ? "active" : ""}`}
+                onClick={() => onChange({ ...config, default_ram_mb: mb })}
+                style={{ fontSize: 11, padding: "2px 10px", cursor: "pointer" }}
+              >
+                {mb / 1024} GB
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
-      <div className="field">
-        <label>
-          <input
-            type="checkbox"
-            checked={config.show_snapshots}
-            onChange={(e) =>
-              onChange({ ...config, show_snapshots: e.target.checked })
-            }
-          />{" "}
-          Show snapshots in the version list
-        </label>
+
+      {/* Interface & Theme Card */}
+      <div className="card">
+        <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
+          Interface & Appearance
+        </h3>
+
+        <div className="form-grid">
+          <div className="field">
+            <label>Launcher Theme</label>
+            <select
+              value={config.theme}
+              onChange={(e) => onChange({ ...config, theme: e.target.value })}
+            >
+              <option value="dark">Material 3 Dark Tonal (Expressive)</option>
+            </select>
+          </div>
+
+          <div className="field">
+            <label>Display Language</label>
+            <select
+              value={config.language}
+              onChange={(e) => onChange({ ...config, language: e.target.value })}
+            >
+              <option value="en-US">English (United States)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="divider" />
+
+        {/* Toggles */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <label style={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={config.close_on_launch}
+              onChange={(e) =>
+                onChange({ ...config, close_on_launch: e.target.checked })
+              }
+            />
+            <span style={{ fontSize: 13 }}>Close launcher automatically when Minecraft starts</span>
+          </label>
+
+          <label style={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={config.show_snapshots}
+              onChange={(e) =>
+                onChange({ ...config, show_snapshots: e.target.checked })
+              }
+            />
+            <span style={{ fontSize: 13 }}>Show snapshot releases in the version picker</span>
+          </label>
+
+          <label style={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={config.show_historical}
+              onChange={(e) =>
+                onChange({ ...config, show_historical: e.target.checked })
+              }
+            />
+            <span style={{ fontSize: 13 }}>Show historical (Alpha & Beta) versions in lists</span>
+          </label>
+        </div>
       </div>
-      <div className="field">
-        <label>
-          <input
-            type="checkbox"
-            checked={config.show_historical}
-            onChange={(e) =>
-              onChange({ ...config, show_historical: e.target.checked })
-            }
-          />{" "}
-          Show historical (alpha/beta) versions
-        </label>
+
+      {/* Storage & Directories */}
+      <div className="card">
+        <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 12 }}>
+          Storage & Directories
+        </h3>
+        <p className="muted" style={{ fontSize: 12.5, marginBottom: 12 }}>
+          Launcher data and cache are managed automatically. Override the default directory if you want
+          instances saved on a specific drive.
+        </p>
+        <div className="field" style={{ margin: 0 }}>
+          <label>Data Directory Override</label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              value={config.data_dir_override ?? ""}
+              placeholder="Default platform storage path (~/.local/share/mc-launcher)"
+              onChange={(e) =>
+                onChange({
+                  ...config,
+                  data_dir_override: e.target.value.trim() || null,
+                })
+              }
+              style={{ flex: 1, fontSize: 12, fontFamily: "var(--mono)" }}
+            />
+            {config.data_dir_override && (
+              <button
+                className="btn ghost"
+                onClick={() => onChange({ ...config, data_dir_override: null })}
+                style={{ fontSize: 12 }}
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
+
+/* ==========================================================================
+   Java Runtimes Tab
+   ========================================================================== */
 
 function JavaTab({
   config,
@@ -163,89 +295,149 @@ function JavaTab({
 
   return (
     <div className="card">
-      <h3>Java installations</h3>
-      <p className="muted" style={{ marginBottom: 12, fontSize: 13 }}>
-        The launcher detects Java in common install locations and
-        <code> JAVA_HOME</code>. You can also add a path manually.
-      </p>
-      <div className="row" style={{ gap: 8, marginBottom: 12 }}>
-        <button
-          className="btn"
-          disabled={detecting}
-          onClick={async () => {
-            setDetecting(true);
-            try {
-              await api.javaDetect();
-              onRefresh();
-            } finally {
-              setDetecting(false);
-            }
-          }}
-        >
-          {detecting ? "Detecting…" : "Re-detect"}
-        </button>
-        <button
-          className="btn"
-          onClick={async () => {
-            const path = await open({
-              multiple: false,
-              directory: false,
-              title: "Select java executable",
-            });
-            if (typeof path === "string") {
+      <div className="row between" style={{ marginBottom: 14 }}>
+        <div>
+          <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
+            Java Runtimes
+          </h3>
+          <span className="muted" style={{ fontSize: 12 }}>
+            Detect and assign Java versions for Minecraft Java Edition
+          </span>
+        </div>
+
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            className="btn tonal"
+            disabled={detecting}
+            onClick={async () => {
+              setDetecting(true);
               try {
-                await api.javaAdd(path);
+                await api.javaDetect();
                 onRefresh();
-              } catch (e) {
-                alert(String(e));
+              } finally {
+                setDetecting(false);
               }
-            }
+            }}
+            style={{ padding: "6px 14px", fontSize: 12, gap: 6 }}
+          >
+            <IconRefresh
+              size={14}
+              style={{ animation: detecting ? "indeterminate 1.5s infinite linear" : undefined }}
+            />
+            <span>{detecting ? "Scanning…" : "Re-detect"}</span>
+          </button>
+
+          <button
+            className="btn primary"
+            onClick={async () => {
+              const path = await open({
+                multiple: false,
+                directory: false,
+                title: "Select Java executable (java / java.exe)",
+              });
+              if (typeof path === "string") {
+                try {
+                  await api.javaAdd(path);
+                  onRefresh();
+                } catch (e) {
+                  alert(String(e));
+                }
+              }
+            }}
+            style={{ padding: "6px 14px", fontSize: 12, gap: 6 }}
+          >
+            <IconFolder size={14} />
+            <span>Add Manually…</span>
+          </button>
+        </div>
+      </div>
+
+      {installations.length === 0 ? (
+        <div
+          style={{
+            padding: "24px",
+            textAlign: "center",
+            background: "var(--md-sys-color-surface-container-lowest)",
+            borderRadius: "var(--md-sys-shape-corner-lg)",
           }}
         >
-          Add manually…
-        </button>
-      </div>
-      {installations.length === 0 ? (
-        <p className="muted" style={{ fontSize: 13 }}>
-          No Java installations detected. Install Java 17 or 21, or click
-          "Add manually…".
-        </p>
+          <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
+            No Java installations detected on your system.
+          </p>
+          <span className="faint" style={{ fontSize: 12 }}>
+            Install OpenJDK 17 or 21 (Temurin / Corretto / Oracle) or browse manually.
+          </span>
+        </div>
       ) : (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Version</th>
-              <th>Vendor</th>
-              <th>Path</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {installations.map((j) => (
-              <tr key={j.path}>
-                <td>{j.version}</td>
-                <td className="muted">{j.vendor}</td>
-                <td className="mono" style={{ fontSize: 11, color: "var(--text-dim)" }}>
-                  {j.path}
-                </td>
-                <td style={{ textAlign: "right" }}>
-                  <button
-                    className="btn ghost"
-                    onClick={() =>
-                      onChange({ ...config, default_java_path: j.path })
-                    }
-                  >
-                    {config.default_java_path === j.path ? "Default ✓" : "Set default"}
-                  </button>
-                </td>
+        <div style={{ overflowX: "auto" }}>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Version</th>
+                <th>Vendor</th>
+                <th>Executable Path</th>
+                <th style={{ textAlign: "right" }}>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {installations.map((j) => {
+                const isDefault = config.default_java_path === j.path;
+                return (
+                  <tr key={j.path}>
+                    <td>
+                      <span className="chip success" style={{ fontSize: 11, padding: "2px 8px" }}>
+                        Java {j.version}
+                      </span>
+                    </td>
+                    <td style={{ fontWeight: 600, color: "var(--md-sys-color-on-surface)" }}>
+                      {j.vendor}
+                    </td>
+                    <td
+                      style={{
+                        fontFamily: "var(--mono)",
+                        fontSize: 11,
+                        color: "var(--md-sys-color-on-surface-variant)",
+                        maxWidth: 240,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                      title={j.path}
+                    >
+                      {j.path}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {isDefault ? (
+                        <span className="chip active" style={{ fontSize: 11, padding: "2px 8px" }}>
+                          <IconCheck size={12} />
+                          <span>Default</span>
+                        </span>
+                      ) : (
+                        <button
+                          className="btn ghost"
+                          onClick={() =>
+                            onChange({ ...config, default_java_path: j.path })
+                          }
+                          style={{ fontSize: 11, padding: "3px 10px" }}
+                        >
+                          Set Default
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
 }
+
+/* ==========================================================================
+   JVM Tuning Tab
+   ========================================================================== */
 
 function JvmTab({
   config,
@@ -256,27 +448,32 @@ function JvmTab({
 }) {
   return (
     <div className="card">
-      <h3>JVM</h3>
-      <p className="muted" style={{ marginBottom: 12, fontSize: 13 }}>
-        Default JVM profile used for new instances. Each instance can override this.
+      <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 8 }}>
+        Java Virtual Machine Profiles
+      </h3>
+      <p className="muted" style={{ marginBottom: 16, fontSize: 12.5 }}>
+        Choose optimization presets for garbage collection and memory tuning.
+        Instances inherit this profile unless configured individually.
       </p>
+
       <div className="field">
-        <label>Default profile</label>
+        <label>Default Optimization Preset</label>
         <select
           value={config.default_jvm_profile}
           onChange={(e) =>
             onChange({ ...config, default_jvm_profile: e.target.value })
           }
         >
-          <option value="default">Default</option>
-          <option value="low_ram">Low RAM</option>
-          <option value="balanced">Balanced</option>
-          <option value="performance">Performance</option>
-          <option value="custom">Custom</option>
+          <option value="default">Default JVM Arguments</option>
+          <option value="low_ram">Low RAM Preset (Optimized for ≤ 2GB)</option>
+          <option value="balanced">Balanced (Shenandoah/G1GC Optimized)</option>
+          <option value="performance">High Performance (ZGC / High Heap)</option>
+          <option value="custom">Custom Arguments</option>
         </select>
       </div>
-      <div className="field">
-        <label>Custom JVM args (used when "Custom" is selected)</label>
+
+      <div className="field" style={{ marginTop: 12 }}>
+        <label>Custom JVM Flags (one parameter per line)</label>
         <textarea
           value={config.default_custom_jvm_args.join("\n")}
           onChange={(e) =>
@@ -288,12 +485,18 @@ function JvmTab({
                 .filter(Boolean),
             })
           }
-          rows={4}
+          placeholder="-XX:+UseG1GC&#10;-XX:InitiatingHeapOccupancyPercent=45"
+          rows={5}
+          style={{ fontFamily: "var(--mono)", fontSize: 12 }}
         />
       </div>
     </div>
   );
 }
+
+/* ==========================================================================
+   Downloads Tab
+   ========================================================================== */
 
 function DownloadsTab({
   config,
@@ -304,27 +507,34 @@ function DownloadsTab({
 }) {
   return (
     <div className="card">
-      <h3>Downloads</h3>
+      <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
+        Network & Download Manager
+      </h3>
+
       <div className="field">
-        <label>Concurrent downloads</label>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <label>Parallel Worker Concurrency</label>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--md-sys-color-primary)" }}>
+            {config.download_concurrency} threads
+          </span>
+        </div>
         <input
-          type="number"
+          type="range"
           min={1}
           max={32}
           value={config.download_concurrency}
           onChange={(e) =>
             onChange({
               ...config,
-              download_concurrency: Math.max(
-                1,
-                Math.min(32, parseInt(e.target.value, 10) || 8),
-              ),
+              download_concurrency: parseInt(e.target.value, 10) || 8,
             })
           }
+          style={{ width: "100%", margin: "8px 0" }}
         />
       </div>
-      <div className="field">
-        <label>Speed limit (KB/s, 0 = unlimited)</label>
+
+      <div className="field" style={{ marginTop: 12 }}>
+        <label>Download Speed Limit (KB/s, 0 for unrestricted)</label>
         <input
           type="number"
           min={0}
@@ -336,26 +546,71 @@ function DownloadsTab({
               download_speed_limit_kbps: v > 0 ? v : null,
             });
           }}
+          placeholder="0 (Unlimited)"
         />
       </div>
     </div>
   );
 }
 
+/* ==========================================================================
+   About Tab
+   ========================================================================== */
+
 function AboutTab() {
   return (
     <div className="card">
-      <h3>About</h3>
-      <p style={{ marginBottom: 6 }}>
-        <strong>MC Launcher</strong>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: "var(--md-sys-shape-corner-md)",
+            background: "linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-secondary) 100%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#ffffff",
+            fontWeight: 800,
+            fontSize: 20,
+            boxShadow: "0 0 16px rgba(56, 189, 248, 0.35)",
+          }}
+        >
+          M
+        </div>
+        <div>
+          <h3 style={{ margin: 0, textTransform: "none", fontSize: 17, fontWeight: 700 }}>
+            MC Launcher
+          </h3>
+          <span className="muted" style={{ fontSize: 12 }}>
+            Version 0.1.0 · Material 3 Expressive Edition
+          </span>
+        </div>
+      </div>
+
+      <p className="muted" style={{ fontSize: 13, lineHeight: 1.6, marginBottom: 16 }}>
+        A lightweight, secure Minecraft Java Edition launcher designed for speed,
+        clarity, and modern desktop experiences. Powered by Tauri 2.0, Rust, and React 18.
       </p>
-      <p className="muted" style={{ fontSize: 13 }}>
-        A fast, lightweight, secure Minecraft Java Edition launcher.
-      </p>
+
       <div className="divider" />
-      <p className="faint" style={{ fontSize: 12 }}>
-        Built with Tauri, React, and Rust. No telemetry. No tracking.
-      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 12.5 }}>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <span className="muted">Privacy & Analytics:</span>
+          <span style={{ fontWeight: 600, color: "var(--md-sys-color-tertiary)" }}>
+            Zero Telemetry · 100% Local
+          </span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <span className="muted">Engine:</span>
+          <span style={{ fontWeight: 600 }}>Tauri v2 + Tokio Async Core</span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <span className="muted">UI System:</span>
+          <span style={{ fontWeight: 600 }}>Material Design 3 Expressive</span>
+        </div>
+      </div>
     </div>
   );
 }

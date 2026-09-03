@@ -1,5 +1,19 @@
-import { useEffect, useState } from "react";
-import { api, formatBytes, formatDuration, formatSpeed, ProgressSnapshot } from "../lib/types";
+import { useEffect, useState, ReactNode } from "react";
+import {
+  api,
+  formatBytes,
+  formatDuration,
+  formatSpeed,
+  ProgressSnapshot,
+} from "../lib/types";
+import {
+  IconDownloads,
+  IconRefresh,
+  IconCheck,
+  IconStop,
+  IconSpeed,
+  IconFolder,
+} from "../lib/icons";
 
 export function Downloads() {
   const [p, setP] = useState<ProgressSnapshot | null>(null);
@@ -22,75 +36,216 @@ export function Downloads() {
     };
   }, []);
 
+  const isActive = p && p.active > 0;
   const pct = p && p.bytes_total > 0 ? (p.bytes_downloaded / p.bytes_total) * 100 : 0;
   const eta =
     p && p.speed_bps > 0 && p.bytes_total > p.bytes_downloaded
       ? (p.bytes_total - p.bytes_downloaded) / p.speed_bps
       : null;
+  const indeterminate = isActive && (!p || p.bytes_total === 0);
 
   return (
-    <div>
-      <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
-        Downloads
-      </h2>
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="row between" style={{ marginBottom: 12 }}>
-          <h3 style={{ margin: 0 }}>In-flight</h3>
-          <div className="row" style={{ gap: 8 }}>
-            <button
-              className="btn"
-              disabled={!p || p.active === 0}
-              onClick={async () => {
-                await api.downloadsCancel();
-              }}
-            >
-              Cancel
-            </button>
-          </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Top Header */}
+      <div className="row between" style={{ flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em" }}>
+            Downloads & Transfer Queue
+          </h2>
+          <span className="muted" style={{ fontSize: 12 }}>
+            Real-time pipeline monitoring for game client, assets, libraries, and mods
+          </span>
         </div>
 
-        <div className="kpi-row" style={{ marginBottom: 16 }}>
-          <Kpi label="Active" value={String(p?.active ?? 0)} />
-          <Kpi label="Completed" value={String(p?.completed ?? 0)} />
-          <Kpi label="Failed" value={String(p?.failed ?? 0)} />
-          <Kpi
-            label="Speed"
-            value={p ? formatSpeed(p.speed_bps) : "0 B/s"}
+        {/* Live Status Chip */}
+        <div
+          className={`chip ${isActive ? "warning" : "success"}`}
+          style={{ padding: "4px 12px", gap: 8 }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: isActive
+                ? "var(--md-sys-color-warning)"
+                : "var(--md-sys-color-tertiary)",
+              boxShadow: isActive
+                ? "0 0 8px var(--md-sys-color-warning)"
+                : "0 0 8px var(--md-sys-color-tertiary)",
+            }}
           />
-        </div>
-
-        <div style={{ marginBottom: 6 }} className="row between">
-          <span className="muted" style={{ fontSize: 12 }}>
-            {p ? formatBytes(p.bytes_downloaded) : "0 B"} /{" "}
-            {p ? formatBytes(p.bytes_total) : "0 B"}
+          <span style={{ fontWeight: 600 }}>
+            {isActive ? `${p.active} active transfers` : "Queue Idle"}
           </span>
-          <span className="muted" style={{ fontSize: 12 }}>
-            {pct.toFixed(1)}%{" "}
-            {eta != null && `· ${formatDuration(eta)} remaining`}
-          </span>
-        </div>
-        <div className="progress">
-          <div className="bar" style={{ width: `${pct}%` }} />
         </div>
       </div>
 
+      {/* Active Transfer Card */}
       <div className="card">
-        <h3>Cache</h3>
-        <p className="muted" style={{ fontSize: 13 }}>
-          Downloaded files are cached in the launcher's data directory. On
-          the next launch, unchanged files are reused. Corrupt files are
-          detected via SHA-1 and re-downloaded automatically.
-        </p>
+        <div className="row between" style={{ marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                background: isActive
+                  ? "var(--md-sys-color-primary-container)"
+                  : "var(--md-sys-color-surface-container-high)",
+                color: isActive
+                  ? "var(--md-sys-color-primary)"
+                  : "var(--md-sys-color-on-surface-variant)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <IconDownloads size={18} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, textTransform: "none", fontSize: 16, fontWeight: 700 }}>
+                In-Flight Transfers
+              </h3>
+              <span className="muted" style={{ fontSize: 12 }}>
+                {isActive ? "Downloading files with parallel workers" : "No downloads currently in progress"}
+              </span>
+            </div>
+          </div>
+
+          <button
+            className="btn danger"
+            disabled={!p || p.active === 0}
+            onClick={async () => {
+              await api.downloadsCancel();
+            }}
+            style={{ padding: "6px 14px", fontSize: 12, gap: 6 }}
+          >
+            <IconStop size={14} />
+            <span>Cancel Transfers</span>
+          </button>
+        </div>
+
+        {/* Expressive KPI Grid */}
+        <div className="kpi-row" style={{ marginBottom: 20 }}>
+          <KpiTile
+            icon={<IconRefresh size={16} />}
+            label="Active Files"
+            value={String(p?.active ?? 0)}
+            highlight={isActive ? "primary" : undefined}
+          />
+          <KpiTile
+            icon={<IconCheck size={16} />}
+            label="Completed Files"
+            value={String(p?.completed ?? 0)}
+            highlight="tertiary"
+          />
+          <KpiTile
+            icon={<IconStop size={16} />}
+            label="Failed Retries"
+            value={String(p?.failed ?? 0)}
+            highlight={p && p.failed > 0 ? "error" : undefined}
+          />
+          <KpiTile
+            icon={<IconSpeed size={16} />}
+            label="Transfer Speed"
+            value={p ? formatSpeed(p.speed_bps) : "0 B/s"}
+            highlight={isActive ? "primary" : undefined}
+          />
+        </div>
+
+        {/* Progress Bar & Readout */}
+        <div style={{ marginBottom: 8 }} className="row between">
+          <span className="muted" style={{ fontSize: 12.5, fontWeight: 500, fontFamily: "var(--mono)" }}>
+            {p ? formatBytes(p.bytes_downloaded) : "0 B"} / {p ? formatBytes(p.bytes_total) : "0 B"}
+          </span>
+          <span
+            className="muted"
+            style={{
+              fontSize: 12.5,
+              fontWeight: 600,
+              color: isActive ? "var(--md-sys-color-primary)" : "var(--md-sys-color-on-surface-variant)",
+            }}
+          >
+            {indeterminate
+              ? "Calculating total size…"
+              : `${pct.toFixed(1)}%${eta != null ? ` · ${formatDuration(eta)} remaining` : ""}`}
+          </span>
+        </div>
+
+        <div className={`progress ${indeterminate ? "indeterminate" : ""}`}>
+          <div
+            className="bar"
+            style={{
+              width: indeterminate ? "40%" : `${Math.min(100, pct)}%`,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Cache & Local Verification Card */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div className="card">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <IconCheck size={18} style={{ color: "var(--md-sys-color-tertiary)" }} />
+            <h3 style={{ margin: 0, textTransform: "none", fontSize: 14, fontWeight: 700 }}>
+              SHA-1 Integrity Verification
+            </h3>
+          </div>
+          <p className="muted" style={{ fontSize: 12.5, lineHeight: 1.5 }}>
+            Every downloaded artifact (game client jar, Minecraft libraries, sound files, and mod assets)
+            is strictly checked against cryptographic SHA-1 hashes before being written to disk. Corrupted
+            chunks are automatically discarded and re-fetched.
+          </p>
+        </div>
+
+        <div className="card">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <IconFolder size={18} style={{ color: "var(--md-sys-color-primary)" }} />
+            <h3 style={{ margin: 0, textTransform: "none", fontSize: 14, fontWeight: 700 }}>
+              Smart Local Cache
+            </h3>
+          </div>
+          <p className="muted" style={{ fontSize: 12.5, lineHeight: 1.5 }}>
+            Unchanged assets are preserved across launches and instances. Once an asset exists in the
+            local cache, launcher preparations skip it entirely, ensuring near-instant launches for
+            previously played versions.
+          </p>
+        </div>
       </div>
     </div>
   );
 }
 
-function Kpi({ label, value }: { label: string; value: string }) {
+function KpiTile({
+  icon,
+  label,
+  value,
+  highlight,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  highlight?: "primary" | "tertiary" | "error";
+}) {
+  const accentColor =
+    highlight === "primary"
+      ? "var(--md-sys-color-primary)"
+      : highlight === "tertiary"
+        ? "var(--md-sys-color-tertiary)"
+        : highlight === "error"
+          ? "var(--md-sys-color-error)"
+          : "var(--md-sys-color-on-surface-variant)";
+
   return (
     <div className="kpi">
-      <div className="label">{label}</div>
-      <div className="value">{value}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, color: "var(--md-sys-color-on-surface-variant)" }}>
+        <span style={{ color: accentColor, opacity: 0.9 }}>{icon}</span>
+        <div className="label" style={{ margin: 0 }}>{label}</div>
+      </div>
+      <div className="value" style={{ marginTop: 6, color: highlight ? accentColor : undefined }}>
+        {value}
+      </div>
     </div>
   );
 }

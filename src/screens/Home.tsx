@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, ReactNode } from "react";
 import {
   api,
   Config,
@@ -9,6 +9,17 @@ import {
   LogLine,
   ProgressSnapshot,
 } from "../lib/types";
+import {
+  IconPlay,
+  IconStop,
+  IconClock,
+  IconCalendar,
+  IconCube,
+  IconRam,
+  IconSpeed,
+  IconRefresh,
+  IconPlus,
+} from "../lib/icons";
 
 interface HomeProps {
   config: Config;
@@ -30,8 +41,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
   const pollHandle = useRef<number | null>(null);
   const progressHandle = useRef<number | null>(null);
 
-  // While we're preparing/launching, poll the download progress so the user
-  // can see what's actually happening instead of staring at "Prep…".
+  // Poll download progress while preparing
   useEffect(() => {
     if (state !== "preparing") {
       if (progressHandle.current != null) {
@@ -47,7 +57,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
         const s = await api.downloadsProgress();
         setProgress(s);
       } catch {
-        // ignore — backend may briefly reject while preparing
+        // ignore
       }
       progressHandle.current = window.setTimeout(tick, 400);
     };
@@ -67,7 +77,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
     }
   }, [logs, showLogs]);
 
-  // Poll for next log line.
+  // Poll for next log line when running
   useEffect(() => {
     if (state !== "running" || !selected) return;
     let cancelled = false;
@@ -78,7 +88,6 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
         if (line) {
           setLogs((prev) => [...prev.slice(-500), line]);
         }
-        // Check if process is still alive.
         const running = await api.launchList();
         const alive = running.some(([id]) => id === selected.id);
         if (!alive) {
@@ -124,6 +133,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
     } catch {
       // ignore
     }
+    setState("idle");
   };
 
   const kill = async () => {
@@ -137,55 +147,119 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
   };
 
   return (
-    <div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Welcome / Empty state if no instance */}
       {instances.length === 0 ? (
-        <div className="card">
-          <h3>Welcome</h3>
-          <p className="muted" style={{ marginBottom: 16 }}>
-            Create your first instance to get started. Pick a Minecraft
-            version, choose your Java, and press Play.
+        <div className="card" style={{ padding: "36px 32px", textAlign: "center" }}>
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: "50%",
+              background: "var(--md-sys-color-primary-container)",
+              color: "var(--md-sys-color-primary)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 16px",
+            }}
+          >
+            <IconCube size={28} />
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
+            Welcome to MC Launcher
+          </h2>
+          <p className="muted" style={{ maxWidth: 460, margin: "0 auto 24px", fontSize: 14 }}>
+            Create your first Minecraft instance to get started. Choose your preferred
+            version, configure RAM, and jump straight into the game.
           </p>
-          <div className="row" style={{ gap: 8 }}>
+          <div style={{ display: "flex", justifyContent: "center" }}>
             <button
-              className="btn primary"
-              onClick={() => { onSelect({} as Instance); onRefresh(); }}
+              className="btn primary large"
+              onClick={() => {
+                onSelect({} as Instance);
+                onRefresh();
+              }}
             >
-              Get started
+              <IconPlus size={18} />
+              <span>Create First Instance</span>
             </button>
           </div>
-          <p className="faint" style={{ marginTop: 12, fontSize: 12 }}>
-            Go to <strong>Instances</strong> in the sidebar to create one.
-          </p>
         </div>
       ) : (
+        /* Material 3 Expressive Hero Card */
         <div className="home-hero">
           <div className="info">
-            <h1>{selected ? selected.name : "No instance selected"}</h1>
-            <p>
-              {selected
-                ? `Minecraft ${selected.version} · ${selected.jvm_profile} JVM · ${selected.ram_mb ?? config.default_ram_mb} MB`
-                : "Select an instance in the sidebar."}
-            </p>
-            {selected?.mod_loader && (
-              <p style={{ marginTop: 4 }}>
-                <span className="tag">{selected.mod_loader.kind}</span>{" "}
-                <span className="muted" style={{ fontSize: 12 }}>
-                  {selected.mod_loader.version}
-                </span>
-              </p>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              {selected?.color && (
+                <span
+                  style={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: "50%",
+                    background: selected.color,
+                    boxShadow: `0 0 10px ${selected.color}`,
+                    display: "inline-block",
+                  }}
+                />
+              )}
+              <h1>{selected ? selected.name : "No instance selected"}</h1>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+              {selected && (
+                <>
+                  <span className="chip success">
+                    <IconCube size={13} />
+                    Minecraft {selected.version}
+                  </span>
+
+                  {selected.mod_loader && (
+                    <span className="chip" style={{ background: "rgba(167, 139, 250, 0.15)", borderColor: "rgba(167, 139, 250, 0.3)", color: "var(--md-sys-color-secondary)" }}>
+                      {selected.mod_loader.kind} {selected.mod_loader.version}
+                    </span>
+                  )}
+
+                  <span className="chip">
+                    <IconRam size={13} />
+                    {selected.ram_mb ?? config.default_ram_mb} MB
+                  </span>
+
+                  <span className="chip">
+                    JVM: {selected.jvm_profile}
+                  </span>
+                </>
+              )}
+            </div>
+
             {error && (
-              <p
+              <div
                 style={{
-                  marginTop: 12,
-                  color: "var(--danger)",
+                  marginTop: 16,
+                  padding: "10px 14px",
+                  borderRadius: "var(--md-sys-shape-corner-md)",
+                  background: "var(--md-sys-color-error-container)",
+                  color: "var(--md-sys-color-error)",
                   fontSize: 13,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
                 }}
               >
-                {error}
-              </p>
+                <span>{error}</span>
+                <button
+                  className="btn ghost"
+                  onClick={() => setError(null)}
+                  style={{ fontSize: 11, padding: "2px 8px", color: "inherit" }}
+                >
+                  Dismiss
+                </button>
+              </div>
             )}
           </div>
+
+          {/* Heroic Play FAB */}
           <div className="play">
             {state === "running" ? (
               <button
@@ -193,110 +267,229 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                 onClick={kill}
                 title="Stop the running game"
                 style={{
-                  background: "var(--danger-soft)",
-                  color: "var(--danger)",
+                  background: "linear-gradient(135deg, var(--md-sys-color-error) 0%, #b91c1c 100%)",
+                  color: "#ffffff",
+                  boxShadow: "0 4px 20px rgba(248, 113, 113, 0.5), 0 0 32px rgba(248, 113, 113, 0.3)",
                 }}
               >
-                Stop
+                <IconStop size={28} />
+                <span style={{ fontSize: 12, fontWeight: 700, marginTop: 2 }}>STOP</span>
               </button>
             ) : (
               <button
                 className="play-button"
                 onClick={play}
                 disabled={!selected || state === "preparing" || state === "launching"}
-                title="Play"
+                title={!selected ? "Select an instance first" : "Launch Minecraft"}
               >
-                {state === "preparing"
-                  ? "Prep…"
-                  : state === "launching"
-                    ? "Launch…"
-                    : "Play"}
+                {state === "preparing" ? (
+                  <>
+                    <IconRefresh size={26} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>PREP…</span>
+                  </>
+                ) : state === "launching" ? (
+                  <>
+                    <IconPlay size={26} style={{ opacity: 0.7 }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>LAUNCH…</span>
+                  </>
+                ) : (
+                  <>
+                    <IconPlay size={32} />
+                    <span style={{ fontSize: 13, fontWeight: 800, marginTop: 2, letterSpacing: "0.5px" }}>PLAY</span>
+                  </>
+                )}
               </button>
             )}
-            <span className="muted" style={{ fontSize: 12 }}>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12,
+                fontWeight: 600,
+                color:
+                  state === "running"
+                    ? "var(--md-sys-color-tertiary)"
+                    : state === "preparing"
+                      ? "var(--md-sys-color-warning)"
+                      : state === "launching"
+                        ? "var(--md-sys-color-primary)"
+                        : "var(--md-sys-color-on-surface-variant)",
+              }}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background:
+                    state === "running"
+                      ? "var(--md-sys-color-tertiary)"
+                      : state === "preparing"
+                        ? "var(--md-sys-color-warning)"
+                        : state === "launching"
+                          ? "var(--md-sys-color-primary)"
+                          : "var(--md-sys-color-outline)",
+                  boxShadow:
+                    state === "running"
+                      ? "0 0 8px var(--md-sys-color-tertiary)"
+                      : state === "preparing"
+                        ? "0 0 8px var(--md-sys-color-warning)"
+                        : "none",
+                }}
+              />
               {state === "running"
                 ? "Running"
                 : state === "preparing"
-                  ? "Preparing"
+                  ? "Preparing files…"
                   : state === "launching"
-                    ? "Launching"
+                    ? "Starting JVM…"
                     : "Ready"}
-            </span>
+            </div>
           </div>
         </div>
       )}
 
+      {/* Expressive KPI Cards */}
       {selected && (
-        <div className="kpi-row" style={{ marginBottom: 20 }}>
-          <Kpi label="Play time" value={fmtTime(selected.play_time_secs)} />
-          <Kpi
-            label="Last played"
-            value={selected.last_played ? fmtDate(selected.last_played) : "—"}
+        <div className="kpi-row">
+          <KpiCard
+            icon={<IconClock size={16} />}
+            label="Play time"
+            value={fmtTime(selected.play_time_secs)}
           />
-          <Kpi label="Minecraft" value={selected.version} />
-          <Kpi
-            label="Memory"
+          <KpiCard
+            icon={<IconCalendar size={16} />}
+            label="Last played"
+            value={selected.last_played ? fmtDate(selected.last_played) : "Never"}
+          />
+          <KpiCard
+            icon={<IconCube size={16} />}
+            label="Minecraft"
+            value={selected.version}
+          />
+          <KpiCard
+            icon={<IconRam size={16} />}
+            label="Allocated RAM"
             value={`${selected.ram_mb ?? config.default_ram_mb} MB`}
           />
         </div>
       )}
 
+      {/* Live Download & Prepare Progress Bar */}
       {state === "preparing" && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <div className="row between" style={{ marginBottom: 10 }}>
-            <h3 style={{ margin: 0 }}>Downloading game files…</h3>
+        <div className="card" style={{ animation: "m3-fade-in var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard)" }}>
+          <div className="row between" style={{ marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: "var(--md-sys-color-primary-container)",
+                  color: "var(--md-sys-color-primary)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconRefresh size={16} style={{ animation: "indeterminate 1.5s infinite linear" }} />
+              </div>
+              <h3 style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
+                Downloading & Preparing Game Files…
+              </h3>
+            </div>
             <button
-              className="btn ghost"
+              className="btn outlined"
               onClick={cancelPrepare}
-              title="Cancel the in-flight downloads"
-              style={{ fontSize: 12 }}
+              style={{ fontSize: 12, padding: "4px 12px" }}
             >
               Cancel
             </button>
           </div>
+
           {progress ? (
             <PrepareProgress p={progress} />
           ) : (
             <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-              Connecting to Mojang servers…
+              Connecting to Mojang & metadata repositories…
             </p>
           )}
-          <p className="faint" style={{ fontSize: 11, marginTop: 10, marginBottom: 0 }}>
-            Files are cached locally — re-launches skip unchanged files.
-            See the Downloads tab for the full queue.
+
+          <p className="faint" style={{ fontSize: 11.5, marginTop: 12, marginBottom: 0 }}>
+            Files are validated with SHA-1 hashes and cached locally. Subsequent launches bypass unchanged files.
           </p>
         </div>
       )}
 
+      {/* Switch Instance Selector with M3 Chips */}
       {instances.length > 1 && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <h3>Switch instance</h3>
-          <div className="row" style={{ flexWrap: "wrap", gap: 8 }}>
-            {instances.map((i) => (
-              <button
-                key={i.id}
-                className={`btn ${selected?.id === i.id ? "primary" : ""}`}
-                onClick={() => onSelect(i)}
-              >
-                {i.name}
-              </button>
-            ))}
+        <div className="card">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <h3 style={{ margin: 0 }}>Switch instance</h3>
+            <span className="muted" style={{ fontSize: 12 }}>
+              {instances.length} instances installed
+            </span>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {instances.map((i) => {
+              const isCur = selected?.id === i.id;
+              return (
+                <button
+                  key={i.id}
+                  className={`chip ${isCur ? "active" : ""}`}
+                  onClick={() => onSelect(i)}
+                  style={{
+                    cursor: "pointer",
+                    padding: "6px 14px",
+                    gap: 8,
+                    fontSize: 12.5,
+                    fontWeight: isCur ? 700 : 500,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: i.color || "var(--md-sys-color-primary)",
+                    }}
+                  />
+                  <span>{i.name}</span>
+                  <span style={{ fontSize: 11, opacity: 0.75 }}>
+                    ({i.version})
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
+      {/* Game Output / Logs */}
       {showLogs && logs.length > 0 && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <div
-            className="row between"
-            style={{ marginBottom: 8 }}
-          >
+        <div className="card">
+          <div className="row between" style={{ marginBottom: 10 }}>
             <h3 style={{ margin: 0 }}>Game output</h3>
-            <button className="btn ghost" onClick={() => setShowLogs(false)}>
-              Hide
-            </button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                className="btn ghost"
+                style={{ fontSize: 12, padding: "4px 10px" }}
+                onClick={() => setLogs([])}
+              >
+                Clear
+              </button>
+              <button
+                className="btn ghost"
+                style={{ fontSize: 12, padding: "4px 10px" }}
+                onClick={() => setShowLogs(false)}
+              >
+                Hide
+              </button>
+            </div>
           </div>
-          <div className="log-view" ref={logBox} style={{ height: 280 }}>
+          <div className="log-view" ref={logBox} style={{ height: 260 }}>
             {logs.map((l, idx) => (
               <div key={idx} className={`log-line ${l.stream}`}>
                 {l.text}
@@ -309,11 +502,22 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
   );
 }
 
-function Kpi({ label, value }: { label: string; value: string }) {
+function KpiCard({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="kpi">
-      <div className="label">{label}</div>
-      <div className="value">{value}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, color: "var(--md-sys-color-on-surface-variant)" }}>
+        <span style={{ color: "var(--md-sys-color-primary)", opacity: 0.9 }}>{icon}</span>
+        <div className="label" style={{ margin: 0 }}>{label}</div>
+      </div>
+      <div className="value" style={{ marginTop: 6 }}>{value}</div>
     </div>
   );
 }
@@ -325,45 +529,43 @@ function PrepareProgress({ p }: { p: ProgressSnapshot }) {
       ? (p.bytes_total - p.bytes_downloaded) / p.speed_bps
       : null;
   const indeterminate = p.bytes_total === 0;
+
   return (
     <div>
-      <div className="kpi-row" style={{ marginBottom: 10 }}>
-        <Kpi label="Active" value={String(p.active)} />
-        <Kpi label="Done" value={String(p.completed)} />
-        <Kpi label="Failed" value={String(p.failed)} />
-        <Kpi label="Speed" value={formatSpeed(p.speed_bps)} />
+      <div className="kpi-row" style={{ marginBottom: 14 }}>
+        <KpiCard icon={<IconRefresh size={14} />} label="Active" value={String(p.active)} />
+        <KpiCard icon={<IconCube size={14} />} label="Completed" value={String(p.completed)} />
+        <KpiCard icon={<IconStop size={14} />} label="Failed" value={String(p.failed)} />
+        <KpiCard icon={<IconSpeed size={14} />} label="Speed" value={formatSpeed(p.speed_bps)} />
       </div>
-      <div className="row between" style={{ marginBottom: 6 }}>
-        <span className="muted" style={{ fontSize: 12 }}>
+
+      <div className="row between" style={{ marginBottom: 8 }}>
+        <span className="muted" style={{ fontSize: 12.5, fontWeight: 500 }}>
           {indeterminate
             ? `${formatBytes(p.bytes_downloaded)} downloaded…`
-            : `${formatBytes(p.bytes_downloaded)} / ${formatBytes(p.bytes_total)}`}
+            : `${formatBytes(p.bytes_downloaded)} of ${formatBytes(p.bytes_total)}`}
         </span>
-        <span className="muted" style={{ fontSize: 12 }}>
+        <span className="muted" style={{ fontSize: 12.5, fontWeight: 600, color: "var(--md-sys-color-primary)" }}>
           {indeterminate
             ? `${p.completed} files done`
-            : `${pct.toFixed(1)}%${
-                eta != null ? ` · ${formatDuration(eta)} left` : ""
-              }`}
+            : `${pct.toFixed(1)}%${eta != null ? ` · ${formatDuration(eta)} left` : ""}`}
         </span>
       </div>
-      <div className="progress">
+
+      <div className={`progress ${indeterminate ? "indeterminate" : ""}`}>
         <div
           className="bar"
           style={{
-            width: indeterminate ? "100%" : `${Math.min(100, pct)}%`,
-            // Pulse animation while total bytes is unknown (file count growing).
-            animation: indeterminate ? "indeterminate 1.4s ease-in-out infinite" : undefined,
+            width: indeterminate ? "40%" : `${Math.min(100, pct)}%`,
           }}
         />
       </div>
-      <style>{`@keyframes indeterminate { 0% { opacity: 0.4 } 50% { opacity: 1 } 100% { opacity: 0.4 } }`}</style>
     </div>
   );
 }
 
 function fmtTime(s: number): string {
-  if (!s) return "0h";
+  if (!s) return "0h 0m";
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   if (h === 0) return `${m}m`;
@@ -372,7 +574,8 @@ function fmtTime(s: number): string {
 
 function fmtDate(iso: string): string {
   try {
-    return new Date(iso).toLocaleString();
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   } catch {
     return iso;
   }
