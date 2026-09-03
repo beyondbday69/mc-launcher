@@ -146,39 +146,62 @@ def annotate_screenshot(
     threads = stats.get("max_threads", 0)
     geom = stats.get("window_geometry", "854x480")
 
-    hud_title = "Minecraft 1.21.4 (Fabric) Smoke Test"
-    line1 = f"FPS: ~{fps:.0f} fps  |  RAM: {peak_rss:.1f} MB / {max_ram} MB ({mem_pct:.1f}%)"
-    line2 = f"CPU: {avg_cpu:.1f}%  |  Threads: {threads}  |  Res: {geom}  |  Software GL"
+    hud_title = "MINECRAFT 1.21.4 (FABRIC)"
+    line1 = f"FPS: ~{fps:.0f} fps   |   RAM: {peak_rss:.1f} MB / {max_ram} MB ({mem_pct:.1f}%)"
+    line2 = f"CPU: {avg_cpu:.1f}%   |   Threads: {threads}   |   Res: {geom}   |   Software GL"
 
     cmd = [
         "convert",
         image_path,
+        # Background card with frosted glass feel
         "-fill",
-        "rgba(14, 17, 23, 0.88)",
+        "rgba(11, 15, 25, 0.92)",
         "-stroke",
-        "rgba(56, 189, 248, 0.5)",
+        "rgba(56, 189, 248, 0.65)",
         "-strokewidth",
-        "1",
+        "1.5",
         "-draw",
-        "roundrectangle 16,16 640,116 12,12",
+        "roundrectangle 16,14 660,120 14,14",
         "-stroke",
         "none",
+        # Title
         "-fill",
         "#38bdf8",
         "-font",
         "Helvetica-Bold",
         "-pointsize",
-        "16",
+        "15",
         "-draw",
-        f'text 32,44 "{hud_title}"',
+        f'text 34,42 "{hud_title}"',
+        # Active status pill
         "-fill",
-        "#e2e8f0",
+        "rgba(6, 78, 59, 0.85)",
+        "-stroke",
+        "rgba(52, 211, 153, 0.8)",
+        "-strokewidth",
+        "1",
+        "-draw",
+        "roundrectangle 275,26 360,48 11,11",
+        "-stroke",
+        "none",
+        "-fill",
+        "#34d399",
         "-font",
-        "Helvetica",
+        "Helvetica-Bold",
+        "-pointsize",
+        "11",
+        "-draw",
+        'text 287,41 "● ACTIVE"',
+        # Stats Row 1: FPS and Memory
+        "-fill",
+        "#f1f5f9",
+        "-font",
+        "Helvetica-Bold",
         "-pointsize",
         "13",
         "-draw",
-        f'text 32,74 "{line1}"',
+        f'text 34,72 "{line1}"',
+        # Stats Row 2: CPU, Threads, Display
         "-fill",
         "#94a3b8",
         "-font",
@@ -186,7 +209,7 @@ def annotate_screenshot(
         "-pointsize",
         "12",
         "-draw",
-        f'text 32,98 "{line2}"',
+        f'text 34,98 "{line2}"',
         output_path,
     ]
 
@@ -198,27 +221,27 @@ def annotate_screenshot(
             "convert",
             image_path,
             "-fill",
-            "rgba(14, 17, 23, 0.88)",
+            "rgba(11, 15, 25, 0.92)",
             "-draw",
-            "rectangle 16,16 640,116",
+            "rectangle 16,14 660,120",
             "-fill",
             "#38bdf8",
             "-pointsize",
-            "16",
+            "15",
             "-draw",
-            f'text 32,44 "{hud_title}"',
+            f'text 34,42 "{hud_title}  ● ACTIVE"',
             "-fill",
-            "#e2e8f0",
+            "#f1f5f9",
             "-pointsize",
             "13",
             "-draw",
-            f'text 32,74 "{line1}"',
+            f'text 34,72 "{line1}"',
             "-fill",
             "#94a3b8",
             "-pointsize",
             "12",
             "-draw",
-            f'text 32,98 "{line2}"',
+            f'text 34,98 "{line2}"',
             output_path,
         ]
         try:
@@ -427,12 +450,13 @@ def main():
     parser.add_argument("--hud-dir", default="/tmp/gallium_hud", help="Mesa Gallium HUD directory")
     parser.add_argument("--output-json", default="/tmp/play-smoke-stats.json", help="Path to output JSON")
     parser.add_argument("--output-md", default="/tmp/play-smoke-stats.md", help="Path to output Markdown")
-    parser.add_argument("--annotate", nargs=2, metavar=("INPUT", "OUTPUT"), help="Overlay HUD on screenshot")
+    parser.add_argument("--annotate", nargs="+", metavar="PATH", help="Overlay HUD on screenshot: INPUT [OUTPUT]")
 
     args = parser.parse_args()
 
     if args.annotate:
-        in_img, out_img = args.annotate
+        in_img = args.annotate[0]
+        out_img = args.annotate[1] if len(args.annotate) > 1 else in_img
         stats = {}
         if os.path.exists(args.output_json):
             try:
@@ -444,12 +468,7 @@ def main():
         if ok:
             print(f"[smoke-monitor] Created annotated HUD screenshot: {out_img}")
         else:
-            print(f"[smoke-monitor] Warning: HUD annotation failed, copying raw image")
-            try:
-                import shutil
-                shutil.copyfile(in_img, out_img)
-            except Exception:
-                pass
+            print(f"[smoke-monitor] Warning: HUD annotation failed")
         return
 
     if not args.pid:
