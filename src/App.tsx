@@ -149,12 +149,6 @@ export function App() {
   if (error) {
     return (
       <div className="app">
-        <div className="liquid-background-mesh" aria-hidden="true">
-          <div className="liquid-orb liquid-orb-cyan liquid-orb-1" />
-          <div className="liquid-orb liquid-orb-violet liquid-orb-2" />
-          <div className="liquid-orb liquid-orb-coral liquid-orb-4" />
-          <div className="liquid-mesh-grain" />
-        </div>
         <div className="content" style={{ position: "relative", zIndex: 5 }}>
           <Card style={{ maxWidth: 500, margin: "60px auto" }}>
             <Card.Header>
@@ -186,12 +180,6 @@ export function App() {
   if (!config) {
     return (
       <div className="app">
-        <div className="liquid-background-mesh" aria-hidden="true">
-          <div className="liquid-orb liquid-orb-cyan liquid-orb-1" />
-          <div className="liquid-orb liquid-orb-violet liquid-orb-2" />
-          <div className="liquid-orb liquid-orb-emerald liquid-orb-3" />
-          <div className="liquid-mesh-grain" />
-        </div>
         <div className="content" style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 5 }}>
           <div className="empty">
             <div className="icon" style={{ animation: "indeterminate 1.5s infinite ease-in-out" }}>
@@ -207,16 +195,7 @@ export function App() {
 
   return (
     <div className="app">
-      {/* Dynamic Liquid Background Mesh with Animated Fluid Color Orbs */}
-      <div className="liquid-background-mesh" aria-hidden="true">
-        <div className="liquid-orb liquid-orb-cyan liquid-orb-1" />
-        <div className="liquid-orb liquid-orb-violet liquid-orb-2" />
-        <div className="liquid-orb liquid-orb-emerald liquid-orb-3" />
-        <div className="liquid-orb liquid-orb-coral liquid-orb-4" />
-        <div className="liquid-mesh-grain" />
-      </div>
-
-      {/* Liquid Glass Navigation Rail */}
+      {/* Solid Black Navigation Rail */}
       <aside className="sidebar nav-rail">
         <div className="brand">
           <div className="logo" />
@@ -245,9 +224,9 @@ export function App() {
                     alignItems: "center",
                     justifyContent: "center",
                     color: isActive
-                      ? "var(--liquid-sky)"
-                      : "var(--md-sys-color-on-surface-variant)",
-                    transition: "color var(--glass-motion-duration-sm) var(--glass-ease-standard)",
+                      ? "#0070f3"
+                      : "var(--text-secondary)",
+                    transition: "color 0.15s ease",
                   }}
                 >
                   {s.icon(isActive)}
@@ -265,7 +244,7 @@ export function App() {
         <div
           style={{
             padding: "14px 18px",
-            borderTop: "1px solid var(--glass-border-subtle)",
+            borderTop: "1px solid var(--border-subtle)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -276,7 +255,7 @@ export function App() {
               fontSize: 11,
               fontWeight: 600,
               fontFamily: "var(--mono)",
-              color: "var(--md-sys-color-on-surface-variant)",
+              color: "var(--text-muted)",
               letterSpacing: "0.4px",
             }}
           >
@@ -288,7 +267,7 @@ export function App() {
               alignItems: "center",
               gap: 6,
               fontSize: 11,
-              color: "var(--liquid-mint)",
+              color: "#10b981",
               fontWeight: 500,
             }}
           >
@@ -297,8 +276,7 @@ export function App() {
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                background: "var(--liquid-mint)",
-                boxShadow: "0 0 8px var(--liquid-mint)",
+                background: "#10b981",
               }}
             />
             Ready
@@ -308,7 +286,7 @@ export function App() {
 
       {/* Main Content Area with Top App Bar */}
       <main className="main">
-        {/* Floating Glass Top App Bar */}
+        {/* Solid Black Top App Bar */}
         <header className="titlebar top-bar">
           <Breadcrumbs>
             <Breadcrumbs.Item>MC Launcher</Breadcrumbs.Item>
@@ -326,11 +304,8 @@ export function App() {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 8,
-                  background: "var(--glass-bg-card)",
-                  backdropFilter: "var(--glass-blur-sm)",
-                  WebkitBackdropFilter: "var(--glass-blur-sm)",
-                  borderColor: "var(--glass-border)",
-                  boxShadow: "var(--glass-sheen)",
+                  background: "#18181b",
+                  border: "1px solid #27272a",
                 }}
                 title={`Active instance: ${selected.name} (${selected.version})`}
               >
@@ -339,14 +314,13 @@ export function App() {
                     width: 8,
                     height: 8,
                     borderRadius: "50%",
-                    background: selected.color || "var(--liquid-sky)",
-                    boxShadow: `0 0 8px ${selected.color || "var(--liquid-sky)"}`,
+                    background: selected.color || "#0070f3",
                   }}
                 />
-                <span style={{ fontWeight: 600, color: "var(--md-sys-color-on-surface)" }}>
+                <span style={{ fontWeight: 600, color: "#ffffff" }}>
                   {selected.name}
                 </span>
-                <span style={{ color: "var(--md-sys-color-on-surface-variant)", fontSize: 11 }}>
+                <span style={{ color: "#a1a1aa", fontSize: 11 }}>
                   · {selected.version}
                 </span>
                 {selected.mod_loader && (
@@ -355,9 +329,9 @@ export function App() {
                     style={{
                       fontSize: 10,
                       padding: "1px 6px",
-                      background: "rgba(139, 92, 246, 0.18)",
-                      borderColor: "rgba(139, 92, 246, 0.35)",
-                      color: "var(--liquid-violet)",
+                      background: "#27272a",
+                      border: "1px solid #3f3f46",
+                      color: "#e4e4e7",
                     }}
                   >
                     {selected.mod_loader.kind}
@@ -368,10 +342,10 @@ export function App() {
               <Chip
                 size="sm"
                 style={{
-                  color: "var(--md-sys-color-on-surface-variant)",
+                  color: "#a1a1aa",
                   fontSize: 11.5,
-                  background: "var(--glass-bg-interactive)",
-                  borderColor: "var(--glass-border-subtle)",
+                  background: "#18181b",
+                  border: "1px solid #27272a",
                 }}
               >
                 No instance

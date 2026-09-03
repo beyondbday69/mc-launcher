@@ -85,22 +85,16 @@ export function Downloads() {
       {/* Active Transfer Card */}
       <Card style={{ position: "relative" }}>
         <Card.Content>
-          <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.45 }} />
           <div className="row between" style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div
                 style={{
                   width: 38,
                   height: 38,
-                  borderRadius: "var(--glass-radius-md)",
-                  background: isActive
-                    ? "linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(139, 92, 246, 0.25) 100%)"
-                    : "var(--glass-bg-interactive)",
-                  color: isActive
-                    ? "var(--liquid-sky)"
-                    : "var(--md-sys-color-on-surface-variant)",
-                  border: "var(--glass-border)",
-                  boxShadow: isActive ? "0 0 16px rgba(6, 182, 212, 0.35)" : "none",
+                  borderRadius: "8px",
+                  background: "#18181b",
+                  color: isActive ? "#0070f3" : "#a1a1aa",
+                  border: "1px solid #27272a",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -169,7 +163,7 @@ export function Downloads() {
               style={{
                 fontSize: 12.5,
                 fontWeight: 600,
-                color: isActive ? "var(--liquid-sky)" : "var(--md-sys-color-on-surface-variant)",
+                color: isActive ? "#0070f3" : "#a1a1aa",
               }}
             >
               {indeterminate
@@ -181,7 +175,6 @@ export function Downloads() {
           <ProgressBar
             value={pct}
             isIndeterminate={indeterminate}
-            className="liquid-progress"
           >
             <ProgressBar.Track>
               <ProgressBar.Fill />
@@ -194,9 +187,8 @@ export function Downloads() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <Card style={{ position: "relative" }}>
           <Card.Content>
-            <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.3 }} />
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-              <IconCheck size={18} style={{ color: "var(--liquid-mint)" }} />
+              <IconCheck size={18} style={{ color: "#10b981" }} />
               <h3 style={{ margin: 0, textTransform: "none", fontSize: 14, fontWeight: 700 }}>
                 SHA-1 Integrity Verification
               </h3>
@@ -211,9 +203,8 @@ export function Downloads() {
 
         <Card style={{ position: "relative" }}>
           <Card.Content>
-            <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.3 }} />
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-              <IconFolder size={18} style={{ color: "var(--liquid-sky)" }} />
+              <IconFolder size={18} style={{ color: "#0070f3" }} />
               <h3 style={{ margin: 0, textTransform: "none", fontSize: 14, fontWeight: 700 }}>
                 Smart Local Cache
               </h3>
@@ -243,18 +234,17 @@ function KpiTile({
 }) {
   const accentColor =
     highlight === "primary"
-      ? "var(--liquid-sky)"
+      ? "#0070f3"
       : highlight === "tertiary"
-        ? "var(--liquid-mint)"
+        ? "#10b981"
         : highlight === "error"
-          ? "var(--liquid-coral)"
-          : "var(--md-sys-color-on-surface-variant)";
+          ? "#ef4444"
+          : "#a1a1aa";
 
   return (
     <Card className="kpi">
       <Card.Content>
-        <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.35 }} />
-        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--md-sys-color-on-surface-variant)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text-muted)" }}>
           <span
             style={{
               display: "inline-flex",
@@ -262,11 +252,10 @@ function KpiTile({
               justifyContent: "center",
               width: 26,
               height: 26,
-              borderRadius: "var(--glass-radius-sm)",
-              background: "rgba(255, 255, 255, 0.05)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
+              borderRadius: "6px",
+              background: "#18181b",
+              border: "1px solid #27272a",
               color: accentColor,
-              boxShadow: `0 0 10px ${accentColor}33`,
             }}
           >
             {icon}

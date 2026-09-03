@@ -191,10 +191,9 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
           </Card.Content>
         </Card>
       ) : (
-        /* Heroic Liquid Glass Showcase Card */
+        /* Hero Showcase Card */
         <Card className="home-hero hero-card">
           <Card.Content style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
-            <div className="liquid-refraction-line" aria-hidden="true" />
             <div className="info">
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
                 {selected?.color && (
@@ -221,7 +220,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                     </Chip>
 
                     {selected.mod_loader && (
-                      <Chip variant="secondary" style={{ background: "rgba(139, 92, 246, 0.18)", borderColor: "rgba(139, 92, 246, 0.35)", color: "var(--liquid-violet)" }}>
+                      <Chip variant="secondary">
                         {selected.mod_loader.kind} {selected.mod_loader.version}
                       </Chip>
                     )}
@@ -274,9 +273,9 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                   onClick={kill}
                   title="Stop the running game"
                   style={{
-                    background: "linear-gradient(135deg, var(--md-sys-color-error) 0%, #b91c1c 100%)",
+                    background: "#ef4444",
                     color: "#ffffff",
-                    boxShadow: "0 4px 20px rgba(248, 113, 113, 0.5), 0 0 32px rgba(248, 113, 113, 0.3)",
+                    boxShadow: "0 4px 16px rgba(239, 68, 68, 0.4)",
                   }}
                 >
                   <IconStop size={28} />
@@ -522,7 +521,7 @@ function KpiCard({
   icon,
   label,
   value,
-  accent = "var(--liquid-sky)",
+  accent = "#0070f3",
 }: {
   icon: ReactNode;
   label: string;
@@ -532,8 +531,7 @@ function KpiCard({
   return (
     <Card className="kpi">
       <Card.Content>
-        <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.5 }} />
-        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--md-sys-color-on-surface-variant)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text-muted)" }}>
           <span
             style={{
               display: "inline-flex",
@@ -541,11 +539,10 @@ function KpiCard({
               justifyContent: "center",
               width: 26,
               height: 26,
-              borderRadius: "var(--glass-radius-sm)",
-              background: "rgba(255, 255, 255, 0.05)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
+              borderRadius: "6px",
+              background: "#18181b",
+              border: "1px solid #27272a",
               color: accent,
-              boxShadow: `0 0 10px ${accent}33`,
             }}
           >
             {icon}
@@ -569,10 +566,10 @@ function PrepareProgress({ p }: { p: ProgressSnapshot }) {
   return (
     <div>
       <div className="kpi-row" style={{ marginBottom: 14 }}>
-        <KpiCard icon={<IconRefresh size={14} />} label="Active" value={String(p.active)} accent="var(--liquid-sky)" />
-        <KpiCard icon={<IconCube size={14} />} label="Completed" value={String(p.completed)} accent="var(--liquid-mint)" />
-        <KpiCard icon={<IconStop size={14} />} label="Failed" value={String(p.failed)} accent="var(--liquid-coral)" />
-        <KpiCard icon={<IconSpeed size={14} />} label="Speed" value={formatSpeed(p.speed_bps)} accent="var(--liquid-violet)" />
+        <KpiCard icon={<IconRefresh size={14} />} label="Active" value={String(p.active)} accent="#0070f3" />
+        <KpiCard icon={<IconCube size={14} />} label="Completed" value={String(p.completed)} accent="#10b981" />
+        <KpiCard icon={<IconStop size={14} />} label="Failed" value={String(p.failed)} accent="#ef4444" />
+        <KpiCard icon={<IconSpeed size={14} />} label="Speed" value={formatSpeed(p.speed_bps)} accent="#a855f7" />
       </div>
 
       <div className="row between" style={{ marginBottom: 8 }}>
@@ -581,7 +578,7 @@ function PrepareProgress({ p }: { p: ProgressSnapshot }) {
             ? `${formatBytes(p.bytes_downloaded)} downloaded…`
             : `${formatBytes(p.bytes_downloaded)} of ${formatBytes(p.bytes_total)}`}
         </span>
-        <span className="muted" style={{ fontSize: 12.5, fontWeight: 600, color: "var(--liquid-sky)" }}>
+        <span className="muted" style={{ fontSize: 12.5, fontWeight: 600, color: "#0070f3" }}>
           {indeterminate
             ? `${p.completed} files done`
             : `${pct.toFixed(1)}%${eta != null ? ` · ${formatDuration(eta)} left` : ""}`}
@@ -591,7 +588,6 @@ function PrepareProgress({ p }: { p: ProgressSnapshot }) {
       <ProgressBar
         value={pct}
         isIndeterminate={indeterminate}
-        className="liquid-progress"
       >
         <ProgressBar.Track>
           <ProgressBar.Fill />

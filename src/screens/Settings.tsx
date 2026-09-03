@@ -129,7 +129,6 @@ function GeneralTab({
       {/* Memory Allocation Card */}
       <Card style={{ position: "relative" }}>
         <Card.Header>
-          <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
           <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
             Default Memory Allocation
           </Card.Title>
@@ -139,7 +138,7 @@ function GeneralTab({
           <div className="field">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <label>RAM allocated to new instances</label>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--liquid-sky)" }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#0070f3" }}>
                 {ramMb} MB ({(ramMb / 1024).toFixed(1)} GB)
               </span>
             </div>
@@ -164,16 +163,16 @@ function GeneralTab({
               </Slider.Track>
             </Slider>
 
-            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-              {[2048, 4096, 6144, 8192, 12288].map((mb) => (
-                <Chip
+            <div className="button-group" style={{ marginTop: 8 }}>
+              {[2048, 4096, 6144, 8192].map((mb) => (
+                <Button
                   key={mb}
                   variant={ramMb === mb ? "primary" : "secondary"}
-                  onClick={() => onChange({ ...config, default_ram_mb: mb })}
-                  style={{ fontSize: 11, padding: "2px 10px", cursor: "pointer" }}
+                  size="sm"
+                  onPress={() => onChange({ ...config, default_ram_mb: mb })}
                 >
                   {mb / 1024} GB
-                </Chip>
+                </Button>
               ))}
             </div>
           </div>
@@ -183,7 +182,6 @@ function GeneralTab({
       {/* Interface & Theme Card */}
       <Card style={{ position: "relative" }}>
         <Card.Header>
-          <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
           <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
             Interface & Appearance
           </Card.Title>
@@ -197,7 +195,7 @@ function GeneralTab({
                 value={config.theme}
                 onChange={(e) => onChange({ ...config, theme: e.target.value })}
               >
-                <option value="dark">Liquid Glass (Frosted Glassmorphism)</option>
+                <option value="dark">Solid Black (HeroUI v3 OLED)</option>
                 <option value="m3">Material 3 Dark Tonal (Expressive)</option>
               </select>
             </div>
@@ -326,7 +324,6 @@ function JavaTab({
   return (
     <Card style={{ position: "relative" }}>
       <Card.Header className="row between" style={{ marginBottom: 14 }}>
-        <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
         <div>
           <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
             Java Runtimes
@@ -485,7 +482,6 @@ function JvmTab({
   return (
     <Card style={{ position: "relative" }}>
       <Card.Header>
-        <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
         <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 8 }}>
           Java Virtual Machine Profiles
         </Card.Title>
@@ -549,7 +545,6 @@ function DownloadsTab({
   return (
     <Card style={{ position: "relative" }}>
       <Card.Header>
-        <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
         <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
           Network & Download Manager
         </Card.Title>
@@ -559,7 +554,7 @@ function DownloadsTab({
         <div className="field">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <label>Parallel Worker Concurrency</label>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--liquid-sky)" }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#0070f3" }}>
               {config.download_concurrency} threads
             </span>
           </div>
@@ -613,14 +608,13 @@ function AboutTab() {
   return (
     <Card style={{ position: "relative" }}>
       <Card.Header>
-        <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
           <div
             style={{
               width: 44,
               height: 44,
-              borderRadius: "var(--md-sys-shape-corner-md)",
-              background: "linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-secondary) 100%)",
+              borderRadius: "8px",
+              background: "#0070f3",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

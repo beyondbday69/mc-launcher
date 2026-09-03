@@ -1,1934 +1,678 @@
 @import "@heroui/styles";
 
 /* ==========================================================================
-   LIQUID GLASS DESIGN SYSTEM — MC LAUNCHER
-   Pure CSS Fluid Glassmorphism / Frosted Refraction / Cyber-Glass Architecture.
+   SOLID BLACK HEROUI V3 THEME — MC LAUNCHER
+   Pure OLED solid black styling: zero gradients, zero frosted blur, zero glows.
    ========================================================================== */
 
 :root {
-  /* --------------------------------------------------------------------------
-     1. Liquid Glass Design Philosophy & Chromatic Tokens
-     -------------------------------------------------------------------------- */
-  /* Oceanic Midnight Tones */
-  --bg-midnight-0: #060a12;
-  --bg-midnight-1: #0b1120;
-  --bg-midnight-2: #0f172a;
-  --bg-midnight-3: #182338;
+  /* Solid Black Theme Tokens */
+  --bg-canvas: #000000;
+  --bg-subtle: #09090b;
+  --bg-surface: #121215;
+  --bg-surface-elevated: #18181b;
+  --bg-interactive: #202024;
+  --bg-interactive-hover: #27272a;
+  --bg-interactive-active: #323238;
 
-  /* Liquid Chromatic Accent Colors */
-  --liquid-cyan: #06b6d4;
-  --liquid-sky: #38bdf8;
+  /* Solid Borders */
+  --border: #27272a;
+  --border-subtle: #1c1c1f;
+  --border-strong: #3f3f46;
+  --border-focus: #0070f3;
+
+  /* Solid Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --text-disabled: #52525b;
+
+  /* Solid Accent Colors (HeroUI standard) */
+  --solid-primary: #0070f3;
+  --solid-primary-hover: #0060df;
+  --solid-secondary: #27272a;
+  --solid-secondary-hover: #323238;
+  --solid-success: #10b981;
+  --solid-warning: #f59e0b;
+  --solid-danger: #ef4444;
+  --solid-danger-hover: #dc2626;
+
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-full: 9999px;
+
+  /* Fonts */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Monaco, Consolas, monospace;
+
+  /* Backwards compatibility aliases */
+  --md-sys-color-primary: var(--solid-primary);
+  --md-sys-color-secondary: var(--solid-secondary);
+  --md-sys-color-surface: var(--bg-surface);
+  --md-sys-color-surface-container: var(--bg-surface);
+  --md-sys-color-surface-container-high: var(--bg-surface-elevated);
+  --md-sys-color-on-surface: var(--text-primary);
+  --md-sys-color-on-surface-variant: var(--text-secondary);
+  --md-sys-color-outline: var(--border);
+  --md-sys-color-outline-variant: var(--border-subtle);
+  --md-sys-color-error: var(--solid-danger);
+  --md-sys-color-success: var(--solid-success);
+  --md-sys-color-warning: var(--solid-warning);
+
+  --accent: var(--solid-primary);
+  --accent-hover: var(--solid-primary-hover);
+  --accent-soft: #18181b;
+  --success: var(--solid-success);
+  --warning: var(--solid-warning);
+  --danger: var(--solid-danger);
+  --danger-hover: var(--solid-danger-hover);
+
+  --glass-bg-card: var(--bg-surface);
+  --glass-bg-interactive: var(--bg-surface-elevated);
+  --glass-border: 1px solid var(--border);
+  --glass-border-subtle: 1px solid var(--border-subtle);
+  --glass-blur-sm: none;
+  --glass-blur-md: none;
+  --glass-blur-lg: none;
+  --glass-sheen: none;
+  --glass-sheen-elevated: none;
+  --glass-sheen-glow: none;
+  --liquid-sky: var(--solid-primary);
+  --liquid-cyan: var(--solid-primary);
   --liquid-violet: #8b5cf6;
-  --liquid-purple: #a855f7;
-  --liquid-emerald: #10b981;
-  --liquid-mint: #34d399;
-  --liquid-coral: #f43f5e;
-  --liquid-amber: #f59e0b;
-
-  /* Translucent Glass Panes */
-  --glass-bg-lowest: rgba(11, 17, 32, 0.45);
-  --glass-bg-low: rgba(15, 23, 42, 0.55);
-  --glass-bg-base: rgba(18, 27, 48, 0.65);
-  --glass-bg-high: rgba(24, 36, 64, 0.75);
-  --glass-bg-card: rgba(18, 27, 48, 0.60);
-  --glass-bg-interactive: rgba(255, 255, 255, 0.06);
-  --glass-bg-interactive-hover: rgba(255, 255, 255, 0.10);
-  --glass-bg-interactive-active: rgba(255, 255, 255, 0.15);
-
-  /* Frosted Blur & Refraction Filters */
-  --glass-blur-sm: blur(12px) saturate(170%);
-  --glass-blur-md: blur(20px) saturate(180%) contrast(102%);
-  --glass-blur-lg: blur(32px) saturate(200%) contrast(105%);
-  --glass-blur-hero: blur(24px) saturate(190%) contrast(104%);
-
-  /* Specular Edge Sheen & Refraction Borders */
-  --glass-border: 1px solid rgba(255, 255, 255, 0.12);
-  --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.06);
-  --glass-border-glow: 1px solid rgba(56, 189, 248, 0.45);
-  --glass-border-liquid: 1px solid rgba(167, 139, 250, 0.45);
-  --glass-border-error: 1px solid rgba(244, 63, 94, 0.45);
-  --glass-border-success: 1px solid rgba(16, 185, 129, 0.45);
-
-  /* Glass Sheen Shadows & Liquid Halo Glows */
-  --glass-sheen: inset 0 1px 1px 0 rgba(255, 255, 255, 0.22),
-                 inset 0 -1px 1px 0 rgba(0, 0, 0, 0.20),
-                 0 8px 32px 0 rgba(0, 0, 0, 0.40);
-
-  --glass-sheen-elevated: inset 0 1px 2px 0 rgba(255, 255, 255, 0.32),
-                          inset 0 -1px 1px 0 rgba(0, 0, 0, 0.25),
-                          0 16px 48px 0 rgba(0, 0, 0, 0.55);
-
-  --glass-sheen-glow: inset 0 1px 2px 0 rgba(255, 255, 255, 0.45),
-                      0 8px 32px rgba(6, 182, 212, 0.35),
-                      0 0 40px rgba(139, 92, 246, 0.20);
-
-  --liquid-glow-cyan: 0 0 28px rgba(6, 182, 212, 0.45);
-  --liquid-glow-violet: 0 0 28px rgba(139, 92, 246, 0.45);
-  --liquid-glow-emerald: 0 0 28px rgba(16, 185, 129, 0.45);
-  --liquid-glow-coral: 0 0 28px rgba(244, 63, 94, 0.45);
-
-  /* Fluid Shapes & Organic Rounded Radii */
-  --glass-radius-xs: 6px;
-  --glass-radius-sm: 10px;
-  --glass-radius-md: 14px;
-  --glass-radius-lg: 18px;
-  --glass-radius-xl: 22px;
-  --glass-radius-2xl: 28px;
-  --glass-radius-full: 9999px;
-
-  /* Liquid Motion & Fluid Easings */
-  --glass-ease-liquid: cubic-bezier(0.16, 1, 0.3, 1);
-  --glass-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --glass-ease-standard: cubic-bezier(0.2, 0.0, 0, 1.0);
-  --glass-motion-duration-sm: 180ms;
-  --glass-motion-duration-md: 320ms;
-  --glass-motion-duration-lg: 520ms;
-
-  /* --------------------------------------------------------------------------
-     2. Material 3 Expressive & System Aliases (Seamless Interop)
-     -------------------------------------------------------------------------- */
-  --md-sys-color-surface: var(--bg-midnight-0);
-  --md-sys-color-surface-dim: #04070d;
-  --md-sys-color-surface-bright: var(--bg-midnight-2);
-  --md-sys-color-surface-container-lowest: var(--glass-bg-lowest);
-  --md-sys-color-surface-container-low: var(--glass-bg-low);
-  --md-sys-color-surface-container: var(--glass-bg-base);
-  --md-sys-color-surface-container-high: var(--glass-bg-high);
-  --md-sys-color-surface-container-highest: rgba(30, 45, 78, 0.80);
-  --md-sys-color-on-surface: #f8fafc;
-  --md-sys-color-on-surface-variant: #94a3b8;
-  --md-sys-color-outline: rgba(255, 255, 255, 0.14);
-  --md-sys-color-outline-variant: rgba(255, 255, 255, 0.08);
-
-  /* Primary (Liquid Cyan / Sky) */
-  --md-sys-color-primary: var(--liquid-sky);
-  --md-sys-color-on-primary: #041321;
-  --md-sys-color-primary-container: rgba(6, 182, 212, 0.22);
-  --md-sys-color-on-primary-container: #cffafe;
-
-  /* Secondary (Liquid Violet) */
-  --md-sys-color-secondary: var(--liquid-violet);
-  --md-sys-color-on-secondary: #240d4a;
-  --md-sys-color-secondary-container: rgba(139, 92, 246, 0.22);
-  --md-sys-color-on-secondary-container: #ede9fe;
-
-  /* Tertiary (Liquid Mint / Emerald) */
-  --md-sys-color-tertiary: var(--liquid-mint);
-  --md-sys-color-on-tertiary: #022c22;
-  --md-sys-color-tertiary-container: rgba(16, 185, 129, 0.20);
-  --md-sys-color-on-tertiary-container: #d1fae5;
-
-  /* Error (Liquid Coral) */
-  --md-sys-color-error: var(--liquid-coral);
-  --md-sys-color-on-error: #4c0519;
-  --md-sys-color-error-container: rgba(244, 63, 94, 0.20);
-  --md-sys-color-on-error-container: #ffe4e6;
-
-  /* Accents */
-  --md-sys-color-success: var(--liquid-emerald);
-  --md-sys-color-warning: var(--liquid-amber);
-
-  /* Shape Aliases */
-  --md-sys-shape-corner-xs: var(--glass-radius-xs);
-  --md-sys-shape-corner-sm: var(--glass-radius-sm);
-  --md-sys-shape-corner-md: var(--glass-radius-md);
-  --md-sys-shape-corner-lg: var(--glass-radius-lg);
-  --md-sys-shape-corner-xl: var(--glass-radius-xl);
-  --md-sys-shape-corner-2xl: var(--glass-radius-2xl);
-  --md-sys-shape-corner-full: var(--glass-radius-full);
-
-  /* Motion Aliases */
-  --md-sys-motion-easing-emphasized: var(--glass-ease-liquid);
-  --md-sys-motion-easing-standard: var(--glass-ease-standard);
-  --md-sys-motion-duration-short: var(--glass-motion-duration-sm);
-  --md-sys-motion-duration-medium: var(--glass-motion-duration-md);
-  --md-sys-motion-duration-long: var(--glass-motion-duration-lg);
-
-  /* Shadow & Glow Aliases */
-  --md-sys-elevation-1: var(--glass-sheen);
-  --md-sys-elevation-2: var(--glass-sheen);
-  --md-sys-elevation-3: var(--glass-sheen-elevated);
-  --md-sys-elevation-4: var(--glass-sheen-elevated);
-  --md-sys-glow-primary: var(--liquid-glow-cyan);
-  --md-sys-glow-secondary: var(--liquid-glow-violet);
-  --md-sys-glow-tertiary: var(--liquid-glow-emerald);
-  --md-sys-glow-error: var(--liquid-glow-coral);
-
-  /* Legacy Backward-Compatibility Aliases */
-  --bg-0: var(--bg-midnight-0);
-  --bg-1: var(--glass-bg-lowest);
-  --bg-2: var(--glass-bg-low);
-  --bg-3: var(--glass-bg-base);
-  --border: var(--glass-border-subtle);
-  --border-strong: var(--glass-border);
-  --text: var(--md-sys-color-on-surface);
-  --text-dim: var(--md-sys-color-on-surface-variant);
-  --text-faint: #64748b;
-  --accent: var(--liquid-sky);
-  --accent-hover: #7dd3fc;
-  --accent-soft: rgba(6, 182, 212, 0.16);
-  --success: var(--liquid-emerald);
-  --warning: var(--liquid-amber);
-  --danger: var(--liquid-coral);
-  --danger-soft: rgba(244, 63, 94, 0.18);
-  --shadow: var(--glass-sheen);
-  --radius: var(--glass-radius-lg);
-  --radius-sm: var(--glass-radius-sm);
-
-  /* Typography */
-  --font: "Plus Jakarta Sans", "Inter", "Google Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --mono: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --liquid-mint: var(--solid-success);
+  --liquid-emerald: var(--solid-success);
+  --liquid-coral: var(--solid-danger);
+  --liquid-amber: var(--solid-warning);
 }
 
 /* ==========================================================================
-   Liquid Motion & Ripple Keyframes
-   ========================================================================== */
-
-/* Animated Chromatic Liquid Mesh Drift */
-@keyframes liquid-mesh-drift {
-  0% {
-    transform: translate(0, 0) scale(1) rotate(0deg);
-  }
-  33% {
-    transform: translate(32px, -36px) scale(1.08) rotate(3deg);
-  }
-  66% {
-    transform: translate(-28px, 24px) scale(0.96) rotate(-2deg);
-  }
-  100% {
-    transform: translate(16px, -18px) scale(1.04) rotate(1deg);
-  }
-}
-
-/* Chromatic Liquid Shimmer */
-@keyframes liquid-shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-/* Liquid Pulsation Glow */
-@keyframes liquid-pulse-glow {
-  0%, 100% {
-    box-shadow: 0 6px 24px rgba(6, 182, 212, 0.40),
-                0 0 36px rgba(139, 92, 246, 0.25),
-                inset 0 1px 2px rgba(255, 255, 255, 0.50);
-  }
-  50% {
-    box-shadow: 0 10px 36px rgba(6, 182, 212, 0.65),
-                0 0 54px rgba(139, 92, 246, 0.45),
-                inset 0 2px 4px rgba(255, 255, 255, 0.70);
-  }
-}
-
-/* Fluid Ambient Float */
-@keyframes liquid-float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
-/* Fluid Ripple Pulse */
-@keyframes liquid-ripple {
-  0% {
-    transform: scale(0.85);
-    opacity: 0.85;
-  }
-  100% {
-    transform: scale(2.2);
-    opacity: 0;
-  }
-}
-
-/* Liquid Fade & Slide Entrance */
-@keyframes liquid-fade-in {
-  0% {
-    opacity: 0;
-    transform: translateY(8px) scale(0.995);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Spring Dialog Entrance */
-@keyframes liquid-dialog-enter {
-  0% {
-    opacity: 0;
-    transform: scale(0.92) translateY(16px);
-    filter: blur(8px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-    filter: blur(0px);
-  }
-}
-
-/* Indeterminate Liquid Progress Bar */
-@keyframes indeterminate {
-  0% {
-    transform: translateX(-100%) scaleX(0.2);
-  }
-  50% {
-    transform: translateX(35%) scaleX(0.65);
-  }
-  100% {
-    transform: translateX(200%) scaleX(0.2);
-  }
-}
-
-/* Backward-compatibility Keyframe Aliases */
-@keyframes m3-screen-enter {
-  0% {
-    opacity: 0;
-    transform: translateY(8px) scale(0.995);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes m3-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes m3-card-rise {
-  0% {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes m3-pulse-glow {
-  0%, 100% {
-    box-shadow: 0 6px 24px rgba(6, 182, 212, 0.40), 0 0 36px rgba(139, 92, 246, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.50);
-  }
-  50% {
-    box-shadow: 0 10px 36px rgba(6, 182, 212, 0.65), 0 0 54px rgba(139, 92, 246, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.70);
-  }
-}
-
-@keyframes m3-progress-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes m3-dialog-enter {
-  0% {
-    opacity: 0;
-    transform: scale(0.92) translateY(16px);
-    filter: blur(8px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-    filter: blur(0px);
-  }
-}
-
-/* ==========================================================================
-   Global Reset & Base Canvas
+   Base Reset
    ========================================================================== */
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  border-color: var(--border);
 }
 
-html,
-body,
-#root {
+html, body, #root {
   height: 100%;
   width: 100%;
-  background: var(--bg-midnight-0);
-  color: var(--md-sys-color-on-surface);
-  font-family: var(--font);
-  font-size: 14px;
+  overflow: hidden;
+  background: var(--bg-canvas) !important;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
   user-select: none;
-  overflow: hidden;
 }
 
-::selection {
-  background: rgba(6, 182, 212, 0.30);
-  color: #ffffff;
-}
-
-a {
-  color: var(--liquid-sky);
-  text-decoration: none;
-  transition: color var(--glass-motion-duration-sm) var(--glass-ease-standard);
-}
-
-a:hover {
-  color: #7dd3fc;
-  text-decoration: underline;
-  text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
-}
-
-/* Frosted Refractive Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: var(--glass-radius-full);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: background-color var(--glass-motion-duration-sm);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.26);
-  background-clip: padding-box;
+/* Zero out any remaining gradient or refraction lines */
+.liquid-background-mesh,
+.liquid-refraction-line {
+  display: none !important;
 }
 
 /* ==========================================================================
-   Dynamic Fluid Background & App Shell
+   Application Layout Shell (Solid Black)
    ========================================================================== */
 
-.app,
-.app-shell {
-  display: grid;
-  grid-template-columns: 240px 1fr;
+.app {
+  display: flex;
   height: 100vh;
   width: 100vw;
-  overflow: hidden;
-  position: relative;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(6, 182, 212, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 85% 75%, rgba(139, 92, 246, 0.14) 0%, transparent 45%),
-    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
-    linear-gradient(180deg, #060a12 0%, #0b1120 100%);
-  background-attachment: fixed;
-}
-
-/* Dynamic Liquid Background Mesh with Animated Fluid Color Orbs */
-.liquid-background-mesh {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 0;
-}
-
-.liquid-background-mesh .liquid-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.55;
-  mix-blend-mode: screen;
-  will-change: transform;
-}
-
-.liquid-background-mesh .liquid-orb-cyan,
-.liquid-background-mesh .liquid-orb-1 {
-  width: 540px;
-  height: 540px;
-  top: -100px;
-  left: -80px;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.32) 0%, rgba(56, 189, 248, 0.14) 50%, transparent 70%);
-  animation: liquid-mesh-drift 24s ease-in-out infinite alternate;
-}
-
-.liquid-background-mesh .liquid-orb-violet,
-.liquid-background-mesh .liquid-orb-2 {
-  width: 620px;
-  height: 620px;
-  top: 15%;
-  right: -100px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.28) 0%, rgba(168, 85, 247, 0.12) 50%, transparent 70%);
-  animation: liquid-mesh-drift 28s ease-in-out infinite alternate-reverse;
-}
-
-.liquid-background-mesh .liquid-orb-emerald,
-.liquid-background-mesh .liquid-orb-3 {
-  width: 480px;
-  height: 480px;
-  bottom: -60px;
-  left: 22%;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, rgba(52, 211, 153, 0.08) 50%, transparent 70%);
-  animation: liquid-mesh-drift 32s ease-in-out infinite alternate;
-}
-
-.liquid-background-mesh .liquid-orb-coral,
-.liquid-background-mesh .liquid-orb-4 {
-  width: 560px;
-  height: 560px;
-  bottom: 8%;
-  right: 18%;
-  background: radial-gradient(circle, rgba(244, 63, 94, 0.20) 0%, rgba(245, 158, 11, 0.10) 50%, transparent 70%);
-  animation: liquid-mesh-drift 36s ease-in-out infinite alternate-reverse;
-}
-
-.liquid-background-mesh .liquid-mesh-grain {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 0);
-  background-size: 28px 28px;
-  opacity: 0.65;
-}
-
-/* Specular refraction highlight line */
-.liquid-refraction-line {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1.5px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.6) 20%, rgba(6, 182, 212, 0.8) 50%, rgba(139, 92, 246, 0.7) 80%, transparent 100%);
-  pointer-events: none;
-  z-index: 2;
-}
-
-/* Glass Toggle Group */
-.glass-toggle-group {
-  display: flex;
-  background: var(--glass-bg-interactive);
-  backdrop-filter: var(--glass-blur-sm);
-  -webkit-backdrop-filter: var(--glass-blur-sm);
-  border-radius: var(--glass-radius-full);
-  padding: 3px;
-  border: var(--glass-border);
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.25);
-}
-
-.glass-toggle-btn {
-  padding: 5px 10px;
-  border-radius: var(--glass-radius-full);
-  border: 1px solid transparent;
-  color: var(--md-sys-color-on-surface-variant);
-  cursor: pointer;
-  transition: all var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.glass-toggle-btn.active {
-  background: var(--glass-bg-base);
-  border-color: rgba(255, 255, 255, 0.16);
-  color: var(--liquid-sky);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3);
-}
-
-/* Spotlight Glass Cards for Latest Release & Snapshot */
-.spotlight-card-release {
-  background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.18) 0%, rgba(18, 27, 48, 0.65) 75%);
-  backdrop-filter: var(--glass-blur-md);
-  -webkit-backdrop-filter: var(--glass-blur-md);
-  border: 1px solid rgba(16, 185, 129, 0.38);
-  border-radius: var(--glass-radius-xl);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 28px rgba(16, 185, 129, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  background: var(--bg-canvas) !important;
   position: relative;
   overflow: hidden;
-  transition: transform var(--glass-motion-duration-sm) var(--glass-ease-liquid),
-              box-shadow var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-}
-
-.spotlight-card-release:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 36px rgba(16, 185, 129, 0.28), inset 0 1px 2px rgba(255, 255, 255, 0.4);
-}
-
-.spotlight-card-snapshot {
-  background: radial-gradient(circle at top left, rgba(245, 158, 11, 0.18) 0%, rgba(18, 27, 48, 0.65) 75%);
-  backdrop-filter: var(--glass-blur-md);
-  -webkit-backdrop-filter: var(--glass-blur-md);
-  border: 1px solid rgba(245, 158, 11, 0.38);
-  border-radius: var(--glass-radius-xl);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 28px rgba(245, 158, 11, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.3);
-  position: relative;
-  overflow: hidden;
-  transition: transform var(--glass-motion-duration-sm) var(--glass-ease-liquid),
-              box-shadow var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-}
-
-.spotlight-card-snapshot:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 36px rgba(245, 158, 11, 0.28), inset 0 1px 2px rgba(255, 255, 255, 0.4);
-}
-
-/* Glass Badges */
-.glass-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--glass-bg-interactive);
-  backdrop-filter: var(--glass-blur-sm);
-  -webkit-backdrop-filter: var(--glass-blur-sm);
-  border: var(--glass-border-subtle);
-  border-radius: var(--glass-radius-full);
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface-variant);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-}
-
-/* Fluid Online Pulse Indicator */
-.liquid-online-indicator {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--liquid-mint);
-  border: 1.5px solid rgba(6, 10, 18, 0.85);
-  box-shadow: 0 0 8px var(--liquid-mint);
-  animation: liquid-online-pulse 2.2s infinite ease-out;
-}
-
-/* Animated Chromatic Liquid Mesh Orbs Layer */
-.app::before,
-.app-shell::before {
-  content: "";
-  position: absolute;
-  inset: -40%;
-  width: 180%;
-  height: 180%;
-  background:
-    radial-gradient(circle at 20% 30%, rgba(6, 182, 212, 0.16) 0%, transparent 35%),
-    radial-gradient(circle at 80% 25%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 45% 85%, rgba(16, 185, 129, 0.09) 0%, transparent 35%),
-    radial-gradient(circle at 75% 75%, rgba(56, 189, 248, 0.12) 0%, transparent 40%);
-  filter: blur(64px);
-  animation: liquid-mesh-drift 26s ease-in-out infinite alternate;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Subtle Ambient Fluid Noise Overlay */
-.app::after,
-.app-shell::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
 }
 
 /* ==========================================================================
-   Navigation Rail (Sidebar) — Floating Translucent Frosted Glass
+   Navigation Rail / Sidebar (Solid Black)
    ========================================================================== */
 
 .sidebar,
 .nav-rail {
-  margin: 12px 0 12px 14px;
-  height: calc(100vh - 24px);
-  border-radius: var(--glass-radius-xl);
-  background: var(--glass-bg-lowest);
-  backdrop-filter: blur(24px) saturate(180%) contrast(102%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%) contrast(102%);
-  border: var(--glass-border);
-  box-shadow: var(--glass-sheen);
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg-subtle) !important;
+  border-right: 1px solid var(--border) !important;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 18px 0 14px;
-  position: relative;
-  z-index: 10;
-  overflow: hidden;
+  justify-content: space-between;
+  z-index: 20;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-/* Specular Top Edge Sheen */
-.sidebar::before,
-.nav-rail::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28) 30%, rgba(6, 182, 212, 0.45) 70%, transparent);
-  pointer-events: none;
-}
-
-.sidebar .brand,
-.nav-rail .brand {
-  padding: 0 18px 18px;
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--md-sys-color-on-surface);
+.brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.sidebar .brand .logo,
-.nav-rail .brand .logo {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--glass-radius-sm);
-  background: linear-gradient(135deg, var(--liquid-cyan) 0%, var(--liquid-violet) 100%);
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+.brand .logo {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--solid-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  position: relative;
-  overflow: hidden;
 }
 
-.sidebar .brand .logo::after,
-.nav-rail .brand .logo::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, transparent 60%);
+.brand span {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 0 10px;
+  padding: 12px 10px;
   flex: 1;
 }
 
-/* Fluid Navigation Rail Item */
 .nav-item {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 18px;
-  border-radius: var(--glass-radius-full);
-  color: var(--md-sys-color-on-surface-variant);
-  cursor: pointer;
-  font-size: 13.5px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13px;
   font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.15s ease, color 0.15s ease;
   border: 1px solid transparent;
-  transition: all var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-  overflow: hidden;
-  user-select: none;
 }
 
 .nav-item:hover {
-  background: var(--glass-bg-interactive-hover);
-  color: var(--md-sys-color-on-surface);
-  border-color: var(--glass-border-subtle);
-  transform: translateX(2px);
+  background: var(--bg-interactive);
+  color: var(--text-primary);
 }
 
-.nav-item:active {
-  transform: scale(0.97) translateX(2px);
-}
-
-/* Active Liquid Droplet/Pill Indicator with Iridescent Glow */
 .nav-item.active {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.22) 0%, rgba(139, 92, 246, 0.22) 100%);
-  border: var(--glass-border-glow);
-  color: #ffffff;
+  background: var(--bg-interactive-hover) !important;
+  color: var(--text-primary) !important;
   font-weight: 600;
-  box-shadow: 0 4px 18px rgba(6, 182, 212, 0.28), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+  border-color: var(--border) !important;
 }
 
-.nav-item.active::before {
-  content: "";
-  position: absolute;
-  left: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 18px;
-  border-radius: var(--glass-radius-full);
-  background: linear-gradient(180deg, var(--liquid-cyan) 0%, var(--liquid-violet) 100%);
-  box-shadow: 0 0 10px var(--liquid-cyan), 0 0 18px rgba(139, 92, 246, 0.5);
+.nav-item.active svg {
+  color: var(--solid-primary);
 }
 
-.nav-item .badge {
+.frosted-badge {
   margin-left: auto;
-  background: var(--glass-bg-interactive);
-  border: var(--glass-border-subtle);
-  color: var(--md-sys-color-on-surface-variant);
   font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: var(--glass-radius-full);
-  min-width: 20px;
-  text-align: center;
-  transition: all var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-}
-
-.nav-item.active .badge {
-  background: linear-gradient(135deg, var(--liquid-cyan), var(--liquid-sky));
-  color: #041321;
-  font-weight: 700;
-  border-color: transparent;
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.5);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: var(--bg-interactive);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
 }
 
 /* ==========================================================================
-   Main Canvas & Floating Glass Top App Bar
+   Main Content & Top Bar (Solid Black)
    ========================================================================== */
 
 .main {
+  flex: 1;
   display: flex;
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+  background: var(--bg-canvas) !important;
   position: relative;
-  z-index: 5;
-  background: transparent;
+  z-index: 10;
 }
 
-/* Floating Glass Top Bar */
 .titlebar,
 .top-bar {
-  margin: 12px 14px 0 12px;
-  height: 50px;
-  background: var(--glass-bg-lowest);
-  backdrop-filter: var(--glass-blur-lg);
-  -webkit-backdrop-filter: var(--glass-blur-lg);
-  border: var(--glass-border);
-  border-radius: var(--glass-radius-xl);
-  box-shadow: var(--glass-sheen);
+  height: 56px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  -webkit-app-region: drag;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  color: var(--md-sys-color-on-surface);
-  z-index: 20;
-  position: relative;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: var(--bg-canvas) !important;
+  border-bottom: 1px solid var(--border) !important;
+  z-index: 15;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-/* Specular Top Reflection on Bar */
-.titlebar::after,
-.top-bar::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 24px;
-  right: 24px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35) 30%, rgba(6, 182, 212, 0.45) 70%, transparent);
-  pointer-events: none;
-}
-
-.titlebar .user,
-.top-bar .user {
-  margin-left: auto;
-  -webkit-app-region: no-drag;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.titlebar .user .muted,
-.top-bar .user .muted {
-  background: var(--glass-bg-interactive);
-  border: var(--glass-border-subtle);
-  padding: 3px 12px;
-  border-radius: var(--glass-radius-full);
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface-variant);
-  backdrop-filter: var(--glass-blur-sm);
-}
-
-/* Main Content Surface */
 .content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px 14px 14px 12px;
-  animation: liquid-fade-in var(--glass-motion-duration-md) var(--glass-ease-liquid);
-  position: relative;
+  padding: 24px;
+  background: var(--bg-canvas) !important;
 }
 
 /* ==========================================================================
-   Buttons — Pure Liquid Glass Interactive Elements
+   Solid Black Cards & Containers
    ========================================================================== */
 
-button {
-  font: inherit;
-  color: inherit;
-  background: none;
-  border: 1px solid transparent;
-  cursor: pointer;
-  border-radius: var(--glass-radius-full);
-  transition: all var(--glass-motion-duration-sm) var(--glass-ease-liquid);
+.card,
+[data-slot="card"] {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: 20px;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-button:focus-visible {
-  outline: 2px solid var(--liquid-cyan);
-  outline-offset: 2px;
+.card:hover,
+[data-slot="card"]:hover {
+  border-color: var(--border-strong) !important;
 }
 
-.btn {
+/* Hero Showcase Card */
+.home-hero,
+.hero-card {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: 28px !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* KPI Tiles */
+.kpi {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 16px !important;
+  box-shadow: none !important;
+}
+
+.kpi .label {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi .value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 4px;
+  font-feature-settings: "tnum";
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+/* ==========================================================================
+   HeroUI v3 Solid Buttons
+   ========================================================================== */
+
+button,
+.btn,
+[data-slot="button"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 18px;
-  border-radius: var(--glass-radius-full);
-  border: var(--glass-border);
-  background: var(--glass-bg-low);
-  backdrop-filter: var(--glass-blur-sm);
-  -webkit-backdrop-filter: var(--glass-blur-sm);
-  color: var(--md-sys-color-on-surface);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.1px;
-  box-shadow: var(--glass-sheen);
-  user-select: none;
-  white-space: nowrap;
-  position: relative;
-  overflow: hidden;
-}
-
-.btn:hover {
-  background: var(--glass-bg-high);
-  border-color: rgba(255, 255, 255, 0.22);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.28);
-}
-
-.btn:active {
-  transform: scale(0.97) translateY(1px);
-}
-
-/* Primary Filled Liquid Button */
-.btn.primary {
-  background: linear-gradient(135deg, var(--liquid-cyan) 0%, #0284c7 50%, var(--liquid-violet) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  color: #ffffff;
   font-weight: 600;
-  box-shadow: 0 4px 18px rgba(6, 182, 212, 0.40), 0 0 28px rgba(139, 92, 246, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.55);
-}
-
-.btn.primary:hover {
-  background: linear-gradient(135deg, #22d3ee 0%, #0369a1 50%, #a855f7 100%);
-  box-shadow: 0 6px 24px rgba(6, 182, 212, 0.55), 0 0 36px rgba(139, 92, 246, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.70);
-  transform: translateY(-2px);
-}
-
-.btn.primary:active {
-  transform: scale(0.96) translateY(1px);
-  box-shadow: 0 2px 10px rgba(6, 182, 212, 0.35);
-}
-
-/* Tonal Liquid Purple Button */
-.btn.tonal {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.28) 0%, rgba(168, 85, 247, 0.20) 100%);
-  border: 1px solid rgba(167, 139, 250, 0.35);
-  color: #ede9fe;
-  font-weight: 600;
-  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25);
-}
-
-.btn.tonal:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.45) 0%, rgba(168, 85, 247, 0.35) 100%);
-  border-color: rgba(167, 139, 250, 0.55);
-  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.35);
-  transform: translateY(-1px);
-}
-
-.btn.tonal:active {
-  transform: scale(0.97);
-}
-
-/* Outlined Glass Button */
-.btn.outlined {
-  background: transparent;
-  border: 1px solid rgba(6, 182, 212, 0.40);
-  color: var(--liquid-sky);
-  box-shadow: none;
-}
-
-.btn.outlined:hover {
-  background: rgba(6, 182, 212, 0.12);
-  border-color: var(--liquid-sky);
-  box-shadow: 0 0 16px rgba(6, 182, 212, 0.25);
-  transform: translateY(-1px);
-}
-
-.btn.outlined:active {
-  transform: scale(0.97);
-}
-
-/* Ghost / Sheer Glass Button */
-.btn.ghost {
-  background: transparent;
-  border-color: transparent;
-  color: var(--md-sys-color-on-surface-variant);
-  box-shadow: none;
-}
-
-.btn.ghost:hover {
-  background: var(--glass-bg-interactive-hover);
-  color: var(--md-sys-color-on-surface);
-  border-color: var(--glass-border-subtle);
-}
-
-.btn.ghost:active {
-  transform: scale(0.97);
-}
-
-/* Danger Liquid Coral Button */
-.btn.danger {
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.28) 0%, rgba(225, 29, 72, 0.25) 100%);
-  border: 1px solid rgba(244, 63, 94, 0.45);
-  color: #ffe4e6;
-  font-weight: 600;
-  box-shadow: 0 2px 10px rgba(244, 63, 94, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25);
-}
-
-.btn.danger:hover {
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.50) 0%, rgba(225, 29, 72, 0.45) 100%);
-  border-color: rgba(244, 63, 94, 0.65);
-  box-shadow: 0 4px 18px rgba(244, 63, 94, 0.40);
-  transform: translateY(-1px);
-}
-
-.btn.danger:active {
-  transform: scale(0.97);
-}
-
-/* Large Button */
-.btn.large {
-  padding: 12px 28px;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.btn:disabled {
-  opacity: 0.38;
-  cursor: not-allowed;
-  transform: none !important;
-  box-shadow: none !important;
-  pointer-events: none;
-}
-
-/* ==========================================================================
-   Heroic Liquid Play FAB — Circular Fluid Glass Button
-   ========================================================================== */
-
-.play-button {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--liquid-cyan) 0%, #2563eb 50%, var(--liquid-violet) 100%);
-  border: 1.5px solid rgba(255, 255, 255, 0.40);
-  color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  border-radius: var(--radius-md) !important;
   cursor: pointer;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  box-shadow: 0 8px 28px rgba(6, 182, 212, 0.45),
-              0 0 44px rgba(139, 92, 246, 0.30),
-              inset 0 2px 4px rgba(255, 255, 255, 0.60),
-              inset 0 -2px 4px rgba(0, 0, 0, 0.30);
-  transition: transform var(--glass-motion-duration-sm) var(--glass-ease-spring),
-              box-shadow var(--glass-motion-duration-sm) var(--glass-ease-liquid),
-              filter var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-  position: relative;
-  user-select: none;
-  animation: liquid-pulse-glow 3.5s infinite ease-in-out;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  outline: none;
+  background-image: none !important;
+  box-shadow: none !important;
 }
 
-/* Specular Orb Highlight */
-.play-button::before {
-  content: "";
-  position: absolute;
-  inset: 3px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.50) 0%, transparent 60%);
-  pointer-events: none;
+button:active,
+.btn:active,
+[data-slot="button"]:active {
+  transform: scale(0.98);
+}
+
+/* Primary Button (Solid HeroUI Blue) */
+.btn.primary,
+button[data-variant="primary"],
+[data-slot="button"][data-variant="primary"] {
+  background: var(--solid-primary) !important;
+  color: #ffffff !important;
+  border-color: var(--solid-primary) !important;
+}
+
+.btn.primary:hover,
+button[data-variant="primary"]:hover,
+[data-slot="button"][data-variant="primary"]:hover {
+  background: var(--solid-primary-hover) !important;
+  border-color: var(--solid-primary-hover) !important;
+}
+
+/* Secondary / Outline Button */
+.btn.secondary,
+button[data-variant="secondary"],
+button[data-variant="outline"],
+[data-slot="button"][data-variant="secondary"],
+[data-slot="button"][data-variant="outline"] {
+  background: var(--bg-surface-elevated) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+.btn.secondary:hover,
+button[data-variant="secondary"]:hover,
+button[data-variant="outline"]:hover,
+[data-slot="button"][data-variant="secondary"]:hover,
+[data-slot="button"][data-variant="outline"]:hover {
+  background: var(--bg-interactive-hover) !important;
+  border-color: var(--border-strong) !important;
+}
+
+/* Ghost Button */
+button[data-variant="ghost"],
+[data-slot="button"][data-variant="ghost"] {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border-color: transparent !important;
+}
+
+button[data-variant="ghost"]:hover,
+[data-slot="button"][data-variant="ghost"]:hover {
+  background: var(--bg-interactive) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Danger Button */
+.btn.danger,
+button[data-variant="danger"],
+[data-slot="button"][data-variant="danger"] {
+  background: var(--solid-danger) !important;
+  color: #ffffff !important;
+  border-color: var(--solid-danger) !important;
+}
+
+.btn.danger:hover,
+button[data-variant="danger"]:hover,
+[data-slot="button"][data-variant="danger"]:hover {
+  background: var(--solid-danger-hover) !important;
+  border-color: var(--solid-danger-hover) !important;
+}
+
+/* Heroic Solid Play Button */
+.play-button {
+  width: 90px !important;
+  height: 90px !important;
+  min-width: 90px !important;
+  border-radius: 50% !important;
+  background: var(--solid-primary) !important;
+  color: #ffffff !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 8px 24px rgba(0, 112, 243, 0.4) !important;
+  animation: none !important;
+  transition: transform 0.12s ease, background 0.15s ease !important;
 }
 
 .play-button:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 12px 38px rgba(6, 182, 212, 0.65),
-              0 0 56px rgba(139, 92, 246, 0.45),
-              inset 0 2px 4px rgba(255, 255, 255, 0.75);
-  animation: none;
-  filter: brightness(1.08);
+  background: var(--solid-primary-hover) !important;
+  transform: scale(1.04) !important;
 }
 
-/* Tactile Hydraulic Press Physics */
 .play-button:active {
-  transform: scale(0.94) translateY(2px);
-  box-shadow: 0 2px 12px rgba(6, 182, 212, 0.35),
-              inset 0 2px 4px rgba(0, 0, 0, 0.40);
+  transform: scale(0.96) !important;
 }
 
-.play-button:disabled {
-  background: var(--glass-bg-interactive);
-  color: var(--md-sys-color-on-surface-variant);
-  cursor: not-allowed;
-  box-shadow: none;
-  border-color: var(--glass-border-subtle);
-  transform: none !important;
-  opacity: 0.45;
-  animation: none;
-  filter: none;
+.play-button.busy {
+  background: var(--solid-danger) !important;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4) !important;
 }
 
-/* Red / Danger state when stopping running game */
-.play-button[style*="danger"],
-.play-button[style*="--danger"],
-.play-button[style*="248, 113, 113"] {
-  background: linear-gradient(135deg, var(--liquid-coral) 0%, #dc2626 50%, #991b1b 100%) !important;
-  border-color: rgba(255, 255, 255, 0.40) !important;
-  box-shadow: 0 6px 24px rgba(244, 63, 94, 0.50), 0 0 40px rgba(244, 63, 94, 0.30), inset 0 2px 4px rgba(255, 255, 255, 0.60) !important;
-  animation: none;
-}
-
-.play-button[style*="danger"]:hover,
-.play-button[style*="--danger"]:hover,
-.play-button[style*="248, 113, 113"]:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 12px 38px rgba(244, 63, 94, 0.70), 0 0 54px rgba(244, 63, 94, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.75) !important;
+.play-button.busy:hover {
+  background: var(--solid-danger-hover) !important;
 }
 
 /* ==========================================================================
-   Glass Inputs, Search Bars, Selects, Sliders & Switches
+   Solid Inputs, Selects & Textareas
    ========================================================================== */
 
-input,
+input[type="text"],
+input[type="search"],
+input[type="number"],
+input[type="password"],
 select,
-textarea {
-  font: inherit;
-  color: var(--md-sys-color-on-surface);
-  background: var(--glass-bg-low);
-  backdrop-filter: var(--glass-blur-sm);
-  -webkit-backdrop-filter: var(--glass-blur-sm);
-  border: var(--glass-border);
-  border-radius: var(--glass-radius-md);
-  padding: 8px 14px;
-  user-select: text;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.30);
-  transition: border-color var(--glass-motion-duration-sm) var(--glass-ease-liquid),
-              box-shadow var(--glass-motion-duration-sm) var(--glass-ease-liquid),
-              background-color var(--glass-motion-duration-sm) var(--glass-ease-liquid);
+textarea,
+[data-slot="input"],
+.search-bar input {
+  background: var(--bg-subtle) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-primary) !important;
+  padding: 9px 13px !important;
+  font-size: 13px !important;
+  font-family: inherit !important;
+  outline: none !important;
+  transition: border-color 0.15s ease;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-/* Focused Liquid Cyan Ring */
 input:focus,
 select:focus,
-textarea:focus {
-  outline: none;
-  border-color: var(--liquid-cyan);
-  background: var(--glass-bg-base);
-  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.35),
-              0 0 16px rgba(6, 182, 212, 0.20),
-              inset 0 1px 2px rgba(0, 0, 0, 0.20);
+textarea:focus,
+[data-slot="input"]:focus-within {
+  border-color: var(--solid-primary) !important;
 }
 
-/* Search Bars with Pill Shape & Leading Search Icon */
-input[placeholder*="Search"],
-input[placeholder*="Filter"],
-.search-bar,
-.search-input {
-  border-radius: var(--glass-radius-full);
-  padding-left: 38px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: 12px center;
-}
-
-input[placeholder*="Search"]:focus,
-input[placeholder*="Filter"]:focus,
-.search-bar:focus,
-.search-input:focus {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2306b6d4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
-}
-
-/* Clear button for search fields */
-input[type="search"]::-webkit-search-cancel-button,
-input[placeholder*="Search"]::-webkit-search-cancel-button,
-input[placeholder*="Filter"]::-webkit-search-cancel-button {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 14px;
-  width: 14px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'%3E%3C/line%3E%3Cline x1='6' y1='6' x2='18' y2='18'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
-  cursor: pointer;
-  opacity: 0.75;
-  transition: opacity var(--glass-motion-duration-sm);
-}
-
-input[type="search"]::-webkit-search-cancel-button:hover,
-input[placeholder*="Search"]::-webkit-search-cancel-button:hover,
-input[placeholder*="Filter"]::-webkit-search-cancel-button:hover {
-  opacity: 1;
-}
-
-/* Liquid Range Sliders */
-input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  height: 28px;
-  padding: 0;
-  border: none;
-  cursor: pointer;
-}
-
-input[type="range"]:focus {
-  box-shadow: none;
-  background: transparent;
-}
-
-input[type="range"]::-webkit-slider-runnable-track {
-  height: 6px;
-  border-radius: var(--glass-radius-full);
-  background: var(--glass-bg-low);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.40);
-}
-
-input[type="range"]::-moz-range-track {
-  height: 6px;
-  border-radius: var(--glass-radius-full);
-  background: var(--glass-bg-low);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.40);
-}
-
-/* Glowing Fluid Droplet Thumb */
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--liquid-cyan) 0%, var(--liquid-violet) 100%);
-  border: 1.5px solid rgba(255, 255, 255, 0.65);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45),
-              0 0 14px rgba(6, 182, 212, 0.50),
-              inset 0 1px 1px rgba(255, 255, 255, 0.60);
-  margin-top: -7px;
-  transition: transform var(--glass-motion-duration-sm) var(--glass-ease-spring),
-              box-shadow var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-}
-
-input[type="range"]:hover::-webkit-slider-thumb {
-  transform: scale(1.22);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.50), 0 0 22px rgba(6, 182, 212, 0.70);
-}
-
-input[type="range"]:active::-webkit-slider-thumb {
-  transform: scale(1.08);
-}
-
-input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.65);
-  background: linear-gradient(135deg, var(--liquid-cyan) 0%, var(--liquid-violet) 100%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45),
-              0 0 14px rgba(6, 182, 212, 0.50),
-              inset 0 1px 1px rgba(255, 255, 255, 0.60);
-  transition: transform var(--glass-motion-duration-sm) var(--glass-ease-spring),
-              box-shadow var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-}
-
-input[type="range"]:hover::-moz-range-thumb {
-  transform: scale(1.22);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.50), 0 0 22px rgba(6, 182, 212, 0.70);
-}
-
-/* Frosted Glass Checkboxes */
-input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: var(--glass-radius-xs);
-  border: 1.5px solid rgba(255, 255, 255, 0.20);
-  background: var(--glass-bg-low);
-  backdrop-filter: var(--glass-blur-sm);
-  -webkit-backdrop-filter: var(--glass-blur-sm);
-  cursor: pointer;
-  display: inline-grid;
-  place-content: center;
-  vertical-align: middle;
-  margin-right: 8px;
-  padding: 0;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.30);
-  transition: all var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-}
-
-input[type="checkbox"]:hover {
-  border-color: var(--liquid-cyan);
-  background: var(--glass-bg-high);
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
-}
-
-input[type="checkbox"]:checked {
-  background: linear-gradient(135deg, var(--liquid-cyan) 0%, var(--liquid-violet) 100%);
-  border-color: rgba(255, 255, 255, 0.40);
-  box-shadow: 0 0 14px rgba(6, 182, 212, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.50);
-}
-
-input[type="checkbox"]:checked::after {
-  content: "";
-  width: 5px;
-  height: 9px;
-  border: solid #ffffff;
-  border-width: 0 2.2px 2.2px 0;
-  transform: rotate(45deg) translate(-1px, -1px);
-}
-
-/* Fluid Glass Toggle Switch (.m3-switch) */
-.m3-switch {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  width: 48px;
-  height: 28px;
-  border-radius: var(--glass-radius-full);
-  background: var(--glass-bg-interactive);
-  backdrop-filter: var(--glass-blur-sm);
-  -webkit-backdrop-filter: var(--glass-blur-sm);
-  border: var(--glass-border);
-  cursor: pointer;
-  padding: 0;
-  box-sizing: border-box;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.40);
-  transition: all var(--glass-motion-duration-md) var(--glass-ease-liquid);
-}
-
-.m3-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-  position: absolute;
-}
-
-/* Glowing Fluid Droplet Thumb */
-.m3-switch .thumb {
-  position: absolute;
-  left: 3px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.90) 0%, rgba(203, 213, 225, 0.80) 100%);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.40), inset 0 1px 1px rgba(255, 255, 255, 0.60);
-  transition: transform var(--glass-motion-duration-md) var(--glass-ease-spring),
-              width var(--glass-motion-duration-sm),
-              background var(--glass-motion-duration-md) var(--glass-ease-liquid),
-              box-shadow var(--glass-motion-duration-md) var(--glass-ease-liquid);
-}
-
-.m3-switch:hover .thumb {
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), 0 0 10px rgba(255, 255, 255, 0.35);
-}
-
-.m3-switch.active,
-.m3-switch:has(input:checked) {
-  background: linear-gradient(135deg, var(--liquid-cyan) 0%, var(--liquid-violet) 100%);
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 0 18px rgba(6, 182, 212, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.45);
-}
-
-.m3-switch.active .thumb,
-.m3-switch:has(input:checked) .thumb {
-  transform: translateX(20px);
-  width: 20px;
-  height: 20px;
-  left: 2px;
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 0 14px rgba(255, 255, 255, 0.70);
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
 }
 
 /* ==========================================================================
-   Hero Cards, KPI Tiles & Translucent Glass Panes
+   Solid Chips & Badges
    ========================================================================== */
 
-.card {
-  background: var(--glass-bg-card);
-  backdrop-filter: var(--glass-blur-md);
-  -webkit-backdrop-filter: var(--glass-blur-md);
-  border: var(--glass-border);
-  border-radius: var(--glass-radius-xl);
-  padding: 24px 28px;
-  box-shadow: var(--glass-sheen);
-  transition: border-color var(--glass-motion-duration-sm) var(--glass-ease-liquid),
-              box-shadow var(--glass-motion-duration-sm) var(--glass-ease-liquid),
-              transform var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-  position: relative;
-  overflow: hidden;
-}
-
-/* Specular Top Light Reflection Sheen */
-.card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.30) 35%, rgba(6, 182, 212, 0.40) 70%, transparent);
-  pointer-events: none;
-}
-
-.card:hover {
-  border-color: rgba(255, 255, 255, 0.20);
-  box-shadow: inset 0 1px 2px 0 rgba(255, 255, 255, 0.30),
-              inset 0 -1px 1px 0 rgba(0, 0, 0, 0.20),
-              0 12px 36px 0 rgba(0, 0, 0, 0.45),
-              0 0 22px rgba(6, 182, 212, 0.12);
-}
-
-.card h3 {
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--md-sys-color-on-surface-variant);
-  margin-bottom: 14px;
-  font-weight: 700;
-}
-
-/* Floating Hero Card with Glowing Ambient Borders */
-.home-hero,
-.hero-card {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 28px;
-  background: linear-gradient(135deg, rgba(24, 36, 64, 0.65) 0%, rgba(15, 23, 42, 0.75) 100%);
-  backdrop-filter: var(--glass-blur-lg);
-  -webkit-backdrop-filter: var(--glass-blur-lg);
-  border: var(--glass-border);
-  border-radius: var(--glass-radius-2xl);
-  padding: 32px 38px;
-  margin-bottom: 24px;
-  box-shadow: var(--glass-sheen-elevated), 0 0 32px rgba(6, 182, 212, 0.12);
-  position: relative;
-  overflow: hidden;
-  animation: liquid-fade-in var(--glass-motion-duration-md) var(--glass-ease-liquid);
-  transition: transform var(--glass-motion-duration-sm) var(--glass-ease-liquid),
-              border-color var(--glass-motion-duration-sm) var(--glass-ease-liquid),
-              box-shadow var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-}
-
-/* Iridescent Specular Top Edge Light */
-.home-hero::after,
-.hero-card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1.5px;
-  background: linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, 0.70) 25%, rgba(139, 92, 246, 0.65) 75%, transparent 100%);
-}
-
-.home-hero:hover,
-.hero-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(56, 189, 248, 0.35);
-  box-shadow: var(--glass-sheen-elevated), 0 0 40px rgba(6, 182, 212, 0.22);
-}
-
-.home-hero .info h1,
-.hero-card .info h1 {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin-bottom: 8px;
-  color: var(--md-sys-color-on-surface);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.40);
-}
-
-.home-hero .info p,
-.hero-card .info p {
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 13.5px;
-}
-
-.home-hero .play,
-.hero-card .play {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-}
-
-/* KPI Tiles — Floating Frosted Glass Panes */
-.kpi-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-}
-
-.kpi {
-  background: var(--glass-bg-card);
-  backdrop-filter: var(--glass-blur-md);
-  -webkit-backdrop-filter: var(--glass-blur-md);
-  border: var(--glass-border);
-  border-radius: var(--glass-radius-lg);
-  padding: 16px 20px;
-  box-shadow: var(--glass-sheen);
-  position: relative;
-  overflow: hidden;
-  transition: transform var(--glass-motion-duration-sm) var(--glass-ease-liquid),
-              border-color var(--glass-motion-duration-sm) var(--glass-ease-liquid),
-              box-shadow var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-}
-
-/* Specular Top Edge on KPI */
-.kpi::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25) 30%, rgba(6, 182, 212, 0.35) 70%, transparent);
-}
-
-.kpi:hover {
-  transform: translateY(-3px);
-  border-color: var(--glass-border-glow);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45),
-              0 0 22px rgba(6, 182, 212, 0.20),
-              inset 0 1px 1px rgba(255, 255, 255, 0.35);
-}
-
-.kpi .label {
-  font-size: 11px;
-  text-transform: uppercase;
-  color: var(--md-sys-color-on-surface-variant);
-  letter-spacing: 0.8px;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.kpi .value {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--md-sys-color-on-surface);
-  letter-spacing: -0.02em;
-}
-
-/* Instance & Mod Cards */
-.instance-card,
-.mod-card,
-.content .card {
-  background: var(--glass-bg-card);
-  backdrop-filter: var(--glass-blur-md);
-  -webkit-backdrop-filter: var(--glass-blur-md);
-  border: var(--glass-border);
-  border-radius: var(--glass-radius-xl);
-  padding: 18px 22px;
-  box-shadow: var(--glass-sheen);
-  position: relative;
-  overflow: hidden;
-  transition: transform var(--glass-motion-duration-sm) var(--glass-ease-liquid),
-              border-color var(--glass-motion-duration-sm) var(--glass-ease-liquid),
-              box-shadow var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-}
-
-.instance-card::before,
-.mod-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25) 30%, rgba(6, 182, 212, 0.35) 70%, transparent);
-}
-
-.instance-card:hover,
-.mod-card:hover,
-.content .card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(56, 189, 248, 0.35);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45),
-              0 0 20px rgba(6, 182, 212, 0.16),
-              inset 0 1px 1px rgba(255, 255, 255, 0.30);
-}
-
-/* ==========================================================================
-   Glass Chips & Tags — Pill-Shaped Frosted Glass Tags
-   ========================================================================== */
-
+.chip,
 .tag,
-.chip {
+[data-slot="chip"] {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
-  background: var(--glass-bg-interactive);
-  backdrop-filter: var(--glass-blur-sm);
-  -webkit-backdrop-filter: var(--glass-blur-sm);
-  border: var(--glass-border);
-  border-radius: var(--glass-radius-full);
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  color: var(--md-sys-color-on-surface-variant);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12);
-  transition: all var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-  user-select: none;
-}
-
-.tag:hover,
-.chip:hover {
-  background: var(--glass-bg-interactive-hover);
-  border-color: rgba(255, 255, 255, 0.22);
-  color: var(--md-sys-color-on-surface);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.20);
-}
-
-/* Active Iridescent Glass Chip */
-.tag.active,
-.chip.active,
-.chip[aria-selected="true"] {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(139, 92, 246, 0.25) 100%);
-  border-color: rgba(56, 189, 248, 0.55);
-  color: #e0f2fe;
-  box-shadow: 0 0 14px rgba(6, 182, 212, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.30);
-}
-
-.chip.active::before,
-.chip[aria-selected="true"]::before {
-  content: "✓";
-  font-weight: 700;
-  font-size: 10px;
-  margin-right: 2px;
-  color: var(--liquid-sky);
-}
-
-/* Success / Mint Glass Chip */
-.tag.success,
-.chip.success {
-  background: rgba(16, 185, 129, 0.18);
-  border-color: rgba(16, 185, 129, 0.40);
-  color: var(--liquid-mint);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.20), inset 0 1px 1px rgba(255, 255, 255, 0.20);
-}
-
-/* Warning / Amber Glass Chip */
-.tag.warning,
-.chip.warning {
-  background: rgba(245, 158, 11, 0.18);
-  border-color: rgba(245, 158, 11, 0.40);
-  color: var(--liquid-amber);
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.20), inset 0 1px 1px rgba(255, 255, 255, 0.20);
-}
-
-/* Danger / Coral Glass Chip */
-.tag.danger,
-.chip.danger {
-  background: rgba(244, 63, 94, 0.20);
-  border-color: rgba(244, 63, 94, 0.45);
-  color: var(--liquid-coral);
-  box-shadow: 0 0 10px rgba(244, 63, 94, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.20);
+  padding: 3px 10px;
+  border-radius: var(--radius-full) !important;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-surface-elevated) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* ==========================================================================
-   Tables — Frosted Sticky Headers & Glowing Row Accents
+   Solid Progress Bars
    ========================================================================== */
 
-.table {
+.progress,
+[data-slot="progress-bar"] {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  height: 7px;
+  background: var(--bg-surface-elevated) !important;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border);
 }
 
-.table th,
-.table td {
-  text-align: left;
+.progress-bar,
+[data-slot="progress-bar-fill"] {
+  height: 100%;
+  background: var(--solid-primary) !important;
+  border-radius: var(--radius-full);
+  transition: width 0.2s ease;
+  animation: none !important;
+}
+
+/* ==========================================================================
+   Solid Sliders
+   ========================================================================== */
+
+[data-slot="slider-track"] {
+  height: 6px !important;
+  background: var(--bg-surface-elevated) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-full) !important;
+}
+
+[data-slot="slider-fill"] {
+  background: var(--solid-primary) !important;
+  border-radius: var(--radius-full) !important;
+}
+
+[data-slot="slider-thumb"] {
+  width: 18px !important;
+  height: 18px !important;
+  background: #ffffff !important;
+  border: 2px solid var(--solid-primary) !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   Solid Switches
+   ========================================================================== */
+
+[data-slot="switch-control"] {
+  width: 44px !important;
+  height: 24px !important;
+  background: var(--bg-surface-elevated) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-full) !important;
+  padding: 2px !important;
+  transition: background 0.15s ease !important;
+}
+
+[data-slot="switch"][data-selected="true"] [data-slot="switch-control"] {
+  background: var(--solid-primary) !important;
+  border-color: var(--solid-primary) !important;
+}
+
+[data-slot="switch-thumb"] {
+  width: 18px !important;
+  height: 18px !important;
+  background: #ffffff !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+  transition: transform 0.15s ease !important;
+}
+
+/* ==========================================================================
+   Solid Modals & Dialogs
+   ========================================================================== */
+
+[data-slot="modal-backdrop"],
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-slot="modal-dialog"],
+.modal {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: 24px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8) !important;
+  color: var(--text-primary) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ==========================================================================
+   Tables (Solid Black)
+   ========================================================================== */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+thead {
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+}
+
+th {
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
   font-size: 13px;
 }
 
-.table th {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--md-sys-color-on-surface-variant);
-  font-weight: 600;
-  background: var(--glass-bg-low);
-  backdrop-filter: var(--glass-blur-sm);
-  -webkit-backdrop-filter: var(--glass-blur-sm);
-  position: sticky;
-  top: 0;
-  z-index: 5;
+tr:last-child td {
+  border-bottom: none;
 }
 
-.table th:first-child {
-  border-top-left-radius: var(--glass-radius-md);
-}
-
-.table th:last-child {
-  border-top-right-radius: var(--glass-radius-md);
-}
-
-.table tbody tr {
-  cursor: pointer;
-  transition: background-color var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-}
-
-.table tbody tr:hover {
-  background: var(--glass-bg-interactive-hover);
-}
-
-.table tbody tr.selected {
-  background: rgba(6, 182, 212, 0.16);
-}
-
-.table tbody tr.selected td {
-  color: var(--md-sys-color-on-surface);
+tr:hover td {
+  background: var(--bg-interactive);
 }
 
 /* ==========================================================================
-   Glass Dialog Sheets & Modals
+   Utilities & Typography
    ========================================================================== */
 
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(4, 7, 14, 0.72);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  animation: liquid-fade-in var(--glass-motion-duration-sm) var(--glass-ease-liquid);
+.muted {
+  color: var(--text-muted) !important;
 }
-
-/* Multi-layered Frosted Glass Modal */
-.modal {
-  background: linear-gradient(145deg, rgba(24, 36, 64, 0.82) 0%, rgba(15, 23, 42, 0.92) 100%);
-  backdrop-filter: var(--glass-blur-lg);
-  -webkit-backdrop-filter: var(--glass-blur-lg);
-  border: var(--glass-border);
-  border-radius: var(--glass-radius-2xl);
-  padding: 30px 36px;
-  min-width: 440px;
-  max-width: 720px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: var(--glass-sheen-elevated), 0 0 60px rgba(6, 182, 212, 0.18);
-  animation: liquid-dialog-enter var(--glass-motion-duration-md) var(--glass-ease-spring);
-  position: relative;
-}
-
-/* Liquid Specular Highlight on Dialog */
-.modal::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 24px;
-  right: 24px;
-  height: 1.5px;
-  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.65) 30%, rgba(139, 92, 246, 0.65) 70%, transparent);
-}
-
-.modal h2 {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  margin-bottom: 20px;
-  color: var(--md-sys-color-on-surface);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.40);
-}
-
-.modal .actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 24px;
-}
-
-/* ==========================================================================
-   Liquid Progress Bars
-   ========================================================================== */
-
-.progress {
-  position: relative;
-  height: 8px;
-  background: var(--glass-bg-interactive);
-  backdrop-filter: var(--glass-blur-sm);
-  -webkit-backdrop-filter: var(--glass-blur-sm);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--glass-radius-full);
-  overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.40);
-}
-
-.progress .bar {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, var(--liquid-cyan) 0%, var(--liquid-sky) 50%, var(--liquid-violet) 100%);
-  border-radius: var(--glass-radius-full);
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.55);
-  transition: width var(--glass-motion-duration-md) var(--glass-ease-liquid);
-}
-
-.progress.indeterminate .bar {
-  width: 40%;
-  animation: indeterminate 1.5s infinite ease-in-out;
-  background: linear-gradient(90deg, var(--liquid-cyan) 0%, var(--liquid-violet) 50%, var(--liquid-cyan) 100%);
-  background-size: 200% 100%;
-}
-
-.progress.shimmer .bar,
-.progress-shimmer {
-  background: linear-gradient(90deg, var(--liquid-cyan) 0%, #a5f3fc 50%, var(--liquid-violet) 100%);
-  background-size: 200% 100%;
-  animation: liquid-shimmer 2s infinite linear;
-}
-
-/* ==========================================================================
-   Terminal / Log View — Deep Oceanic Frosted Glass
-   ========================================================================== */
-
-.log-view {
-  background: rgba(6, 10, 18, 0.78);
-  backdrop-filter: var(--glass-blur-sm);
-  -webkit-backdrop-filter: var(--glass-blur-sm);
-  border: var(--glass-border);
-  border-radius: var(--glass-radius-lg);
-  padding: 16px 20px;
-  font-family: var(--mono);
-  font-size: 12px;
-  line-height: 1.6;
-  height: 100%;
-  overflow: auto;
-  color: #cbd5e1;
-  user-select: text;
-  white-space: pre-wrap;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.60);
-}
-
-.log-line.stderr {
-  color: var(--liquid-coral);
-}
-
-.log-line.info {
-  color: var(--liquid-sky);
-}
-
-/* ==========================================================================
-   Empty States
-   ========================================================================== */
-
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 64px 24px;
-  color: var(--md-sys-color-on-surface-variant);
-  text-align: center;
-  gap: 10px;
-  animation: liquid-fade-in var(--glass-motion-duration-md) var(--glass-ease-liquid);
-}
-
-.empty .icon {
-  font-size: 36px;
-  color: var(--liquid-sky);
-  opacity: 0.80;
-  margin-bottom: 6px;
-  filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.45));
-}
-
-/* ==========================================================================
-   Settings Layout — Translucent Panes & Floating Sub-Nav
-   ========================================================================== */
-
-.settings {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 24px;
-  height: 100%;
-}
-
-.settings-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.settings-nav-item {
-  padding: 10px 16px;
-  border-radius: var(--glass-radius-full);
-  color: var(--md-sys-color-on-surface-variant);
-  cursor: pointer;
-  font-size: 13.5px;
-  font-weight: 500;
-  border: 1px solid transparent;
-  transition: all var(--glass-motion-duration-sm) var(--glass-ease-liquid);
-}
-
-.settings-nav-item:hover {
-  background: var(--glass-bg-interactive-hover);
-  color: var(--md-sys-color-on-surface);
-}
-
-.settings-nav-item.active {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.22) 0%, rgba(139, 92, 246, 0.22) 100%);
-  border-color: var(--glass-border-glow);
-  color: #ffffff;
-  font-weight: 600;
-  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.30);
-}
-
-.settings-content {
-  overflow-y: auto;
-  padding-right: 8px;
-}
-
-/* ==========================================================================
-   Dropdown Menus & Popovers Refractive Glass Styling
-   ========================================================================== */
-
-.titlebar .user > div > div[style*="position: absolute"],
-.top-bar .user > div > div[style*="position: absolute"] {
-  backdrop-filter: var(--glass-blur-lg) !important;
-  -webkit-backdrop-filter: var(--glass-blur-lg) !important;
-  border: var(--glass-border) !important;
-  box-shadow: var(--glass-sheen-elevated), 0 0 36px rgba(6, 182, 212, 0.20) !important;
-  background: linear-gradient(145deg, rgba(24, 36, 64, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
-}
-
-/* ==========================================================================
-   Utility Classes & Form Helpers
-   ========================================================================== */
 
 .row {
   display: flex;
@@ -1940,15 +684,10 @@ input[type="checkbox"]:checked::after {
   justify-content: space-between;
 }
 
-.grid {
-  display: grid;
-  gap: 14px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px 18px;
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .field {
@@ -1959,27 +698,38 @@ input[type="checkbox"]:checked::after {
 }
 
 .field label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface-variant);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-.muted {
-  color: var(--md-sys-color-on-surface-variant);
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
 
-.faint {
-  color: var(--text-faint);
+.button-group {
+  display: flex;
+  gap: 8px;
 }
 
-.mono {
-  font-family: var(--mono);
-  font-size: 12px;
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-muted);
 }
 
-.divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.08);
-  margin: 18px 0;
-  border: none;
+.empty .icon {
+  margin-bottom: 16px;
+  color: var(--text-muted);
+}
+
+@keyframes indeterminate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

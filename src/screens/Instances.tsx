@@ -187,24 +187,23 @@ export function Instances({ instances, onChange, onSelect }: Props) {
                 justifyContent: "space-between",
                 gap: 16,
                 cursor: "pointer",
-                borderLeft: `4px solid ${i.color || "var(--liquid-sky)"}`,
+                borderLeft: `4px solid ${i.color || "#0070f3"}`,
                 position: "relative",
               }}
               onClick={() => onSelect(i)}
             >
               <Card.Content>
-                <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.4 }} />
                 <div>
                   {/* Header with Avatar & Title */}
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                     <Avatar
                       size="md"
                       style={{
-                        background: `linear-gradient(135deg, ${i.color || "var(--liquid-sky)"} 0%, ${i.color ? i.color + "99" : "var(--liquid-cyan)"} 100%)`,
+                        background: i.color || "#18181b",
+                        border: "1px solid #27272a",
                         color: "#ffffff",
                         fontWeight: 800,
                         fontSize: 16,
-                        boxShadow: `0 4px 16px ${i.color ? i.color + "45" : "rgba(6, 182, 212, 0.4)"}`,
                       }}
                     >
                       <Avatar.Fallback>{i.name.charAt(0).toUpperCase()}</Avatar.Fallback>
@@ -558,7 +557,6 @@ function CreateModal({ isOpen, onClose, onSave }: CreateProps) {
       <Modal.Backdrop>
         <Modal.Container>
           <Modal.Dialog style={{ width: 500, maxWidth: "90vw", position: "relative" }}>
-            <div className="liquid-refraction-line" aria-hidden="true" />
             <Modal.Header>
               <Modal.Heading>Create New Instance</Modal.Heading>
             </Modal.Header>
@@ -714,7 +712,6 @@ function EditModal({
       <Modal.Backdrop>
         <Modal.Container>
           <Modal.Dialog style={{ width: 560, maxWidth: "90vw", position: "relative" }}>
-            <div className="liquid-refraction-line" aria-hidden="true" />
             <Modal.Header>
               <Modal.Heading>Edit Instance: {instance.name}</Modal.Heading>
             </Modal.Header>

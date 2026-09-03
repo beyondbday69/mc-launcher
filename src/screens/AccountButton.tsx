@@ -50,9 +50,9 @@ export function AccountButton() {
               gap: 8,
               display: "inline-flex",
               alignItems: "center",
-              backdropFilter: "var(--glass-blur-sm)",
-              WebkitBackdropFilter: "var(--glass-blur-sm)",
-              boxShadow: "var(--glass-sheen)",
+              border: "1px solid #27272a",
+              background: "#18181b",
+              borderRadius: "20px",
             }}
             title="Account profile"
           >
@@ -62,11 +62,15 @@ export function AccountButton() {
                 <Avatar.Fallback>{initial}</Avatar.Fallback>
               </Avatar>
               <span
-                className="liquid-online-indicator"
                 style={{
                   position: "absolute",
                   bottom: -1,
                   right: -1,
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: "#10b981",
+                  border: "1.5px solid #000000",
                 }}
                 title="Online"
               />
@@ -76,7 +80,7 @@ export function AccountButton() {
               style={{
                 fontSize: 12.5,
                 fontWeight: 600,
-                color: "var(--md-sys-color-on-surface)",
+                color: "#ffffff",
               }}
             >
               {account.username}
@@ -85,30 +89,26 @@ export function AccountButton() {
             <IconChevronDown
               size={13}
               style={{
-                color: "var(--md-sys-color-on-surface-variant)",
+                color: "#a1a1aa",
               }}
             />
           </div>
         </Dropdown.Trigger>
 
-        {/* Floating Frosted Dropdown Popover */}
+        {/* Solid Black Dropdown Popover */}
         <Dropdown.Popover
           placement="bottom end"
           style={{
             minWidth: 268,
-            background: "rgba(15, 23, 42, 0.95)",
-            backdropFilter: "var(--glass-blur-lg)",
-            WebkitBackdropFilter: "var(--glass-blur-lg)",
-            border: "var(--glass-border)",
-            borderRadius: "var(--glass-radius-xl)",
+            background: "#121214",
+            border: "1px solid #27272a",
+            borderRadius: "12px",
             padding: "16px",
-            boxShadow: "var(--glass-sheen-elevated), 0 0 32px rgba(6, 182, 212, 0.15)",
+            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.6)",
             zIndex: 100,
             overflow: "hidden",
           }}
         >
-          <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.5 }} />
-
           {/* Account Header */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
             <Avatar size="md">

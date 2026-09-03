@@ -447,7 +447,6 @@ function ModCard({
           width: "100%",
         }}
       >
-        <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.35 }} />
         {/* Icon */}
         {hit.icon_url ? (
           <img
@@ -458,26 +457,25 @@ function ModCard({
             style={{
               width: 52,
               height: 52,
-              borderRadius: "var(--glass-radius-md)",
-              background: "var(--glass-bg-interactive)",
+              borderRadius: "8px",
               objectFit: "cover",
               flexShrink: 0,
-              border: "var(--glass-border-subtle)",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.35)",
+              border: "1px solid #27272a",
             }}
+            loading="lazy"
           />
         ) : (
           <div
             style={{
               width: 52,
               height: 52,
-              borderRadius: "var(--glass-radius-md)",
-              background: "var(--glass-bg-interactive)",
-              border: "var(--glass-border-subtle)",
+              borderRadius: "8px",
+              background: "#18181b",
+              border: "1px solid #27272a",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--liquid-sky)",
+              color: "#a1a1aa",
               fontSize: 22,
               flexShrink: 0,
             }}
@@ -493,7 +491,7 @@ function ModCard({
               style={{
                 fontSize: 15,
                 fontWeight: 700,
-                color: "var(--md-sys-color-on-surface)",
+                color: "#ffffff",
               }}
             >
               {hit.title}
@@ -522,13 +520,13 @@ function ModCard({
           {/* Stats Row with HeroUI Badges/Chips */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11.5 }}>
             <Chip size="sm">
-              <IconDownloads size={13} style={{ color: "var(--liquid-sky)", marginRight: 4 }} />
+              <IconDownloads size={13} style={{ color: "#0070f3", marginRight: 4 }} />
               {hit.downloads.toLocaleString()} downloads
             </Chip>
 
             {hit.versions.length > 0 && (
               <Chip size="sm">
-                <IconCube size={13} style={{ color: "var(--liquid-mint)", marginRight: 4 }} />
+                <IconCube size={13} style={{ color: "#10b981", marginRight: 4 }} />
                 {hit.versions.slice(0, 3).join(", ")}
                 {hit.versions.length > 3 ? "…" : ""}
               </Chip>

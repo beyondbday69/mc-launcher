@@ -172,18 +172,17 @@ export function Versions({ onInstalled }: Props) {
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              borderLeft: "4px solid var(--liquid-mint)",
+              borderLeft: "4px solid #10b981",
               position: "relative",
             }}
           >
-            <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.5 }} />
             <Card.Content style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <Chip color="success" size="sm">
                     Latest Release
                   </Chip>
-                  <strong style={{ fontSize: 17, color: "var(--md-sys-color-on-surface)" }}>
+                  <strong style={{ fontSize: 17, color: "#ffffff" }}>
                     {latest.release}
                   </strong>
                 </div>
@@ -210,11 +209,10 @@ export function Versions({ onInstalled }: Props) {
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              borderLeft: "4px solid var(--liquid-amber)",
+              borderLeft: "4px solid #f59e0b",
               position: "relative",
             }}
           >
-            <div className="liquid-refraction-line" aria-hidden="true" style={{ opacity: 0.5 }} />
             <Card.Content style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
