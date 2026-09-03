@@ -328,7 +328,7 @@ async fn main() -> ExitCode {
                 "max_ram_mb": max_ram_mb,
                 "avg_cpu": 58.0,
                 "max_threads": max_threads,
-                "window_geometry": format!("{}x{}", args.resolution_width, args.resolution_height),
+                "window_geometry": format!("{}x{}", args.resolution.0, args.resolution.1),
             });
             let _ = std::fs::write("/tmp/play-smoke-stats.json", stats_json.to_string());
         }
