@@ -1,6 +1,7 @@
 import { useEffect, useState, ReactNode } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Button, Card, Chip, Input, Label, Slider, Switch } from "@heroui/react";
+import WithIcons from "@/components/ui/demo";
 import { api, Config, JavaInstallation } from "../lib/types";
 import {
   IconSettings,
@@ -254,6 +255,19 @@ function GeneralTab({
                 <span style={{ fontSize: 13 }}>Show historical (Alpha & Beta) versions in lists</span>
               </Switch.Content>
             </Switch>
+          </div>
+
+          {/* Quick Action Toggles with Icons */}
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+            <div style={{ marginBottom: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+                Quick Action Switches (Icon Toggles)
+              </span>
+              <p className="muted" style={{ margin: "2px 0 0 0", fontSize: 12 }}>
+                HeroUI v3 icon-embedded switches with custom active colors
+              </p>
+            </div>
+            <WithIcons />
           </div>
         </Card.Content>
       </Card>

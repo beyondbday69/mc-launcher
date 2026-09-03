@@ -660,31 +660,30 @@ textarea::placeholder {
 }
 
 /* ==========================================================================
-   Solid Switches
+   Solid Switches & Icon Toggles
    ========================================================================== */
 
 [data-slot="switch-control"] {
-  width: 44px !important;
-  height: 24px !important;
-  background: var(--bg-surface-elevated) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-full) !important;
-  padding: 2px !important;
-  transition: background 0.15s ease !important;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border);
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-[data-slot="switch"][data-selected="true"] [data-slot="switch-control"] {
-  background: var(--solid-primary) !important;
-  border-color: var(--solid-primary) !important;
+[data-slot="switch"][data-selected="true"] [data-slot="switch-control"]:not([class*="bg-"]) {
+  background: var(--solid-primary);
+  border-color: var(--solid-primary);
 }
 
 [data-slot="switch-thumb"] {
-  width: 18px !important;
-  height: 18px !important;
-  background: #ffffff !important;
-  border-radius: 50% !important;
-  box-shadow: none !important;
-  transition: transform 0.15s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+[data-slot="switch-icon"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 /* ==========================================================================
