@@ -6,6 +6,7 @@ import {
   Card,
   Chip,
   Input,
+  Label,
   Modal,
   Slider,
 } from "@heroui/react";
@@ -626,13 +627,8 @@ function CreateModal({ isOpen, onClose, onSave }: CreateProps) {
 
               {/* RAM Slider */}
               <div className="field">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <label>Memory (RAM)</label>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--md-sys-color-primary)" }}>
-                    {ramMb} MB ({(ramMb / 1024).toFixed(1)} GB)
-                  </span>
-                </div>
                 <Slider
+                  className="w-full"
                   minValue={1024}
                   maxValue={16384}
                   step={512}
@@ -640,6 +636,10 @@ function CreateModal({ isOpen, onClose, onSave }: CreateProps) {
                   onChange={(v) => setRamMb(Array.isArray(v) ? v[0] : v)}
                   style={{ width: "100%", margin: "8px 0" }}
                 >
+                  <Label>Memory (RAM)</Label>
+                  <Slider.Output>
+                    {({ state }) => `${state.values[0]} MB (${(state.values[0] / 1024).toFixed(1)} GB)`}
+                  </Slider.Output>
                   <Slider.Track>
                     <Slider.Fill />
                     <Slider.Thumb />
@@ -772,13 +772,8 @@ function EditModal({
 
               {/* RAM Slider */}
               <div className="field">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <label>Memory (RAM)</label>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--md-sys-color-primary)" }}>
-                    {draft.ram_mb ?? 2048} MB ({(((draft.ram_mb ?? 2048)) / 1024).toFixed(1)} GB)
-                  </span>
-                </div>
                 <Slider
+                  className="w-full"
                   minValue={1024}
                   maxValue={16384}
                   step={512}
@@ -791,6 +786,10 @@ function EditModal({
                   }
                   style={{ width: "100%", margin: "8px 0" }}
                 >
+                  <Label>Memory (RAM)</Label>
+                  <Slider.Output>
+                    {({ state }) => `${state.values[0]} MB (${(state.values[0] / 1024).toFixed(1)} GB)`}
+                  </Slider.Output>
                   <Slider.Track>
                     <Slider.Fill />
                     <Slider.Thumb />

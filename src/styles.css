@@ -551,11 +551,43 @@ textarea::placeholder {
    Solid Sliders
    ========================================================================== */
 
+.slider,
+[data-slot="slider"] {
+  display: grid !important;
+  grid-template-areas:
+    "label output"
+    "track track" !important;
+  grid-template-columns: 1fr auto !important;
+  row-gap: 8px !important;
+  width: 100% !important;
+}
+
+.slider [data-slot="label"],
+[data-slot="slider"] [data-slot="label"],
+.slider label {
+  grid-area: label !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+}
+
+.slider__output,
+[data-slot="slider-output"] {
+  grid-area: output !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: var(--solid-primary) !important;
+  text-align: right !important;
+}
+
+.slider__track,
 [data-slot="slider-track"] {
+  grid-area: track !important;
   height: 6px !important;
   background: var(--bg-surface-elevated) !important;
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-full) !important;
+  position: relative !important;
 }
 
 [data-slot="slider-fill"] {

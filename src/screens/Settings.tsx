@@ -1,6 +1,6 @@
 import { useEffect, useState, ReactNode } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { Button, Card, Chip, Input, Slider, Switch } from "@heroui/react";
+import { Button, Card, Chip, Input, Label, Slider, Switch } from "@heroui/react";
 import { api, Config, JavaInstallation } from "../lib/types";
 import {
   IconSettings,
@@ -136,14 +136,8 @@ function GeneralTab({
 
         <Card.Content>
           <div className="field">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <label>RAM allocated to new instances</label>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#0070f3" }}>
-                {ramMb} MB ({(ramMb / 1024).toFixed(1)} GB)
-              </span>
-            </div>
-
             <Slider
+              className="w-full"
               minValue={1024}
               maxValue={16384}
               step={512}
@@ -157,6 +151,10 @@ function GeneralTab({
               }}
               style={{ width: "100%", margin: "8px 0" }}
             >
+              <Label>RAM allocated to new instances</Label>
+              <Slider.Output>
+                {({ state }) => `${state.values[0]} MB (${(state.values[0] / 1024).toFixed(1)} GB)`}
+              </Slider.Output>
               <Slider.Track>
                 <Slider.Fill />
                 <Slider.Thumb />
@@ -552,13 +550,8 @@ function DownloadsTab({
 
       <Card.Content>
         <div className="field">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <label>Parallel Worker Concurrency</label>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#0070f3" }}>
-              {config.download_concurrency} threads
-            </span>
-          </div>
           <Slider
+            className="w-full"
             minValue={1}
             maxValue={32}
             step={1}
@@ -572,6 +565,10 @@ function DownloadsTab({
             }}
             style={{ width: "100%", margin: "8px 0" }}
           >
+            <Label>Parallel Worker Concurrency</Label>
+            <Slider.Output>
+              {({ state }) => `${state.values[0]} threads`}
+            </Slider.Output>
             <Slider.Track>
               <Slider.Fill />
               <Slider.Thumb />
