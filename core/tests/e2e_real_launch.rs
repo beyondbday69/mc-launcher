@@ -403,6 +403,18 @@ async fn real_relaunch_skips_unchanged_files() {
     let first_mtime = first_meta.modified().unwrap();
     let first_size = first_meta.len();
 
+    // Snapshot a sample of library files before the second launch.
+    let libs_dir = runtime_dir.join("libraries");
+    let sample = sample_library_files(&libs_dir, 5);
+    assert!(sample.len() >= 5, "should sample at least 5 library files");
+    let sample_mtimes: Vec<(PathBuf, std::time::SystemTime)> = sample
+        .into_iter()
+        .map(|path| {
+            let mt = std::fs::metadata(&path).unwrap().modified().unwrap();
+            (path, mt)
+        })
+        .collect();
+
     // Wait one second so the mtime would visibly differ if prepare()
     // touched the file.
     std::thread::sleep(std::time::Duration::from_millis(1100));
@@ -430,19 +442,16 @@ async fn real_relaunch_skips_unchanged_files() {
         "client JAR mtime must be unchanged (file was not re-downloaded)"
     );
 
-    // Also verify a sample of library files were not touched.
-    let libs_dir = runtime_dir.join("libraries");
-    let sample = sample_library_files(&libs_dir, 5);
-    assert!(sample.len() >= 5, "should sample at least 5 library files");
-    for path in sample {
+    // Also verify that the sampled library files were not touched.
+    for (path, first_lib_mtime) in sample_mtimes {
         let md = std::fs::metadata(&path).unwrap();
         let mt = md.modified().unwrap();
-        assert!(
-            mt <= first_mtime,
-            "library file {} was rewritten (mtime {:?} > first_mtime {:?})",
+        assert_eq!(
+            mt, first_lib_mtime,
+            "library file {} was rewritten (mtime {:?} != first_lib_mtime {:?})",
             path.display(),
             mt,
-            first_mtime
+            first_lib_mtime
         );
     }
 }
