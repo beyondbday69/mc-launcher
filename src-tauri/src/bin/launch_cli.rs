@@ -269,6 +269,30 @@ async fn main() -> ExitCode {
 
     let mut lines: usize = 0;
     const MAX_LOG_LINES: usize = 2_000;
+    let max_ram_mb = args.max_ram_mb;
+    let (stats_stop_tx, mut stats_stop_rx) = tokio::sync::oneshot::channel::<()>();
+    let stats_task = tokio::spawn(async move {
+        let mut stats_ticker = tokio::time::interval(std::time::Duration::from_secs(5));
+        let mut peak_rss_mb: f64 = 0.0;
+        let mut max_threads: usize = 0;
+        loop {
+            tokio::select! {
+                _ = &mut stats_stop_rx => break,
+                _ = stats_ticker.tick() => {
+                    if let Some((rss, peak, threads)) = read_proc_memory(pid) {
+                        peak_rss_mb = peak_rss_mb.max(peak);
+                        max_threads = max_threads.max(threads);
+                        let pct = (rss / max_ram_mb as f64) * 100.0;
+                        eprintln!(
+                            "[launch-cli] [stats] mem: {rss:.1} MB / {max_ram_mb} MB ({pct:.1}%) | peak: {peak:.1} MB | threads: {threads}"
+                        );
+                    }
+                }
+            }
+        }
+        (peak_rss_mb, max_threads)
+    });
+
     loop {
         match handle.next_log().await {
             Some(line) => {
@@ -286,11 +310,48 @@ async fn main() -> ExitCode {
         }
     }
 
+    let _ = stats_stop_tx.send(());
+    if let Ok((peak_rss_mb, max_threads)) = stats_task.await {
+        if peak_rss_mb > 0.0 {
+            eprintln!("[launch-cli] ============================================================");
+            eprintln!("[launch-cli] 📊 PERFORMANCE & RESOURCE SUMMARY (PID: {pid})");
+            eprintln!(
+                "[launch-cli] Peak Memory (VmHWM): {peak_rss_mb:.1} MB / {max_ram_mb} MB ({:.1}%)",
+                (peak_rss_mb / max_ram_mb as f64) * 100.0
+            );
+            eprintln!("[launch-cli] Max JVM Threads:     {max_threads}");
+            eprintln!("[launch-cli] ============================================================");
+        }
+    }
+
     // Best-effort: kill the child in case CI didn't (e.g. the line
     // cap fired before the screenshot finished).
     let _ = handle.kill().await;
     let _ = std::fs::remove_file(&pid_file);
     ExitCode::SUCCESS
+}
+
+fn read_proc_memory(pid: u32) -> Option<(f64, f64, usize)> {
+    let status = std::fs::read_to_string(format!("/proc/{pid}/status")).ok()?;
+    let mut rss = 0.0;
+    let mut peak = 0.0;
+    let mut threads = 0;
+    for line in status.lines() {
+        if line.starts_with("VmRSS:") {
+            if let Some(val) = line.split_whitespace().nth(1) {
+                rss = val.parse::<f64>().unwrap_or(0.0) / 1024.0;
+            }
+        } else if line.starts_with("VmHWM:") {
+            if let Some(val) = line.split_whitespace().nth(1) {
+                peak = val.parse::<f64>().unwrap_or(0.0) / 1024.0;
+            }
+        } else if line.starts_with("Threads:") {
+            if let Some(val) = line.split_whitespace().nth(1) {
+                threads = val.parse::<usize>().unwrap_or(0);
+            }
+        }
+    }
+    Some((rss, peak, threads))
 }
 
 fn pick_java(catalog: &JavaCatalog, _java_dir: &PathBuf) -> LauncherResult<JavaInstallation> {
