@@ -9,7 +9,6 @@ const SCREENS = [
   { id: "downloads", name: "04-downloads.png", label: "Downloads & Queue" },
   { id: "content", name: "05-content.png", label: "Content & Mods" },
   { id: "settings", name: "06-settings.png", label: "Settings & Config" },
-  { id: "demo", name: "07-morph-slider.png", label: "MorphSlider WebGL Demo" },
 ];
 
 const OUT_DIR = process.env.SCREENSHOT_DIR || "/tmp/screenshots";

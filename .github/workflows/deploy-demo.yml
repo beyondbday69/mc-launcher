@@ -46,13 +46,11 @@ jobs:
           OWNER="${{ github.repository_owner }}"
           REPO_NAME="${REPO#*/}"
           DEMO_URL="https://${OWNER}.github.io/${REPO_NAME}/"
-          MORPH_DEMO_URL="https://${OWNER}.github.io/${REPO_NAME}/?screen=demo"
 
-          echo "## 🌐 Live Web Demo URLs" >> $GITHUB_STEP_SUMMARY
+          echo "## 🌐 Live Web Demo URL" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "The live web demo of our app has been built and published to GitHub Pages:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **App Demo URL:** [${DEMO_URL}](${DEMO_URL})" >> $GITHUB_STEP_SUMMARY
-          echo "- **MorphSlider WebGL Demo URL:** [${MORPH_DEMO_URL}](${MORPH_DEMO_URL})" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "*(Note: If visiting for the first time, make sure GitHub Pages is enabled in repository Settings -> Pages -> Source: Deploy from branch 'gh-pages'.)*" >> $GITHUB_STEP_SUMMARY
