@@ -1,228 +1,218 @@
 import { useEffect, useState } from "react";
-import { Avatar, Button, Chip, Dropdown } from "@heroui/react";
 import { api, Account } from "../lib/types";
-import { IconChevronDown, IconUser, IconRefresh, IconTrash } from "../lib/icons";
 
 export function AccountButton() {
-  const [account, setAccount] = useState<Account | null>(null);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [selectedAcc, setSelectedAcc] = useState<Account | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [offlineName, setOfflineName] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.authAccounts().then((list) => setAccount(list[0] ?? null)).catch(() => {});
+    api.authAccounts()
+      .then((list) => {
+        setAccounts(list);
+        if (list.length > 0) setSelectedAcc(list[0]);
+      })
+      .catch(() => {});
   }, []);
 
-  const startLogin = async () => {
-    setError(null);
+  const handleMicrosoftLogin = async () => {
     setBusy(true);
     try {
       const acc = await api.authBegin();
-      setAccount(acc);
-    } catch (e) {
-      setError(typeof e === "string" ? e : (e as any)?.message ?? String(e));
+      setAccounts((prev) => [...prev, acc]);
+      setSelectedAcc(acc);
+      setShowModal(false);
+    } catch (err) {
+      console.error("[NVIDIA Auth]:", err);
     } finally {
       setBusy(false);
     }
   };
 
-  const logout = async () => {
-    if (!account) return;
+  const handleAddOffline = () => {
+    if (!offlineName.trim()) return;
+    const offlineAcc: Account = {
+      id: `offline-${Date.now()}`,
+      username: offlineName.trim(),
+      uuid: "00000000-0000-0000-0000-000000000000",
+      access_token: "offline-token",
+      refresh_token: "offline-refresh",
+      expires_at: "2099-01-01T00:00:00Z",
+      is_msa: false,
+    };
+    setAccounts((prev) => [...prev, offlineAcc]);
+    setSelectedAcc(offlineAcc);
+    setOfflineName("");
+    setShowModal(false);
+  };
+
+  const handleLogout = async (id: string) => {
     try {
-      await api.authRemove(account.id);
-      setAccount(null);
-    } catch (e) {
-      setError(String(e));
+      await api.authRemove(id);
+      const updated = accounts.filter((a) => a.id !== id);
+      setAccounts(updated);
+      setSelectedAcc(updated[0] || null);
+    } catch (err) {
+      console.error("[NVIDIA Logout]:", err);
     }
   };
 
-  if (account) {
-    const initial = (account.username || "M").charAt(0).toUpperCase();
-
-    return (
-      <Dropdown>
-        {/* Glass Account Chip Trigger */}
-        <Dropdown.Trigger>
-          <div
-            className="chip glass-account-chip"
-            style={{
-              cursor: "pointer",
-              padding: "4px 12px 4px 5px",
-              gap: 8,
-              display: "inline-flex",
-              alignItems: "center",
-              border: "1px solid #27272a",
-              background: "#18181b",
-              borderRadius: "20px",
-            }}
-            title="Account profile"
-          >
-            {/* Avatar with Online Dot */}
-            <div style={{ position: "relative", width: 24, height: 24 }}>
-              <Avatar size="sm">
-                <Avatar.Fallback>{initial}</Avatar.Fallback>
-              </Avatar>
-              <span
-                style={{
-                  position: "absolute",
-                  bottom: -1,
-                  right: -1,
-                  width: 7,
-                  height: 7,
-                  borderRadius: "50%",
-                  background: "#10b981",
-                  border: "1.5px solid #000000",
-                }}
-                title="Online"
-              />
-            </div>
-
-            <span
-              style={{
-                fontSize: 12.5,
-                fontWeight: 600,
-                color: "#ffffff",
-              }}
-            >
-              {account.username}
-            </span>
-
-            <IconChevronDown
-              size={13}
-              style={{
-                color: "#a1a1aa",
-              }}
-            />
-          </div>
-        </Dropdown.Trigger>
-
-        {/* Solid Black Dropdown Popover */}
-        <Dropdown.Popover
-          placement="bottom end"
+  return (
+    <>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setShowModal(true)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 9,
+          padding: "4px 12px 4px 6px",
+          background: "var(--bg-surface)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius-xs)",
+          cursor: "pointer",
+          transition: "all 0.15s ease",
+        }}
+        title="Manage Gamer Account"
+      >
+        <div
           style={{
-            minWidth: 268,
-            background: "#121214",
-            border: "1px solid #27272a",
-            borderRadius: "12px",
-            padding: "16px",
-            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.6)",
-            zIndex: 100,
-            overflow: "hidden",
+            width: 24,
+            height: 24,
+            borderRadius: "var(--radius-xs)",
+            background: "var(--bg-interactive)",
+            border: "1px solid var(--border)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 12,
+            fontWeight: 800,
+            color: "var(--nvidia-green)",
           }}
         >
-          {/* Account Header */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-            <Avatar size="md">
-              <Avatar.Fallback>{initial}</Avatar.Fallback>
-            </Avatar>
-            <div style={{ minWidth: 0, flex: 1 }}>
+          {selectedAcc ? selectedAcc.username.charAt(0).toUpperCase() : "P"}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: "#ffffff" }}>
+            {selectedAcc ? selectedAcc.username : "Player"}
+          </span>
+        </div>
+
+        <div
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: "var(--nvidia-green)",
+            boxShadow: "0 0 6px var(--nvidia-green)",
+          }}
+        />
+      </div>
+
+      {showModal && (
+        <div className="modal-backdrop">
+          <div className="modal-box">
+            <div className="modal-header">
+              <h3>GEFORCE GAMER ID & PROFILES</h3>
+              <button
+                type="button"
+                style={{ background: "none", border: "none", color: "#9da5b4", fontSize: 18, cursor: "pointer" }}
+                onClick={() => setShowModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {/* Active Profile */}
               <div
                 style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "#ffffff",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
+                  padding: "14px",
+                  background: "var(--bg-canvas)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--radius-xs)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
               >
-                {account.username}
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: "#ffffff" }}>
+                    {selectedAcc ? selectedAcc.username : "Player (Offline)"}
+                  </div>
+                  <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "#76b900" }}>
+                    {selectedAcc?.is_msa ? "MICROSOFT AUTHENTICATED" : "LOCAL OFFLINE PROFILE"}
+                  </div>
+                </div>
+
+                {selectedAcc && (
+                  <button
+                    type="button"
+                    className="btn-nvidia-secondary"
+                    style={{ padding: "4px 10px", fontSize: 11, color: "#ef4444" }}
+                    onClick={() => handleLogout(selectedAcc.id)}
+                  >
+                    DISCONNECT
+                  </button>
+                )}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-                <Chip size="sm" color="success">
-                  {account.is_msa ? "Microsoft Account" : "Online"}
-                </Chip>
+
+              {/* Add Offline Profile */}
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", color: "#9da5b4", marginBottom: 6 }}>
+                  Quick Offline Username
+                </label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    type="text"
+                    className="input-nvidia"
+                    placeholder="Enter offline username..."
+                    value={offlineName}
+                    onChange={(e) => setOfflineName(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn-nvidia-secondary"
+                    disabled={!offlineName.trim()}
+                    onClick={handleAddOffline}
+                  >
+                    ADD
+                  </button>
+                </div>
+              </div>
+
+              {/* Microsoft Account */}
+              <div style={{ paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
+                <button
+                  type="button"
+                  className="btn-nvidia-primary"
+                  style={{ width: "100%" }}
+                  disabled={busy}
+                  onClick={handleMicrosoftLogin}
+                >
+                  {busy ? "CONNECTING TO MICROSOFT..." : "SIGN IN WITH MICROSOFT ACCOUNT"}
+                </button>
               </div>
             </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn-nvidia-secondary"
+                onClick={() => setShowModal(false)}
+              >
+                CLOSE
+              </button>
+            </div>
           </div>
-
-          {/* UUID Info */}
-          <div
-            style={{
-              background: "#18181b",
-              border: "1px solid #27272a",
-              padding: "6px 10px",
-              borderRadius: "6px",
-              fontSize: 11,
-              fontFamily: "var(--mono)",
-              color: "#a1a1aa",
-              marginBottom: 10,
-              wordBreak: "break-all",
-            }}
-          >
-            UUID: {account.uuid ? account.uuid.slice(0, 18) + "…" : "Local session"}
-          </div>
-
-          <div className="divider" style={{ margin: "6px 0 10px" }} />
-
-          {/* Actions */}
-          <Dropdown.Menu aria-label="Account Actions" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <Dropdown.Item
-              id="switch-account"
-              onAction={startLogin}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "6px 10px",
-                borderRadius: "6px",
-                fontSize: 12.5,
-                cursor: "pointer",
-              }}
-            >
-              <IconRefresh size={14} />
-              <span>Switch / Add Account</span>
-            </Dropdown.Item>
-
-            <Dropdown.Item
-              id="logout"
-              onAction={logout}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "6px 10px",
-                borderRadius: "6px",
-                fontSize: 12.5,
-                color: "#ef4444",
-                cursor: "pointer",
-              }}
-            >
-              <IconTrash size={14} />
-              <span>Sign out</span>
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown.Popover>
-      </Dropdown>
-    );
-  }
-
-  return (
-    <div className="row" style={{ gap: 8, alignItems: "center" }}>
-      {error && (
-        <span
-          className="tag danger"
-          style={{ fontSize: 11, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis" }}
-          title={error}
-        >
-          {error}
-        </span>
+        </div>
       )}
-      <Button
-        variant="primary"
-        size="sm"
-        onPress={startLogin}
-        isDisabled={busy}
-        style={{
-          padding: "4px 14px",
-          fontSize: 12.5,
-          gap: 6,
-        }}
-      >
-        <IconUser size={14} />
-        <span>{busy ? "Signing in…" : "Sign in"}</span>
-      </Button>
-    </div>
+    </>
   );
 }
+
+export default AccountButton;

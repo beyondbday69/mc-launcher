@@ -1,848 +1,371 @@
-import { useEffect, useState } from "react";
-import {
-  Avatar,
-  Button,
-  ButtonGroup,
-  Card,
-  Chip,
-  Input,
-  Label,
-  Modal,
-  Slider,
-} from "@heroui/react";
-import { api, Instance, VersionEntry } from "../lib/types";
-import {
-  IconPlus,
-  IconPlay,
-  IconEdit,
-  IconCopy,
-  IconTrash,
-  IconFolder,
-  IconGrid,
-  IconList,
-  IconCheck,
-  IconCube,
-  IconRam,
-  IconClock,
-} from "../lib/icons";
+import { useState, useMemo } from "react";
+import { api, Instance, ModInfo, formatDuration } from "../lib/types";
 
-interface Props {
+interface InstancesProps {
   instances: Instance[];
-  onChange: () => void;
-  onSelect: (i: Instance) => void;
+  onChange: () => Promise<void>;
+  onSelect: (instance: Instance) => void;
 }
 
-const COLOR_PALETTE = [
-  "#38bdf8", // Sky / Cyan
-  "#a78bfa", // Violet / Purple
-  "#34d399", // Emerald / Green
-  "#f59e0b", // Amber / Orange
-  "#f87171", // Coral / Red
-  "#ec4899", // Pink
-  "#06b6d4", // Teal
-  "#6366f1", // Indigo
-];
-
-export function Instances({ instances, onChange, onSelect }: Props) {
+export function Instances({ instances, onChange, onSelect }: InstancesProps) {
+  const [search, setSearch] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newVersion, setNewVersion] = useState("1.21.4");
   const [creating, setCreating] = useState(false);
-  const [editing, setEditing] = useState<Instance | null>(null);
-  const [filter, setFilter] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [copiedFolderId, setCopiedFolderId] = useState<string | null>(null);
 
-  const filtered = instances.filter(
-    (i) =>
-      i.name.toLowerCase().includes(filter.toLowerCase()) ||
-      i.version.toLowerCase().includes(filter.toLowerCase()) ||
-      (i.mod_loader && i.mod_loader.kind.toLowerCase().includes(filter.toLowerCase())),
-  );
+  // Mod Drawer State
+  const [activeModDrawerInst, setActiveModDrawerInst] = useState<Instance | null>(null);
+  const [modsList, setModsList] = useState<ModInfo[]>([]);
+  const [loadingMods, setLoadingMods] = useState(false);
 
-  const handleCopyFolder = (i: Instance) => {
-    navigator.clipboard.writeText(i.game_dir);
-    setCopiedFolderId(i.id);
-    setTimeout(() => setCopiedFolderId(null), 2000);
+  const filteredInstances = useMemo(() => {
+    return instances.filter(
+      (inst) =>
+        inst.name.toLowerCase().includes(search.toLowerCase()) ||
+        inst.version.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [instances, search]);
+
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    setCreating(true);
+    try {
+      const created = await api.instancesCreate(newName.trim(), newVersion);
+      setShowCreateModal(false);
+      setNewName("");
+      await onChange();
+      onSelect(created);
+    } catch (err) {
+      console.error("[NVIDIA Create Instance]:", err);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDuplicate = async (inst: Instance) => {
+    try {
+      await api.instancesDuplicate(inst.id, `${inst.name} (Copy)`);
+      await onChange();
+    } catch (err) {
+      console.error("[NVIDIA Duplicate Instance]:", err);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this game profile?")) return;
+    try {
+      await api.instancesDelete(id);
+      await onChange();
+    } catch (err) {
+      console.error("[NVIDIA Delete Instance]:", err);
+    }
+  };
+
+  const handleOpenMods = async (inst: Instance) => {
+    setActiveModDrawerInst(inst);
+    setLoadingMods(true);
+    try {
+      const mods = await api.instancesListMods(inst.id);
+      setModsList(mods);
+    } catch (err) {
+      console.error("[NVIDIA List Mods]:", err);
+    } finally {
+      setLoadingMods(false);
+    }
+  };
+
+  const handleToggleMod = async (fileName: string, currentEnabled: boolean) => {
+    if (!activeModDrawerInst) return;
+    try {
+      await api.instancesSetModEnabled(activeModDrawerInst.id, fileName, !currentEnabled);
+      const mods = await api.instancesListMods(activeModDrawerInst.id);
+      setModsList(mods);
+    } catch (err) {
+      console.error("[NVIDIA Toggle Mod]:", err);
+    }
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      {/* Top Search & Actions Bar */}
-      <div className="row between" style={{ flexWrap: "wrap", gap: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0, color: "#ffffff" }}>
-            Instances
-          </h2>
-          <Chip size="sm">
-            {filtered.length}
-          </Chip>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Top Toolbar */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, maxWidth: 420 }}>
+          <input
+            type="text"
+            className="input-nvidia"
+            placeholder="Search installed game profiles..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
 
-        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-          {/* Search Input */}
-          <div style={{ position: "relative" }}>
-            <Input
-              type="text"
-              className="search-bar"
-              placeholder="Search instances…"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              style={{
-                width: 200,
-                fontSize: 13,
-              }}
-            />
-            {filter && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onPress={() => setFilter("")}
-                style={{
-                  position: "absolute",
-                  right: 6,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  padding: "2px 6px",
-                  fontSize: 12,
-                  color: "#a1a1aa",
-                }}
-              >
-                ✕
-              </Button>
-            )}
-          </div>
-
-          {/* View Mode Toggle */}
-          <ButtonGroup>
-            <Button
-              variant={viewMode === "grid" ? "primary" : "secondary"}
-              size="sm"
-              onPress={() => setViewMode("grid")}
-              aria-label="Grid View"
-            >
-              <IconGrid size={15} />
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "primary" : "secondary"}
-              size="sm"
-              onPress={() => setViewMode("list")}
-              aria-label="List View"
-            >
-              <IconList size={15} />
-            </Button>
-          </ButtonGroup>
-
-          {/* Create Button */}
-          <Button
-            variant="primary"
-            size="sm"
-            onPress={() => setCreating(true)}
-            style={{ padding: "6px 14px", gap: 6 }}
-          >
-            <IconPlus size={15} />
-            <span>New Instance</span>
-          </Button>
-        </div>
+        <button
+          type="button"
+          className="btn-nvidia-primary"
+          onClick={() => setShowCreateModal(true)}
+        >
+          <span>+ NEW GAME PROFILE</span>
+        </button>
       </div>
 
-      {/* Empty State */}
-      {filtered.length === 0 ? (
-        <div className="empty">
-          <div className="icon">
-            <IconCube size={40} />
-          </div>
-          <p style={{ fontSize: 16, fontWeight: 600, color: "#ffffff" }}>No instances found</p>
-          <p className="faint" style={{ fontSize: 13 }}>
-            {instances.length === 0
-              ? "Create an instance to start your Minecraft journey."
-              : "Try adjusting your search query."}
-          </p>
-          {instances.length === 0 && (
-            <Button
-              variant="primary"
-              size="sm"
-              onPress={() => setCreating(true)}
-              style={{ marginTop: 12 }}
-            >
-              <IconPlus size={16} />
-              <span>Create First Instance</span>
-            </Button>
-          )}
-        </div>
-      ) : viewMode === "grid" ? (
-        /* Clean Solid Cards Grid */
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: 14,
-          }}
-        >
-          {filtered.map((i) => (
-            <Card
-              key={i.id}
-              className="instance-card"
+      {/* Game Profile Cards Grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 18 }}>
+        {filteredInstances.map((inst) => (
+          <div
+            key={inst.id}
+            style={{
+              background: "var(--bg-surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius-sm)",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              transition: "all 0.15s ease",
+            }}
+          >
+            {/* Tile Header */}
+            <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-surface-elevated)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <span className="badge-rtx">
+                  {inst.mod_loader ? `${inst.mod_loader.kind.toUpperCase()} ${inst.mod_loader.version}` : "VANILLA"}
+                </span>
+                <span style={{ fontSize: 11.5, fontFamily: "var(--font-mono)", color: "#9da5b4" }}>
+                  MC {inst.version}
+                </span>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.01em" }}>
+                {inst.name}
+              </h3>
+            </div>
+
+            {/* Tile Body Telemetry */}
+            <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 8, fontSize: 12.5, color: "#9da5b4" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Memory Allocation:</span>
+                <span style={{ fontFamily: "var(--font-mono)", color: "var(--nvidia-green)", fontWeight: 700 }}>
+                  {inst.ram_mb || 2048} MB
+                </span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Total Playtime:</span>
+                <span style={{ fontFamily: "var(--font-mono)", color: "#ffffff" }}>
+                  {formatDuration(inst.play_time_secs)}
+                </span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Last Played:</span>
+                <span>{inst.last_played ? new Date(inst.last_played).toLocaleDateString() : "Never"}</span>
+              </div>
+            </div>
+
+            {/* Tile Action Footer */}
+            <div
               style={{
-                cursor: "pointer",
-                borderLeft: `3px solid ${i.color || "#0070f3"}`,
-                padding: "16px 18px",
+                padding: "12px 20px",
+                background: "var(--bg-subtle)",
+                borderTop: "1px solid var(--border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 8,
               }}
-              onClick={() => onSelect(i)}
             >
-              <Card.Content style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {/* Header with Avatar & Title */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <Avatar
-                    size="sm"
-                    style={{
-                      background: i.color || "#18181b",
-                      border: "1px solid #27272a",
-                      color: "#ffffff",
-                      fontWeight: 800,
-                      fontSize: 14,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Avatar.Fallback>{i.name.charAt(0).toUpperCase()}</Avatar.Fallback>
-                  </Avatar>
+              <button
+                type="button"
+                className="btn-nvidia-primary"
+                style={{ padding: "8px 18px", fontSize: 12.5 }}
+                onClick={() => onSelect(inst)}
+              >
+                ▶ PLAY
+              </button>
 
-                  <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <button
+                  type="button"
+                  className="btn-nvidia-secondary"
+                  style={{ padding: "8px 12px", fontSize: 12 }}
+                  onClick={() => handleOpenMods(inst)}
+                  title="Manage Mods"
+                >
+                  MODS
+                </button>
+                <button
+                  type="button"
+                  className="btn-nvidia-secondary"
+                  style={{ padding: "8px 10px", fontSize: 12 }}
+                  onClick={() => handleDuplicate(inst)}
+                  title="Duplicate Profile"
+                >
+                  CLONE
+                </button>
+                <button
+                  type="button"
+                  className="btn-nvidia-secondary"
+                  style={{ padding: "8px 10px", fontSize: 12, color: "#ef4444" }}
+                  onClick={() => handleDelete(inst.id)}
+                  title="Delete Profile"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Create Instance Modal */}
+      {showCreateModal && (
+        <div className="modal-backdrop">
+          <div className="modal-box">
+            <div className="modal-header">
+              <h3>CREATE NEW GAME PROFILE</h3>
+              <button
+                type="button"
+                style={{ background: "none", border: "none", color: "#9da5b4", fontSize: 18, cursor: "pointer" }}
+                onClick={() => setShowCreateModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", color: "#9da5b4", marginBottom: 6 }}>
+                  Profile Name
+                </label>
+                <input
+                  type="text"
+                  className="input-nvidia"
+                  placeholder="e.g. GeForce RTX Shader World"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", color: "#9da5b4", marginBottom: 6 }}>
+                  Minecraft Target Version
+                </label>
+                <select
+                  className="input-nvidia"
+                  value={newVersion}
+                  onChange={(e) => setNewVersion(e.target.value)}
+                  style={{ background: "var(--bg-canvas)" }}
+                >
+                  <option value="1.21.4">Minecraft 1.21.4 (Latest Game Ready)</option>
+                  <option value="1.21.1">Minecraft 1.21.1</option>
+                  <option value="1.20.4">Minecraft 1.20.4</option>
+                  <option value="1.20.1">Minecraft 1.20.1</option>
+                  <option value="24w45a">Snapshot 24w45a</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn-nvidia-secondary"
+                onClick={() => setShowCreateModal(false)}
+              >
+                CANCEL
+              </button>
+              <button
+                type="button"
+                className="btn-nvidia-primary"
+                disabled={creating || !newName.trim()}
+                onClick={handleCreate}
+              >
+                {creating ? "CREATING..." : "CONFIRM PROFILE"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mod Management Modal / Drawer */}
+      {activeModDrawerInst && (
+        <div className="modal-backdrop">
+          <div className="modal-box" style={{ maxWidth: 640 }}>
+            <div className="modal-header">
+              <div>
+                <h3>INSTALLED MODS & EXTENSIONS</h3>
+                <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "#76b900" }}>
+                  PROFILE: {activeModDrawerInst.name}
+                </span>
+              </div>
+              <button
+                type="button"
+                style={{ background: "none", border: "none", color: "#9da5b4", fontSize: 18, cursor: "pointer" }}
+                onClick={() => setActiveModDrawerInst(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="modal-body" style={{ maxHeight: 400, overflowY: "auto" }}>
+              {loadingMods ? (
+                <div style={{ textAlign: "center", padding: 30, color: "#9da5b4" }}>
+                  Scanning mods directory...
+                </div>
+              ) : modsList.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 30, color: "#656d7c" }}>
+                  No mods installed in this profile. Browse the RTX Mods & Content tab to install shaders and optimization mods.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {modsList.map((m) => (
                     <div
+                      key={m.file_name}
                       style={{
-                        fontSize: 15,
-                        fontWeight: 700,
-                        color: "#ffffff",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
+                        padding: "12px 16px",
+                        background: "var(--bg-canvas)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "var(--radius-xs)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                       }}
-                      title={i.name}
                     >
-                      {i.name}
+                      <div>
+                        <div style={{ fontSize: 13.5, fontWeight: 700, color: m.enabled ? "#ffffff" : "#656d7c" }}>
+                          {m.file_name}
+                        </div>
+                        <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "#656d7c" }}>
+                          {(m.size / 1024 / 1024).toFixed(2)} MB • {m.loader_hint || "generic"}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className={m.enabled ? "btn-nvidia-primary" : "btn-nvidia-secondary"}
+                        style={{ padding: "4px 14px", fontSize: 11 }}
+                        onClick={() => handleToggleMod(m.file_name, m.enabled)}
+                      >
+                        {m.enabled ? "ACTIVE" : "DISABLED"}
+                      </button>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
-                      <Chip color="success" size="sm" style={{ padding: "1px 6px", fontSize: 11 }}>
-                        {i.version}
-                      </Chip>
-                      {i.mod_loader && (
-                        <Chip
-                          variant="secondary"
-                          size="sm"
-                          style={{
-                            fontSize: 10.5,
-                            padding: "1px 6px",
-                          }}
-                        >
-                          {i.mod_loader.kind}
-                        </Chip>
-                      )}
-                    </div>
-                  </div>
+                  ))}
                 </div>
+              )}
+            </div>
 
-                {/* Instance Details Row */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    fontSize: 11.5,
-                    color: "#a1a1aa",
-                  }}
-                >
-                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <IconRam size={13} style={{ color: "#0070f3" }} />
-                    <span>{i.ram_mb ?? 2048} MB</span>
-                  </span>
-                  <span>·</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <IconClock size={13} />
-                    <span>{i.last_played ? formatDate(i.last_played) : "Never played"}</span>
-                  </span>
-                </div>
-
-                {/* Quick Actions Footer */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    paddingTop: 8,
-                    borderTop: "1px solid #27272a",
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onPress={() => onSelect(i)}
-                    style={{ padding: "3px 12px", fontSize: 12, gap: 5 }}
-                  >
-                    <IconPlay size={12} />
-                    <span>Play</span>
-                  </Button>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onPress={() => handleCopyFolder(i)}
-                      aria-label={copiedFolderId === i.id ? "Folder path copied!" : `Game Dir: ${i.game_dir}`}
-                      style={{
-                        padding: "5px 7px",
-                        color: copiedFolderId === i.id ? "#10b981" : "#a1a1aa",
-                      }}
-                    >
-                      {copiedFolderId === i.id ? <IconCheck size={14} /> : <IconFolder size={14} />}
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onPress={() => setEditing(i)}
-                      aria-label="Edit instance settings"
-                      style={{ padding: "5px 7px", color: "#a1a1aa" }}
-                    >
-                      <IconEdit size={14} />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onPress={async () => {
-                        const name = prompt("New name for duplicate:", `${i.name} copy`);
-                        if (!name) return;
-                        try {
-                          await api.instancesDuplicate(i.id, name);
-                          onChange();
-                        } catch (e) {
-                          alert(String(e));
-                        }
-                      }}
-                      aria-label="Duplicate instance"
-                      style={{ padding: "5px 7px", color: "#a1a1aa" }}
-                    >
-                      <IconCopy size={14} />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onPress={async () => {
-                        if (!confirm(`Delete instance "${i.name}"?`)) return;
-                        try {
-                          await api.instancesDelete(i.id);
-                          onChange();
-                        } catch (e) {
-                          alert(String(e));
-                        }
-                      }}
-                      aria-label="Delete instance"
-                      style={{ padding: "5px 7px", color: "#ef4444" }}
-                    >
-                      <IconTrash size={14} />
-                    </Button>
-                  </div>
-                </div>
-              </Card.Content>
-            </Card>
-          ))}
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn-nvidia-primary"
+                onClick={() => setActiveModDrawerInst(null)}
+              >
+                DONE
+              </button>
+            </div>
+          </div>
         </div>
-      ) : (
-        /* List View */
-        <div style={{ overflowX: "auto" }}>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Instance</th>
-                <th>Version</th>
-                <th>Loader</th>
-                <th>RAM</th>
-                <th>Last played</th>
-                <th style={{ textAlign: "right" }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((i) => (
-                <tr key={i.id} onClick={() => onSelect(i)} style={{ cursor: "pointer" }}>
-                  <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span
-                        style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: "50%",
-                          background: i.color || "#0070f3",
-                          flexShrink: 0,
-                        }}
-                      />
-                      <span style={{ fontWeight: 600, color: "#ffffff" }}>
-                        {i.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <Chip color="success" size="sm">
-                      {i.version}
-                    </Chip>
-                  </td>
-                  <td>
-                    {i.mod_loader ? (
-                      <Chip variant="secondary" size="sm">
-                        {i.mod_loader.kind}
-                      </Chip>
-                    ) : (
-                      <span className="muted">—</span>
-                    )}
-                  </td>
-                  <td style={{ fontFamily: "var(--mono)", fontSize: 12, color: "#a1a1aa" }}>
-                    {i.ram_mb ?? 2048} MB
-                  </td>
-                  <td className="muted" style={{ fontSize: 12 }}>
-                    {i.last_played ? formatDate(i.last_played) : "Never"}
-                  </td>
-                  <td onClick={(e) => e.stopPropagation()}>
-                    <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onPress={() => onSelect(i)}
-                        style={{ padding: "2px 10px", fontSize: 12 }}
-                      >
-                        Play
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onPress={() => handleCopyFolder(i)}
-                        aria-label="Copy game folder path"
-                        style={{ padding: "4px 6px" }}
-                      >
-                        {copiedFolderId === i.id ? <IconCheck size={14} /> : <IconFolder size={14} />}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onPress={() => setEditing(i)}
-                        aria-label="Edit instance"
-                        style={{ padding: "4px 6px" }}
-                      >
-                        <IconEdit size={14} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onPress={async () => {
-                          const name = prompt("New name for duplicate:", `${i.name} copy`);
-                          if (!name) return;
-                          try {
-                            await api.instancesDuplicate(i.id, name);
-                            onChange();
-                          } catch (e) {
-                            alert(String(e));
-                          }
-                        }}
-                        aria-label="Duplicate"
-                        style={{ padding: "4px 6px" }}
-                      >
-                        <IconCopy size={14} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onPress={async () => {
-                          if (!confirm(`Delete instance "${i.name}"?`)) return;
-                          try {
-                            await api.instancesDelete(i.id);
-                            onChange();
-                          } catch (e) {
-                            alert(String(e));
-                          }
-                        }}
-                        aria-label="Delete"
-                        style={{ padding: "4px 6px", color: "#ef4444" }}
-                      >
-                        <IconTrash size={14} />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Create Instance Dialog */}
-      {creating && (
-        <CreateModal
-          isOpen={creating}
-          onClose={() => setCreating(false)}
-          onSave={async (name, version, color, ramMb) => {
-            try {
-              const inst = await api.instancesCreate(name, version);
-              inst.color = color;
-              inst.ram_mb = ramMb;
-              await api.instancesUpdate(inst);
-              onChange();
-              setCreating(false);
-              onSelect(inst);
-            } catch (e) {
-              alert(String(e));
-            }
-          }}
-        />
-      )}
-
-      {/* Edit Instance Dialog */}
-      {editing && (
-        <EditModal
-          isOpen={Boolean(editing)}
-          instance={editing}
-          onClose={() => setEditing(null)}
-          onSave={async (inst) => {
-            try {
-              await api.instancesUpdate(inst);
-              onChange();
-              setEditing(null);
-            } catch (e) {
-              alert(String(e));
-            }
-          }}
-        />
       )}
     </div>
   );
 }
 
-/* ==========================================================================
-   Create Instance Modal
-   ========================================================================== */
-
-interface CreateProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (name: string, version: string, color: string, ramMb: number) => Promise<void>;
-}
-
-function CreateModal({ isOpen, onClose, onSave }: CreateProps) {
-  const [name, setName] = useState("");
-  const [version, setVersion] = useState("");
-  const [color, setColor] = useState(COLOR_PALETTE[0]!);
-  const [ramMb, setRamMb] = useState(2048);
-  const [versions, setVersions] = useState<VersionEntry[]>([]);
-  const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    api
-      .versionsList(false, false)
-      .then((vs) => {
-        setVersions(vs);
-        if (vs[0]) setVersion(vs[0].id);
-      })
-      .catch(() => {});
-  }, []);
-
-  return (
-    <Modal isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <Modal.Backdrop>
-        <Modal.Container>
-          <Modal.Dialog style={{ width: 480, maxWidth: "90vw" }}>
-            <Modal.Header>
-              <Modal.Heading>Create New Instance</Modal.Heading>
-            </Modal.Header>
-
-            <Modal.Body>
-              <div className="field">
-                <label>Instance Name</label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Survival 1.21"
-                  autoFocus
-                />
-              </div>
-
-              <div className="field">
-                <label>Theme Color</label>
-                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                  {COLOR_PALETTE.map((c) => {
-                    const isSelected = color === c;
-                    return (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setColor(c)}
-                        style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: "50%",
-                          background: c,
-                          border: isSelected ? "2px solid #ffffff" : "2px solid transparent",
-                          boxShadow: isSelected ? `0 0 10px ${c}` : "none",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "#ffffff",
-                          transition: "transform 0.15s ease",
-                          transform: isSelected ? "scale(1.1)" : "scale(1)",
-                        }}
-                        title={c}
-                      >
-                        {isSelected && <IconCheck size={14} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="field">
-                <label>Minecraft Version</label>
-                <select
-                  value={version}
-                  onChange={(e) => setVersion(e.target.value)}
-                  style={{ width: "100%" }}
-                >
-                  {versions.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.id} {v.type === "snapshot" ? "(snapshot)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="field">
-                <Slider
-                  className="w-full"
-                  minValue={1024}
-                  maxValue={16384}
-                  step={512}
-                  value={ramMb}
-                  onChange={(v) => setRamMb(Array.isArray(v) ? v[0] : v)}
-                  style={{ width: "100%", margin: "8px 0" }}
-                >
-                  <Label>Memory (RAM)</Label>
-                  <Slider.Output>
-                    {({ state }) => `${state.values[0]} MB (${(state.values[0] / 1024).toFixed(1)} GB)`}
-                  </Slider.Output>
-                  <Slider.Track>
-                    <Slider.Fill />
-                    <Slider.Thumb />
-                  </Slider.Track>
-                </Slider>
-                <div style={{ display: "flex", gap: 6 }}>
-                  {[2048, 4096, 6144, 8192].map((mb) => (
-                    <Chip
-                      key={mb}
-                      variant={ramMb === mb ? "primary" : "secondary"}
-                      onClick={() => setRamMb(mb)}
-                      style={{ fontSize: 11, padding: "2px 8px", cursor: "pointer" }}
-                    >
-                      {mb / 1024} GB
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-            </Modal.Body>
-
-            <Modal.Footer>
-              <Button variant="ghost" size="sm" onPress={onClose}>
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                isDisabled={!name.trim() || !version || busy}
-                onPress={async () => {
-                  setBusy(true);
-                  try {
-                    await onSave(name.trim(), version, color, ramMb);
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                {busy ? "Creating…" : "Create Instance"}
-              </Button>
-            </Modal.Footer>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
-  );
-}
-
-/* ==========================================================================
-   Edit Instance Modal
-   ========================================================================== */
-
-interface EditProps {
-  isOpen: boolean;
-  instance: Instance;
-  onClose: () => void;
-  onSave: (i: Instance) => Promise<void>;
-}
-
-function EditModal({
-  isOpen,
-  instance,
-  onClose,
-  onSave,
-}: EditProps) {
-  const [draft, setDraft] = useState<Instance>({ ...instance });
-  const [busy, setBusy] = useState(false);
-
-  return (
-    <Modal isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <Modal.Backdrop>
-        <Modal.Container>
-          <Modal.Dialog style={{ width: 520, maxWidth: "90vw" }}>
-            <Modal.Header>
-              <Modal.Heading>Edit Instance: {instance.name}</Modal.Heading>
-            </Modal.Header>
-
-            <Modal.Body>
-              <div className="form-grid">
-                <div className="field">
-                  <label>Instance Name</label>
-                  <Input
-                    value={draft.name}
-                    onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                  />
-                </div>
-
-                <div className="field">
-                  <label>Minecraft Version</label>
-                  <Input
-                    value={draft.version}
-                    onChange={(e) => setDraft({ ...draft, version: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="field">
-                <label>Theme Color</label>
-                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                  {COLOR_PALETTE.map((c) => {
-                    const isSelected = draft.color === c;
-                    return (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setDraft({ ...draft, color: c })}
-                        style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: "50%",
-                          background: c,
-                          border: isSelected ? "2px solid #ffffff" : "2px solid transparent",
-                          boxShadow: isSelected ? `0 0 10px ${c}` : "none",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "#ffffff",
-                          transition: "transform 0.15s ease",
-                          transform: isSelected ? "scale(1.1)" : "scale(1)",
-                        }}
-                        title={c}
-                      >
-                        {isSelected && <IconCheck size={14} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="field">
-                <Slider
-                  className="w-full"
-                  minValue={1024}
-                  maxValue={16384}
-                  step={512}
-                  value={draft.ram_mb ?? 2048}
-                  onChange={(v) =>
-                    setDraft({ ...draft, ram_mb: Array.isArray(v) ? v[0] : v })
-                  }
-                  style={{ width: "100%", margin: "8px 0" }}
-                >
-                  <Label>Allocated RAM</Label>
-                  <Slider.Output>
-                    {({ state }) => `${state.values[0]} MB (${(state.values[0] / 1024).toFixed(1)} GB)`}
-                  </Slider.Output>
-                  <Slider.Track>
-                    <Slider.Fill />
-                    <Slider.Thumb />
-                  </Slider.Track>
-                </Slider>
-              </div>
-
-              <div className="field">
-                <label>JVM Optimization Profile</label>
-                <select
-                  value={draft.jvm_profile}
-                  onChange={(e) => setDraft({ ...draft, jvm_profile: e.target.value })}
-                >
-                  <option value="default">Default JVM Arguments</option>
-                  <option value="low_ram">Low RAM Preset (Optimized for ≤ 2GB)</option>
-                  <option value="balanced">Balanced (Shenandoah/G1GC Optimized)</option>
-                  <option value="performance">High Performance (ZGC / High Heap)</option>
-                  <option value="custom">Custom Arguments</option>
-                </select>
-              </div>
-
-              {draft.jvm_profile === "custom" && (
-                <div className="field">
-                  <label>Custom JVM Arguments (one per line)</label>
-                  <textarea
-                    value={draft.custom_jvm_args.join("\n")}
-                    onChange={(e) =>
-                      setDraft({
-                        ...draft,
-                        custom_jvm_args: e.target.value
-                          .split("\n")
-                          .map((s) => s.trim())
-                          .filter(Boolean),
-                      })
-                    }
-                    rows={4}
-                    style={{ fontFamily: "var(--mono)", fontSize: 12 }}
-                  />
-                </div>
-              )}
-            </Modal.Body>
-
-            <Modal.Footer>
-              <Button variant="ghost" size="sm" onPress={onClose}>
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                isDisabled={!draft.name.trim() || !draft.version || busy}
-                onPress={async () => {
-                  setBusy(true);
-                  try {
-                    await onSave(draft);
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                {busy ? "Saving…" : "Save Changes"}
-              </Button>
-            </Modal.Footer>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
-  );
-}
-
-function formatDate(iso: string): string {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  } catch {
-    return iso;
-  }
-}
+export default Instances;

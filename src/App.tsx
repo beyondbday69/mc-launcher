@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback, ReactNode } from "react";
-import { Breadcrumbs, Card, Chip, Button } from "@heroui/react";
 import { api, Config, Instance } from "./lib/types";
 import { Home } from "./screens/Home";
 import { Instances } from "./screens/Instances";
@@ -17,7 +16,7 @@ import {
   IconSettings,
 } from "./lib/icons";
 
-type Screen =
+export type Screen =
   | "home"
   | "instances"
   | "versions"
@@ -28,47 +27,53 @@ type Screen =
 interface NavScreen {
   id: Screen;
   label: string;
-  icon: (active: boolean) => ReactNode;
+  category: string;
+  icon: () => ReactNode;
 }
 
 const SCREENS: NavScreen[] = [
   {
     id: "home",
-    label: "Home",
+    label: "Dashboard",
+    category: "HOME",
     icon: () => <IconHome size={18} />,
   },
   {
     id: "instances",
-    label: "Instances",
+    label: "Game Library",
+    category: "GAMES",
     icon: () => <IconInstances size={18} />,
   },
   {
     id: "versions",
-    label: "Versions",
+    label: "Driver Catalog",
+    category: "DRIVERS",
     icon: () => <IconVersions size={18} />,
   },
   {
     id: "downloads",
-    label: "Downloads",
+    label: "Transfers",
+    category: "NETWORK",
     icon: () => <IconDownloads size={18} />,
   },
   {
     id: "content",
-    label: "Content",
+    label: "RTX Mods & Shaders",
+    category: "RTX HUB",
     icon: () => <IconContent size={18} />,
   },
   {
     id: "settings",
-    label: "Settings",
+    label: "Performance & JVM",
+    category: "TUNING",
     icon: () => <IconSettings size={18} />,
   },
 ];
 
 export function App() {
-  // `MC_LAUNCHER_INITIAL_SCREEN` (env var) overrides the default screen.
-  // Used by smoke tests to verify multiple pages in one run.
   const [screen, setScreen] = useState<Screen>("home");
 
+  // Deep linking and CLI / smoke test initial screen support
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const paramScreen = params.get("screen");
@@ -84,7 +89,8 @@ export function App() {
       return;
     }
 
-    api.initialScreen()
+    api
+      .initialScreen()
       .then((s) => {
         if (
           s === "home" ||
@@ -103,23 +109,24 @@ export function App() {
   const [config, setConfig] = useState<Config | null>(null);
   const [instances, setInstances] = useState<Instance[]>([]);
   const [selected, setSelected] = useState<Instance | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
-      const [cfg, inst] = await Promise.all([
+      const [cfg, insts] = await Promise.all([
         api.configGet(),
         api.instancesList(),
       ]);
       setConfig(cfg);
-      setInstances(inst);
-      const cur =
-        cfg.selected_instance != null
-          ? inst.find((i) => i.id === cfg.selected_instance) ?? inst[0] ?? null
-          : inst[0] ?? null;
-      setSelected(cur);
-    } catch (e) {
-      setError(typeof e === "string" ? e : (e as any)?.message ?? String(e));
+      setInstances(insts);
+
+      if (cfg.selected_instance) {
+        const found = insts.find((i) => i.id === cfg.selected_instance);
+        setSelected(found || insts[0] || null);
+      } else if (insts.length > 0) {
+        setSelected(insts[0]);
+      }
+    } catch (err) {
+      console.error("[NVIDIA App] refresh error:", err);
     }
   }, []);
 
@@ -127,251 +134,118 @@ export function App() {
     refresh();
   }, [refresh]);
 
-  // Polling: refresh instance list every 5s, but only when on the home screen.
-  useEffect(() => {
-    if (screen !== "home") return;
-    const id = setInterval(() => {
-      api.instancesList().then(setInstances).catch(() => {});
-    }, 5000);
-    return () => clearInterval(id);
-  }, [screen]);
-
   const onSelect = useCallback(
     async (inst: Instance) => {
       setSelected(inst);
       try {
         await api.instancesSelect(inst.id);
-      } catch {
-        // ignore
+        if (config) {
+          setConfig({ ...config, selected_instance: inst.id });
+        }
+      } catch (err) {
+        console.error("[NVIDIA App] select instance error:", err);
       }
     },
-    [],
+    [config]
   );
 
-  const onConfigChange = useCallback(
-    async (next: Config) => {
-      setConfig(next);
-      try {
-        await api.configUpdate(next);
-      } catch (e) {
-        setError(typeof e === "string" ? e : String(e));
-      }
-    },
-    [],
-  );
-
-  if (error) {
-    return (
-      <div className="app">
-        <div className="content" style={{ position: "relative", zIndex: 5 }}>
-          <Card style={{ maxWidth: 500, margin: "60px auto" }}>
-            <Card.Header>
-              <Card.Title style={{ color: "#ef4444" }}>Launcher Error</Card.Title>
-            </Card.Header>
-            <Card.Content>
-              <p style={{ color: "#ffffff", marginBottom: 12 }}>
-                {error}
-              </p>
-              <p className="muted" style={{ fontSize: 12, marginBottom: 16 }}>
-                Check the launcher logs for technical details. You can retry now or restart the launcher.
-              </p>
-              <Button
-                variant="primary"
-                onPress={() => {
-                  setError(null);
-                  refresh();
-                }}
-              >
-                Retry
-              </Button>
-            </Card.Content>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  if (!config) {
-    return (
-      <div className="app">
-        <div className="content" style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 5 }}>
-          <div className="empty">
-            <div className="icon" style={{ animation: "indeterminate 1.5s infinite ease-in-out" }}>
-              <IconInstances size={42} />
-            </div>
-            <p style={{ fontSize: 16, fontWeight: 600 }}>Loading MC Launcher…</p>
-            <span className="muted" style={{ fontSize: 12 }}>Connecting to runtime environment</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const onConfigChange = useCallback(async (newConfig: Config) => {
+    setConfig(newConfig);
+    try {
+      await api.configUpdate(newConfig);
+    } catch (err) {
+      console.error("[NVIDIA App] update config error:", err);
+    }
+  }, []);
 
   return (
     <div className="app">
-      {/* Solid Black Navigation Rail */}
-      <aside className="sidebar nav-rail">
+      {/* NVIDIA GeForce Style Navigation Rail */}
+      <aside className="sidebar">
         <div className="brand">
-          <div className="logo" />
-          <span>MC Launcher</span>
+          <div className="brand-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#000000" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <div className="brand-info">
+            <span className="brand-title">GEFORCE LAUNCHER</span>
+            <span className="brand-sub">RTX MC EDITION</span>
+          </div>
         </div>
 
         <nav className="nav">
           {SCREENS.map((s) => {
             const isActive = screen === s.id;
             return (
-              <div
+              <button
                 key={s.id}
+                type="button"
                 className={`nav-item ${isActive ? "active" : ""}`}
                 onClick={() => setScreen(s.id)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    setScreen(s.id);
-                  }
-                }}
               >
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: isActive
-                      ? "#0070f3"
-                      : "var(--text-secondary)",
-                    transition: "color 0.15s ease",
-                  }}
-                >
-                  {s.icon(isActive)}
-                </span>
+                <div className="nav-icon">{s.icon()}</div>
                 <span>{s.label}</span>
                 {s.id === "instances" && instances.length > 0 && (
-                  <Chip size="sm" className="frosted-badge">{instances.length}</Chip>
+                  <span className="nav-badge">{instances.length}</span>
                 )}
-              </div>
+              </button>
             );
           })}
         </nav>
 
-        {/* Navigation Rail Footer / Version Info */}
-        <div
-          style={{
-            padding: "14px 18px",
-            borderTop: "1px solid var(--border-subtle)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              fontFamily: "var(--mono)",
-              color: "var(--text-muted)",
-              letterSpacing: "0.4px",
-            }}
-          >
-            v0.1.0
-          </span>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 11,
-              color: "#10b981",
-              fontWeight: 500,
-            }}
-          >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: "#10b981",
-              }}
-            />
-            Ready
+        <div className="sidebar-footer">
+          <div className="status-indicator-live">
+            <div className="status-dot-pulse" />
+            <span>RTX OPTIMAL</span>
           </div>
+          <span style={{ color: "#656d7c" }}>v0.1.0</span>
         </div>
       </aside>
 
-      {/* Main Content Area with Top App Bar */}
+      {/* Main Experience Viewport */}
       <main className="main">
-        {/* Solid Black Top App Bar */}
-        <header className="titlebar top-bar">
-          <Breadcrumbs>
-            <Breadcrumbs.Item>MC Launcher</Breadcrumbs.Item>
-            <Breadcrumbs.Item>{screen}</Breadcrumbs.Item>
-          </Breadcrumbs>
+        <header className="header">
+          <div className="header-left">
+            <div className="header-rtx-badge">
+              <span>●</span>
+              <span>RTX ON</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#9da5b4" }}>
+              <span style={{ color: "#656d7c" }}>GEFORCE</span>
+              <span>/</span>
+              <span style={{ color: "#f5f6f8", fontWeight: 700, textTransform: "uppercase" }}>
+                {SCREENS.find((s) => s.id === screen)?.label || "Dashboard"}
+              </span>
+            </div>
+          </div>
 
-          <div className="user">
-            {/* Selected Instance Status Chip */}
+          <div className="header-right">
             {selected ? (
-              <Chip
-                size="sm"
-                onClick={() => setScreen("home")}
-                style={{
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "#18181b",
-                  border: "1px solid #27272a",
-                }}
-                title={`Active instance: ${selected.name} (${selected.version})`}
+              <div
+                className="header-chip-instance"
+                role="button"
+                tabIndex={0}
+                onClick={() => setScreen("instances")}
+                style={{ cursor: "pointer" }}
+                title="Click to switch active profile"
               >
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: selected.color || "#0070f3",
-                  }}
-                />
-                <span style={{ fontWeight: 600, color: "#ffffff" }}>
-                  {selected.name}
+                <div className="header-chip-dot" />
+                <span>{selected.name}</span>
+                <span style={{ color: "#656d7c", fontSize: 11, fontFamily: "var(--font-mono)" }}>
+                  {selected.version}
                 </span>
-                <span style={{ color: "#a1a1aa", fontSize: 11 }}>
-                  · {selected.version}
-                </span>
-                {selected.mod_loader && (
-                  <Chip
-                    size="sm"
-                    style={{
-                      fontSize: 10,
-                      padding: "1px 6px",
-                      background: "#27272a",
-                      border: "1px solid #3f3f46",
-                      color: "#e4e4e7",
-                    }}
-                  >
-                    {selected.mod_loader.kind}
-                  </Chip>
-                )}
-              </Chip>
+              </div>
             ) : (
-              <Chip
-                size="sm"
-                style={{
-                  color: "#a1a1aa",
-                  fontSize: 11.5,
-                  background: "#18181b",
-                  border: "1px solid #27272a",
-                }}
-              >
-                No instance
-              </Chip>
+              <div className="header-chip-instance" style={{ color: "#656d7c" }}>
+                <span>No profile active</span>
+              </div>
             )}
 
-            {/* Account Chip & Menu */}
             <AccountButton />
           </div>
         </header>
 
-        {/* Screen Container with Smooth Entrance Animation */}
         <div key={screen} className="content">
           {screen === "home" && (
             <Home
@@ -403,3 +277,5 @@ export function App() {
     </div>
   );
 }
+
+export default App;

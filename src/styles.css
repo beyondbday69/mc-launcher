@@ -1,97 +1,86 @@
 @import "@heroui/styles";
 
 /* ==========================================================================
-   SOLID BLACK HEROUI V3 THEME — MC LAUNCHER
-   Pure OLED solid black styling: zero gradients, zero frosted blur, zero glows.
+   NVIDIA GEFORCE // RTX DESIGN SYSTEM — MC LAUNCHER
+   High-performance industrial gaming aesthetic:
+   Titanium charcoals, stealth black surfaces, signature GeForce Green (#76b900)
+   accents, precision telemetry HUDs, and hardware-accelerated styling.
    ========================================================================== */
 
 :root {
-  /* Solid Black Theme Tokens */
-  --bg-canvas: #000000;
-  --bg-subtle: #09090b;
-  --bg-surface: #121215;
-  --bg-surface-elevated: #18181b;
-  --bg-interactive: #202024;
-  --bg-interactive-hover: #27272a;
-  --bg-interactive-active: #323238;
+  /* NVIDIA Brand Accents */
+  --nvidia-green: #76b900;
+  --nvidia-green-hover: #88d600;
+  --nvidia-green-active: #629900;
+  --nvidia-green-dim: #446900;
+  --nvidia-green-soft: rgba(118, 185, 0, 0.12);
+  --nvidia-green-softer: rgba(118, 185, 0, 0.06);
+  --nvidia-green-border: rgba(118, 185, 0, 0.38);
+  --nvidia-green-glow: rgba(118, 185, 0, 0.45);
+  --nvidia-green-grad: linear-gradient(135deg, #88d600 0%, #76b900 60%, #598c00 100%);
 
-  /* Solid Borders */
-  --border: #27272a;
-  --border-subtle: #1c1c1f;
-  --border-strong: #3f3f46;
-  --border-focus: #0070f3;
+  /* Titanium & Stealth Surfaces */
+  --bg-canvas: #0a0b0e;
+  --bg-subtle: #0f1115;
+  --bg-surface: #14171d;
+  --bg-surface-elevated: #1a1e26;
+  --bg-interactive: #222732;
+  --bg-interactive-hover: #2b3240;
+  --bg-interactive-active: #343c4c;
 
-  /* Solid Text Colors */
-  --text-primary: #ffffff;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-  --text-disabled: #52525b;
+  /* Industrial Borders */
+  --border: #262b36;
+  --border-subtle: #1a1d24;
+  --border-strong: #373e4e;
+  --border-focus: var(--nvidia-green);
 
-  /* Solid Accent Colors (HeroUI standard) */
-  --solid-primary: #0070f3;
-  --solid-primary-hover: #0060df;
-  --solid-secondary: #27272a;
-  --solid-secondary-hover: #323238;
-  --solid-success: #10b981;
-  --solid-warning: #f59e0b;
-  --solid-danger: #ef4444;
-  --solid-danger-hover: #dc2626;
+  /* High-Contrast Typography */
+  --text-primary: #f5f6f8;
+  --text-secondary: #9da5b4;
+  --text-muted: #656d7c;
+  --text-disabled: #444a56;
 
-  /* Radii */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  /* Telemetry Status Colors */
+  --status-ready: #76b900;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  --status-info: #00b4d8;
+
+  /* Precision Radii */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
   --radius-full: 9999px;
 
   /* Fonts */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Monaco, Consolas, monospace;
+  --font-sans: "Rajdhani", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", ui-monospace, monospace;
 
   /* Backwards compatibility aliases */
-  --md-sys-color-primary: var(--solid-primary);
-  --md-sys-color-secondary: var(--solid-secondary);
+  --accent: var(--nvidia-green);
+  --accent-hover: var(--nvidia-green-hover);
+  --accent-soft: var(--nvidia-green-soft);
+  --solid-primary: var(--nvidia-green);
+  --solid-primary-hover: var(--nvidia-green-hover);
+  --solid-secondary: var(--bg-interactive);
+  --solid-secondary-hover: var(--bg-interactive-hover);
+  --solid-success: var(--nvidia-green);
+  --solid-warning: var(--status-warning);
+  --solid-danger: var(--status-error);
+  --md-sys-color-primary: var(--nvidia-green);
+  --md-sys-color-secondary: var(--bg-interactive);
   --md-sys-color-surface: var(--bg-surface);
   --md-sys-color-surface-container: var(--bg-surface);
   --md-sys-color-surface-container-high: var(--bg-surface-elevated);
   --md-sys-color-on-surface: var(--text-primary);
   --md-sys-color-on-surface-variant: var(--text-secondary);
   --md-sys-color-outline: var(--border);
-  --md-sys-color-outline-variant: var(--border-subtle);
-  --md-sys-color-error: var(--solid-danger);
-  --md-sys-color-success: var(--solid-success);
-  --md-sys-color-warning: var(--solid-warning);
-
-  --accent: var(--solid-primary);
-  --accent-hover: var(--solid-primary-hover);
-  --accent-soft: #18181b;
-  --success: var(--solid-success);
-  --warning: var(--solid-warning);
-  --danger: var(--solid-danger);
-  --danger-hover: var(--solid-danger-hover);
-
-  --glass-bg-card: var(--bg-surface);
-  --glass-bg-interactive: var(--bg-surface-elevated);
-  --glass-border: 1px solid var(--border);
-  --glass-border-subtle: 1px solid var(--border-subtle);
-  --glass-blur-sm: none;
-  --glass-blur-md: none;
-  --glass-blur-lg: none;
-  --glass-sheen: none;
-  --glass-sheen-elevated: none;
-  --glass-sheen-glow: none;
-  --liquid-sky: var(--solid-primary);
-  --liquid-cyan: var(--solid-primary);
-  --liquid-violet: #8b5cf6;
-  --liquid-mint: var(--solid-success);
-  --liquid-emerald: var(--solid-success);
-  --liquid-coral: var(--solid-danger);
-  --liquid-amber: var(--solid-warning);
 }
 
 /* ==========================================================================
-   Base Reset
+   Base & Reset
    ========================================================================== */
 
 * {
@@ -101,88 +90,139 @@
   border-color: var(--border);
 }
 
-html, body, #root {
+::selection {
+  background: var(--nvidia-green-soft);
+  color: #ffffff;
+}
+
+html,
+body,
+#root {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  background: var(--bg-canvas) !important;
+  background: var(--bg-canvas);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 13.5px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   user-select: none;
 }
 
-/* Zero out any remaining gradient or refraction lines */
-.liquid-background-mesh,
-.liquid-refraction-line {
-  display: none !important;
+h1, h2, h3, h4 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+/* Slim Industrial Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-interactive);
+  border-radius: var(--radius-xs);
+  border: 2px solid var(--bg-canvas);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
 }
 
 /* ==========================================================================
-   Application Layout Shell (Solid Black)
+   App Shell (NVIDIA GeForce App Layout)
    ========================================================================== */
 
 .app {
   display: flex;
   height: 100vh;
   width: 100vw;
-  background: var(--bg-canvas) !important;
-  position: relative;
+  background: var(--bg-canvas);
   overflow: hidden;
 }
 
-/* ==========================================================================
-   Navigation Rail / Sidebar (Solid Black)
-   ========================================================================== */
-
-.sidebar,
-.nav-rail {
-  width: 220px;
-  flex-shrink: 0;
-  background: var(--bg-subtle) !important;
-  border-right: 1px solid var(--border) !important;
+.main {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  height: 100vh;
+  min-width: 0;
+  overflow: hidden;
+  background: radial-gradient(circle at 80% 0%, rgba(118, 185, 0, 0.03) 0%, transparent 60%);
+}
+
+/* ==========================================================================
+   Sidebar Navigation (GeForce Rail)
+   ========================================================================== */
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg-subtle);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
   z-index: 20;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 20px 18px;
-  border-bottom: 1px solid var(--border-subtle);
+  gap: 12px;
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(20, 23, 29, 0.6) 0%, transparent 100%);
 }
 
-.brand .logo {
-  width: 28px;
-  height: 28px;
+.brand-icon {
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-sm);
-  background: var(--solid-primary);
+  background: var(--nvidia-green);
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #000000;
+  font-weight: 900;
+  font-size: 18px;
+  box-shadow: 0 0 16px var(--nvidia-green-glow);
   flex-shrink: 0;
 }
 
-.brand span {
-  font-size: 15px;
-  font-weight: 700;
+.brand-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.brand-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--text-primary);
-  letter-spacing: -0.2px;
+  line-height: 1.1;
+}
+
+.brand-sub {
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  color: var(--nvidia-green);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 12px 10px;
+  padding: 14px 10px;
   flex: 1;
 }
 
@@ -190,640 +230,657 @@ html, body, #root {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--text-secondary);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  background: transparent;
-  transition: background 0.15s ease, color 0.15s ease;
-  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  position: relative;
+  text-align: left;
 }
 
 .nav-item:hover {
   background: var(--bg-interactive);
   color: var(--text-primary);
+  border-color: var(--border);
 }
 
 .nav-item.active {
-  background: var(--bg-interactive-hover) !important;
-  color: var(--text-primary) !important;
-  font-weight: 600;
-  border-color: var(--border) !important;
+  background: var(--nvidia-green-soft);
+  color: #ffffff;
+  border-color: var(--nvidia-green-border);
+  font-weight: 700;
 }
 
-.nav-item.active svg {
-  color: var(--solid-primary);
+.nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3.5px;
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+  background: var(--nvidia-green);
+  box-shadow: 0 0 10px var(--nvidia-green);
 }
 
-.frosted-badge {
+.nav-item.active .nav-icon {
+  color: var(--nvidia-green);
+}
+
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.nav-badge {
   margin-left: auto;
   font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 700;
   padding: 2px 7px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-xs);
   background: var(--bg-interactive);
   color: var(--text-secondary);
   border: 1px solid var(--border);
 }
 
-/* ==========================================================================
-   Main Content & Top Bar (Solid Black)
-   ========================================================================== */
-
-.main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  background: var(--bg-canvas) !important;
-  position: relative;
-  z-index: 10;
+.nav-item.active .nav-badge {
+  background: var(--nvidia-green);
+  color: #000000;
+  border-color: var(--nvidia-green);
 }
 
-.titlebar,
-.top-bar {
+.sidebar-footer {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  background: var(--bg-canvas);
+}
+
+.status-indicator-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--nvidia-green);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.status-dot-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--nvidia-green);
+  box-shadow: 0 0 8px var(--nvidia-green);
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+/* ==========================================================================
+   Header Bar (GeForce Top Bar)
+   ========================================================================== */
+
+.header {
   height: 56px;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  background: var(--bg-canvas) !important;
-  border-bottom: 1px solid var(--border) !important;
-  z-index: 15;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+  z-index: 10;
+  flex-shrink: 0;
 }
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-rtx-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-surface);
+  border: 1px solid var(--nvidia-green-border);
+  font-size: 11.5px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: var(--nvidia-green);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-chip-instance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.header-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nvidia-green);
+  box-shadow: 0 0 6px var(--nvidia-green);
+}
+
+/* ==========================================================================
+   Content Viewport
+   ========================================================================== */
 
 .content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 24px;
-  background: var(--bg-canvas) !important;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* ==========================================================================
-   Solid Black Cards & Containers
+   NVIDIA Action Buttons & Controls
    ========================================================================== */
 
-.card,
-[data-slot="card"] {
-  background: var(--bg-surface) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-lg) !important;
-  padding: 20px;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-
-.card:hover,
-[data-slot="card"]:hover {
-  border-color: var(--border-strong) !important;
-}
-
-/* Hero Showcase Card */
-.home-hero,
-.hero-card {
-  background: var(--bg-surface) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-lg) !important;
-  padding: 28px !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-/* KPI Tiles */
-.kpi {
-  background: var(--bg-surface) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-md) !important;
-  padding: 16px !important;
-  box-shadow: none !important;
-}
-
-.kpi .label {
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.kpi .value {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-top: 4px;
-  font-feature-settings: "tnum";
-}
-
-.kpi-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 12px;
-}
-
-/* ==========================================================================
-   HeroUI v3 Solid Buttons
-   ========================================================================== */
-
-button,
-.btn,
-[data-slot="button"] {
+.btn-nvidia-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-weight: 600;
-  border-radius: var(--radius-md) !important;
+  padding: 10px 22px;
+  background: var(--nvidia-green);
+  color: #000000;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: var(--radius-xs);
+  border: none;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
-  font-family: inherit;
-  font-size: 13px;
-  padding: 8px 16px;
-  border: 1px solid transparent;
-  outline: none;
-  background-image: none !important;
-  box-shadow: none !important;
+  transition: all 0.15s ease;
+  box-shadow: 0 0 16px rgba(118, 185, 0, 0.35);
 }
 
-button:active,
-.btn:active,
-[data-slot="button"]:active {
-  transform: scale(0.98);
+.btn-nvidia-primary:hover {
+  background: var(--nvidia-green-hover);
+  box-shadow: 0 0 24px rgba(118, 185, 0, 0.55);
+  transform: translateY(-1px);
 }
 
-/* Primary Button (Solid HeroUI Blue) */
-.btn.primary,
-button[data-variant="primary"],
-[data-slot="button"][data-variant="primary"] {
-  background: var(--solid-primary) !important;
-  color: #ffffff !important;
-  border-color: var(--solid-primary) !important;
+.btn-nvidia-primary:active {
+  transform: translateY(0);
 }
 
-.btn.primary:hover,
-button[data-variant="primary"]:hover,
-[data-slot="button"][data-variant="primary"]:hover {
-  background: var(--solid-primary-hover) !important;
-  border-color: var(--solid-primary-hover) !important;
-}
-
-/* Secondary / Outline Button */
-.btn.secondary,
-button[data-variant="secondary"],
-button[data-variant="outline"],
-[data-slot="button"][data-variant="secondary"],
-[data-slot="button"][data-variant="outline"] {
-  background: var(--bg-surface-elevated) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--border) !important;
-}
-
-.btn.secondary:hover,
-button[data-variant="secondary"]:hover,
-button[data-variant="outline"]:hover,
-[data-slot="button"][data-variant="secondary"]:hover,
-[data-slot="button"][data-variant="outline"]:hover {
-  background: var(--bg-interactive-hover) !important;
-  border-color: var(--border-strong) !important;
-}
-
-/* Ghost Button */
-button[data-variant="ghost"],
-[data-slot="button"][data-variant="ghost"] {
-  background: transparent !important;
-  color: var(--text-secondary) !important;
-  border-color: transparent !important;
-}
-
-button[data-variant="ghost"]:hover,
-[data-slot="button"][data-variant="ghost"]:hover {
-  background: var(--bg-interactive) !important;
-  color: var(--text-primary) !important;
-}
-
-/* Danger Button */
-.btn.danger,
-button[data-variant="danger"],
-[data-slot="button"][data-variant="danger"] {
-  background: var(--solid-danger) !important;
-  color: #ffffff !important;
-  border-color: var(--solid-danger) !important;
-}
-
-.btn.danger:hover,
-button[data-variant="danger"]:hover,
-[data-slot="button"][data-variant="danger"]:hover {
-  background: var(--solid-danger-hover) !important;
-  border-color: var(--solid-danger-hover) !important;
-}
-
-/* Heroic Solid Play Button */
-.play-button {
-  width: 90px !important;
-  height: 90px !important;
-  min-width: 90px !important;
-  border-radius: 50% !important;
-  background: var(--solid-primary) !important;
-  color: #ffffff !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 4px !important;
-  border: none !important;
-  cursor: pointer !important;
-  box-shadow: 0 8px 24px rgba(0, 112, 243, 0.4) !important;
-  animation: none !important;
-  transition: transform 0.12s ease, background 0.15s ease !important;
-}
-
-.play-button:hover {
-  background: var(--solid-primary-hover) !important;
-  transform: scale(1.04) !important;
-}
-
-.play-button:active {
-  transform: scale(0.96) !important;
-}
-
-.play-button.busy {
-  background: var(--solid-danger) !important;
-  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4) !important;
-}
-
-.play-button.busy:hover {
-  background: var(--solid-danger-hover) !important;
-}
-
-/* ==========================================================================
-   Solid Inputs, Selects & Textareas
-   ========================================================================== */
-
-input[type="text"],
-input[type="search"],
-input[type="number"],
-input[type="password"],
-select,
-textarea,
-[data-slot="input"],
-.search-bar input {
-  background: var(--bg-subtle) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-md) !important;
-  color: var(--text-primary) !important;
-  padding: 9px 13px !important;
-  font-size: 13px !important;
-  font-family: inherit !important;
-  outline: none !important;
-  transition: border-color 0.15s ease;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-input:focus,
-select:focus,
-textarea:focus,
-[data-slot="input"]:focus-within {
-  border-color: var(--solid-primary) !important;
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: var(--text-muted) !important;
-}
-
-/* ==========================================================================
-   Solid Chips & Badges
-   ========================================================================== */
-
-.chip,
-.tag,
-[data-slot="chip"] {
+.btn-nvidia-secondary {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
-  border-radius: var(--radius-full) !important;
-  font-size: 12px;
-  font-weight: 500;
-  background: var(--bg-surface-elevated) !important;
-  border: 1px solid var(--border) !important;
-  color: var(--text-primary) !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-/* ==========================================================================
-   Solid Progress Bars
-   ========================================================================== */
-
-.progress,
-[data-slot="progress-bar"] {
-  width: 100%;
-  height: 7px;
-  background: var(--bg-surface-elevated) !important;
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  position: relative;
-  border: 1px solid var(--border);
-}
-
-.progress-bar,
-[data-slot="progress-bar-fill"] {
-  height: 100%;
-  background: var(--solid-primary) !important;
-  border-radius: var(--radius-full);
-  transition: width 0.2s ease;
-  animation: none !important;
-}
-
-/* ==========================================================================
-   Modern HeroUI v3 Capsule Slider & Pill Knob
-   Matches official @heroui/styles component specification
-   ========================================================================== */
-
-.slider,
-[data-slot="slider"] {
-  display: grid !important;
-  grid-template-areas:
-    "label output"
-    "track track" !important;
-  grid-template-columns: 1fr auto !important;
-  row-gap: 6px !important;
-  width: 100% !important;
-}
-
-.slider [data-slot="label"],
-[data-slot="slider"] [data-slot="label"],
-.slider label {
-  grid-area: label !important;
-  width: fit-content !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  color: var(--text-primary) !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-.slider__output,
-[data-slot="slider-output"] {
-  grid-area: output !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  color: var(--text-secondary) !important;
-  text-align: right !important;
-  font-variant-numeric: tabular-nums !important;
-}
-
-.slider__track,
-[data-slot="slider-track"] {
-  grid-area: track !important;
-  height: 20px !important;
-  background: var(--bg-surface-elevated) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-full) !important;
-  position: relative !important;
-  cursor: pointer !important;
-  box-sizing: border-box !important;
-}
-
-.slider__fill,
-[data-slot="slider-fill"] {
-  background: var(--solid-primary) !important;
-  height: 100% !important;
-  border-radius: var(--radius-full) !important;
-  position: absolute !important;
-  top: 0 !important;
-  bottom: 0 !important;
-  pointer-events: none !important;
-}
-
-.slider__thumb,
-[data-slot="slider-thumb"] {
-  position: absolute !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  width: 28px !important;
-  height: 20px !important;
-  background: var(--solid-primary) !important;
-  border-radius: var(--radius-full) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  cursor: grab !important;
-  outline: none !important;
-  z-index: 10 !important;
-  transition:
-    background-color 250ms cubic-bezier(0.4, 0, 0.2, 1),
-    transform 250ms cubic-bezier(0, 0, 0.2, 1),
-    box-shadow 150ms cubic-bezier(0, 0, 0.2, 1) !important;
-}
-
-/* HeroUI v3 Signature Pill Knob */
-.slider__thumb::after,
-[data-slot="slider-thumb"]::after {
-  content: "" !important;
-  position: relative !important;
-  z-index: 10 !important;
-  display: block !important;
-  width: 20px !important;
-  height: 14px !important;
-  background: #ffffff !important;
-  border-radius: 6px !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
-  transform-origin: center !important;
-  transition: all 150ms ease !important;
-}
-
-.slider__thumb:hover::after,
-[data-slot="slider-thumb"]:hover::after {
-  background: #f4f4f5 !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6) !important;
-}
-
-.slider__thumb[data-dragging="true"],
-[data-slot="slider-thumb"][data-dragging="true"] {
-  cursor: grabbing !important;
-}
-
-.slider__thumb[data-dragging="true"]::after,
-[data-slot="slider-thumb"][data-dragging="true"]::after {
-  transform: scale(0.9) !important;
-  background: #e4e4e7 !important;
-}
-
-.slider__thumb[data-focus-visible="true"],
-[data-slot="slider-thumb"][data-focus-visible="true"] {
-  box-shadow: 0 0 0 2px var(--bg-canvas), 0 0 0 4px var(--solid-primary) !important;
-}
-
-/* ==========================================================================
-   Solid Switches & Icon Toggles
-   ========================================================================== */
-
-[data-slot="switch-control"] {
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border);
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-[data-slot="switch"][data-selected="true"] [data-slot="switch-control"]:not([class*="bg-"]) {
-  background: var(--solid-primary);
-  border-color: var(--solid-primary);
-}
-
-[data-slot="switch-thumb"] {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-[data-slot="switch-icon"] {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-/* ==========================================================================
-   Solid Modals & Dialogs
-   ========================================================================== */
-
-[data-slot="modal-backdrop"],
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.85) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-[data-slot="modal-dialog"],
-.modal {
-  background: var(--bg-surface) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-lg) !important;
-  padding: 24px !important;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8) !important;
-  color: var(--text-primary) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-/* ==========================================================================
-   Tables (Solid Black)
-   ========================================================================== */
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--bg-surface);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-
-thead {
-  background: var(--bg-subtle);
-  border-bottom: 1px solid var(--border);
-}
-
-th {
-  padding: 12px 16px;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-td {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-  font-size: 13px;
-}
-
-tr:last-child td {
-  border-bottom: none;
-}
-
-tr:hover td {
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 18px;
   background: var(--bg-interactive);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-/* ==========================================================================
-   Utilities & Typography
-   ========================================================================== */
-
-.muted {
-  color: var(--text-muted) !important;
+.btn-nvidia-secondary:hover {
+  background: var(--bg-interactive-hover);
+  border-color: var(--nvidia-green-border);
+  color: var(--nvidia-green);
 }
 
-.row {
+/* High-Tech Telemetry Cards */
+.telemetry-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.telemetry-card:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-surface-elevated);
+}
+
+.telemetry-label {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.row.between {
   justify-content: space-between;
 }
 
-.col {
+.telemetry-value {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.telemetry-tag {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--nvidia-green);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Hero Game Ready Spotlight (Home Screen)
+   ========================================================================== */
+
+.hero-game-card {
+  background: linear-gradient(135deg, #161a22 0%, #0e1015 100%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 28px;
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+}
+
+.hero-game-card::after {
+  content: "";
+  position: absolute;
+  right: -60px;
+  top: -60px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(118, 185, 0, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-badge-strip {
+  display: flex;
   gap: 8px;
+  margin-bottom: 12px;
 }
 
-.field {
+.badge-rtx {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: rgba(118, 185, 0, 0.15);
+  border: 1px solid var(--nvidia-green);
+  border-radius: var(--radius-xs);
+  color: var(--nvidia-green);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.badge-channel {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  background: var(--bg-interactive);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.hero-game-title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.hero-game-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 14px;
+  align-items: center;
+  gap: 12px;
 }
 
-.field label {
-  font-size: 12.5px;
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hero-btn-launch {
+  height: 48px;
+  padding: 0 32px;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--nvidia-green);
+  color: #000000;
+  border: none;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 0 24px rgba(118, 185, 0, 0.4);
+  transition: all 0.15s ease;
+}
+
+.hero-btn-launch:hover {
+  background: var(--nvidia-green-hover);
+  box-shadow: 0 0 36px rgba(118, 185, 0, 0.65);
+  transform: translateY(-1px);
+}
+
+.hero-btn-launch:active {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   NVIDIA GeForce Slider Specification (RAM Allocation)
+   ========================================================================== */
+
+.slider {
+  display: grid;
+  grid-template-areas:
+    "label output"
+    "track track";
+  grid-template-columns: 1fr auto;
+  row-gap: 8px;
+  width: 100%;
+}
+
+.slider [data-slot="label"] {
+  grid-area: label;
+  font-size: 13px;
   font-weight: 600;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.slider__output {
+  grid-area: output;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--nvidia-green);
+  font-variant-numeric: tabular-nums;
+}
+
+.slider__track {
+  grid-area: track;
+  position: relative;
+  width: 100%;
+  height: 18px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+
+.slider__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--nvidia-green);
+  border-radius: var(--radius-xs) 0 0 var(--radius-xs);
+  box-shadow: 0 0 12px var(--nvidia-green-glow);
+  pointer-events: none;
+}
+
+.slider__thumb {
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  background: #000000;
+  border: 2px solid var(--nvidia-green);
+  border-radius: var(--radius-xs);
+  box-shadow: 0 0 12px rgba(118, 185, 0, 0.6);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.slider__thumb::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--nvidia-green);
+  border-radius: 1px;
+}
+
+.slider__thumb:hover {
+  border-color: #ffffff;
+  box-shadow: 0 0 18px var(--nvidia-green);
+}
+
+.slider__thumb[data-dragging="true"],
+.slider__thumb:active {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 0 24px var(--nvidia-green);
+}
+
+.slider__thumb:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Data Tables & Grids (GeForce Versions & Downloads)
+   ========================================================================== */
+
+.nvidia-table-wrap {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.nvidia-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.nvidia-table th {
+  background: var(--bg-surface-elevated);
+  padding: 12px 16px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.nvidia-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.nvidia-table tr:hover td {
+  background: var(--bg-interactive);
   color: var(--text-primary);
 }
 
-.form-grid {
+.nvidia-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ==========================================================================
+   Mod & Content Cards
+   ========================================================================== */
+
+.content-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
 
-.button-group {
-  display: flex;
-  gap: 8px;
-}
-
-.empty {
+.mod-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 18px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: all 0.15s ease;
+}
+
+.mod-card:hover {
+  border-color: var(--nvidia-green-border);
+  background: var(--bg-surface-elevated);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* ==========================================================================
+   Modal Dialogs (GeForce Style)
+   ========================================================================== */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 7, 10, 0.82);
+  backdrop-filter: blur(6px);
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
-  color: var(--text-muted);
+  z-index: 999;
 }
 
-.empty .icon {
-  margin-bottom: 16px;
-  color: var(--text-muted);
+.modal-box {
+  width: 90%;
+  max-width: 540px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75), 0 0 24px rgba(118, 185, 0, 0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-@keyframes indeterminate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.modal-header {
+  padding: 18px 22px;
+  background: var(--bg-surface-elevated);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.modal-body {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-footer {
+  padding: 16px 22px;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Form inputs */
+.input-nvidia {
+  width: 100%;
+  height: 38px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 0 12px;
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input-nvidia:focus {
+  border-color: var(--nvidia-green);
+  box-shadow: 0 0 10px var(--nvidia-green-glow);
 }

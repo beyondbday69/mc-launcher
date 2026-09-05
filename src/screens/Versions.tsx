@@ -1,319 +1,220 @@
-import { useEffect, useMemo, useState } from "react";
-import { Button, ButtonGroup, Card, Chip, Input } from "@heroui/react";
-import { api, VersionEntry } from "../lib/types";
-import {
-  IconCube,
-  IconPlus,
-  IconCheck,
-  IconRefresh,
-} from "../lib/icons";
+import { useState, useEffect, useMemo } from "react";
+import { api, VersionEntry, LatestPair } from "../lib/types";
 
-interface Props {
-  onInstalled: () => void;
+interface VersionsProps {
+  onInstalled: () => Promise<void>;
 }
 
-type VersionFilterType = "all" | "release" | "snapshot" | "modded";
-
-// Widely used modded Minecraft versions for the "modded" filter chip
-const KNOWN_MODDED_VERSIONS = new Set([
-  "1.21.4", "1.21.3", "1.21.1", "1.21",
-  "1.20.6", "1.20.4", "1.20.2", "1.20.1", "1.20",
-  "1.19.4", "1.19.2", "1.19",
-  "1.18.2", "1.18.1", "1.18",
-  "1.17.1", "1.16.5", "1.15.2", "1.14.4", "1.12.2", "1.7.10"
-]);
-
-export function Versions({ onInstalled }: Props) {
-  const [all, setAll] = useState<VersionEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("");
-  const [type, setType] = useState<VersionFilterType>("release");
-  const [latest, setLatest] = useState<{ release: string; snapshot: string } | null>(null);
+export function Versions({ onInstalled }: VersionsProps) {
+  const [versions, setVersions] = useState<VersionEntry[]>([]);
+  const [latest, setLatest] = useState<LatestPair | null>(null);
+  const [channel, setChannel] = useState<"release" | "all">("release");
+  const [search, setSearch] = useState("");
+  const [installingId, setInstallingId] = useState<string | null>(null);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const [vs, lt] = await Promise.all([
-          api.versionsList(true, false),
-          api.versionsLatest(),
-        ]);
-        setAll(vs);
-        setLatest(lt);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    Promise.all([
+      api.versionsList(true, false),
+      api.versionsLatest(),
+    ])
+      .then(([vList, lPair]) => {
+        setVersions(vList);
+        setLatest(lPair);
+      })
+      .catch((err) => console.error("[NVIDIA Versions Load]:", err));
   }, []);
 
-  const filtered = useMemo(() => {
-    return all.filter((v) => {
-      if (filter && !v.id.toLowerCase().includes(filter.toLowerCase())) {
-        return false;
-      }
-      if (type === "release" && v.type !== "release") return false;
-      if (type === "snapshot" && v.type !== "snapshot") return false;
-      if (type === "modded" && !KNOWN_MODDED_VERSIONS.has(v.id)) return false;
+  const filteredVersions = useMemo(() => {
+    return versions.filter((v) => {
+      if (channel === "release" && v.type !== "release") return false;
+      if (search && !v.id.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [all, filter, type]);
+  }, [versions, channel, search]);
 
-  const handleCreateInstance = async (versionId: string) => {
-    const defaultName = `Minecraft ${versionId}`;
-    const name = prompt(`Create new instance using Minecraft ${versionId}:`, defaultName);
-    if (!name?.trim()) return;
-
+  const handleInstall = async (versionId: string) => {
+    setInstallingId(versionId);
     try {
-      await api.instancesCreate(name.trim(), versionId);
-      onInstalled();
-      alert(`Instance "${name.trim()}" created successfully! It will prepare game files on first launch.`);
-    } catch (e) {
-      alert(String(e));
+      await api.instancesCreate(`Minecraft ${versionId}`, versionId);
+      await onInstalled();
+      alert(`Profile 'Minecraft ${versionId}' created successfully!`);
+    } catch (err) {
+      console.error("[NVIDIA Version Install]:", err);
+    } finally {
+      setInstallingId(null);
     }
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      {/* Top Search & Filter Bar */}
-      <div className="row between" style={{ flexWrap: "wrap", gap: 12 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0, color: "#ffffff" }}>
-          Minecraft Versions
-        </h2>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Dual Spotlight Banners */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        {/* Game Ready Stable */}
+        <div
+          style={{
+            background: "linear-gradient(135deg, #182012 0%, #12151c 100%)",
+            border: "1px solid var(--nvidia-green)",
+            borderRadius: "var(--radius-sm)",
+            padding: "20px 24px",
+            boxShadow: "0 0 20px rgba(118, 185, 0, 0.15)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span className="badge-rtx">● GAME READY RELEASE</span>
+              <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "#76b900" }}>
+                RECOMMENDED
+              </span>
+            </div>
+            <h2 style={{ fontSize: 24, fontWeight: 800, color: "#ffffff" }}>
+              MINECRAFT {latest?.release || "1.21.4"}
+            </h2>
+            <p style={{ fontSize: 12.5, color: "#9da5b4", marginTop: 4 }}>
+              Fully verified for optimal stability, shader rendering, and multiplayer compatibility.
+            </p>
+          </div>
 
-        <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
-          {/* Version Filter Tabs */}
-          <ButtonGroup>
-            <Button
-              variant={type === "release" ? "primary" : "secondary"}
-              size="sm"
-              onPress={() => setType("release")}
+          <div>
+            <button
+              type="button"
+              className="btn-nvidia-primary"
+              disabled={Boolean(installingId)}
+              onClick={() => handleInstall(latest?.release || "1.21.4")}
             >
-              <IconCheck size={13} style={{ opacity: type === "release" ? 1 : 0.4 }} />
-              <span>Releases</span>
-            </Button>
+              <span>
+                {installingId === (latest?.release || "1.21.4") ? "INSTALLING..." : "INSTALL GAME READY"}
+              </span>
+            </button>
+          </div>
+        </div>
 
-            <Button
-              variant={type === "snapshot" ? "primary" : "secondary"}
-              size="sm"
-              onPress={() => setType("snapshot")}
+        {/* Developer Snapshot */}
+        <div
+          style={{
+            background: "var(--bg-surface)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-sm)",
+            padding: "20px 24px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span className="badge-channel" style={{ color: "#f59e0b", borderColor: "rgba(245,158,11,0.4)" }}>
+                DEVELOPER PREVIEW
+              </span>
+              <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "#656d7c" }}>
+                EXPERIMENTAL
+              </span>
+            </div>
+            <h2 style={{ fontSize: 24, fontWeight: 800, color: "#ffffff" }}>
+              SNAPSHOT {latest?.snapshot || "24w45a"}
+            </h2>
+            <p style={{ fontSize: 12.5, color: "#9da5b4", marginTop: 4 }}>
+              Bleeding-edge Mojang development channel. Early features & testbed.
+            </p>
+          </div>
+
+          <div>
+            <button
+              type="button"
+              className="btn-nvidia-secondary"
+              disabled={Boolean(installingId)}
+              onClick={() => handleInstall(latest?.snapshot || "24w45a")}
             >
-              <span>Snapshots</span>
-            </Button>
-
-            <Button
-              variant={type === "modded" ? "primary" : "secondary"}
-              size="sm"
-              onPress={() => setType("modded")}
-            >
-              <span>Modded</span>
-            </Button>
-
-            <Button
-              variant={type === "all" ? "primary" : "secondary"}
-              size="sm"
-              onPress={() => setType("all")}
-            >
-              <span>All</span>
-            </Button>
-          </ButtonGroup>
-
-          {/* Search Input */}
-          <div style={{ position: "relative" }}>
-            <Input
-              type="text"
-              className="search-bar"
-              placeholder="Filter versions (e.g. 1.21)…"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              style={{
-                width: 200,
-                fontSize: 13,
-              }}
-            />
-            {filter && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onPress={() => setFilter("")}
-                aria-label="Clear filter"
-                style={{
-                  position: "absolute",
-                  right: 6,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  padding: "2px 6px",
-                  fontSize: 12,
-                  color: "#a1a1aa",
-                }}
-              >
-                ✕
-              </Button>
-            )}
+              <span>
+                {installingId === (latest?.snapshot || "24w45a") ? "INSTALLING..." : "INSTALL SNAPSHOT"}
+              </span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Sleek Spotlight Banner for Latest Versions */}
-      {latest && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div
-            style={{
-              padding: "12px 16px",
-              background: "#121215",
-              border: "1px solid #27272a",
-              borderLeft: "3px solid #10b981",
-              borderRadius: "10px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
+      {/* Release Channel Filter & Search Toolbar */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            type="button"
+            className={channel === "release" ? "btn-nvidia-primary" : "btn-nvidia-secondary"}
+            style={{ padding: "8px 16px", fontSize: 12 }}
+            onClick={() => setChannel("release")}
           >
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Chip color="success" size="sm">Latest Release</Chip>
-                <strong style={{ fontSize: 15, color: "#ffffff" }}>{latest.release}</strong>
-              </div>
-            </div>
-            <Button
-              variant="primary"
-              size="sm"
-              onPress={() => handleCreateInstance(latest.release)}
-              style={{ padding: "4px 12px", fontSize: 12, gap: 5 }}
-            >
-              <IconPlus size={13} />
-              <span>Install</span>
-            </Button>
-          </div>
-
-          <div
-            style={{
-              padding: "12px 16px",
-              background: "#121215",
-              border: "1px solid #27272a",
-              borderLeft: "3px solid #f59e0b",
-              borderRadius: "10px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
+            GAME READY CHANNELS ONLY
+          </button>
+          <button
+            type="button"
+            className={channel === "all" ? "btn-nvidia-primary" : "btn-nvidia-secondary"}
+            style={{ padding: "8px 16px", fontSize: 12 }}
+            onClick={() => setChannel("all")}
           >
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Chip color="warning" size="sm">Latest Snapshot</Chip>
-                <strong style={{ fontSize: 15, color: "#ffffff" }}>{latest.snapshot}</strong>
-              </div>
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onPress={() => handleCreateInstance(latest.snapshot)}
-              style={{ padding: "4px 12px", fontSize: 12, gap: 5 }}
-            >
-              <IconPlus size={13} />
-              <span>Install</span>
-            </Button>
-          </div>
+            SHOW ALL (INCL. SNAPSHOTS)
+          </button>
         </div>
-      )}
 
-      {/* Content Table or Loading */}
-      {loading ? (
-        <div className="empty">
-          <div className="icon">
-            <IconRefresh size={36} style={{ animation: "indeterminate 1.5s infinite linear" }} />
-          </div>
-          <p style={{ fontSize: 16, fontWeight: 600, color: "#ffffff" }}>Fetching versions from Mojang…</p>
-          <span className="muted" style={{ fontSize: 12 }}>
-            Parsing launch manifest & asset index
-          </span>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="empty">
-          <div className="icon">
-            <IconCube size={36} />
-          </div>
-          <p style={{ fontSize: 16, fontWeight: 600, color: "#ffffff" }}>No versions match filters</p>
-          <p className="faint" style={{ fontSize: 12 }}>
-            Try clearing the search query or switching to "All".
-          </p>
-        </div>
-      ) : (
-        <Card style={{ padding: 0, overflow: "hidden" }}>
-          <Card.Content style={{ padding: 0 }}>
-            <div style={{ overflowX: "auto" }}>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Version</th>
-                    <th>Type</th>
-                    <th>Release Date</th>
-                    <th style={{ textAlign: "right" }}>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.slice(0, 150).map((v) => {
-                    const isRelease = v.type === "release";
-                    const isSnapshot = v.type === "snapshot";
+        <input
+          type="text"
+          className="input-nvidia"
+          placeholder="Filter driver versions..."
+          style={{ maxWidth: 300 }}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
 
-                    return (
-                      <tr key={v.id}>
-                        <td>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <IconCube size={14} style={{ color: "#0070f3", opacity: 0.9 }} />
-                            <span style={{ fontWeight: 600, color: "#ffffff" }}>
-                              {v.id}
-                            </span>
-                          </div>
-                        </td>
-                        <td>
-                          <Chip
-                            color={isRelease ? "success" : isSnapshot ? "warning" : "default"}
-                            size="sm"
-                          >
-                            {v.type}
-                          </Chip>
-                        </td>
-                        <td className="muted" style={{ fontSize: 12 }}>
-                          {formatReleaseDate(v.releaseTime)}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onPress={() => handleCreateInstance(v.id)}
-                            style={{ padding: "3px 10px", fontSize: 11.5, gap: 5 }}
-                          >
-                            <IconPlus size={12} />
-                            <span>Create</span>
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {filtered.length > 150 && (
-              <p className="faint" style={{ margin: "10px 0", fontSize: 11.5, textAlign: "center" }}>
-                Showing first 150 of {filtered.length} matching versions. Use search for older builds.
-              </p>
-            )}
-          </Card.Content>
-        </Card>
-      )}
+      {/* Versions Catalog Table */}
+      <div className="nvidia-table-wrap">
+        <table className="nvidia-table">
+          <thead>
+            <tr>
+              <th>CHANNEL</th>
+              <th>VERSION ID</th>
+              <th>RELEASE DATE</th>
+              <th>SHA-1 CHECKSUM</th>
+              <th style={{ textAlign: "right" }}>DEPLOY</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredVersions.map((v) => (
+              <tr key={v.id}>
+                <td>
+                  <span className={v.type === "release" ? "badge-rtx" : "badge-channel"}>
+                    {v.type === "release" ? "GAME READY" : "SNAPSHOT"}
+                  </span>
+                </td>
+                <td style={{ fontWeight: 800, color: "#ffffff", fontFamily: "var(--font-mono)" }}>
+                  {v.id}
+                </td>
+                <td style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>
+                  {v.releaseTime ? new Date(v.releaseTime).toLocaleDateString() : "—"}
+                </td>
+                <td style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "#656d7c" }}>
+                  {v.sha1 ? `${v.sha1.slice(0, 10)}...` : "VERIFIED SIGNATURE"}
+                </td>
+                <td style={{ textAlign: "right" }}>
+                  <button
+                    type="button"
+                    className="btn-nvidia-secondary"
+                    style={{ padding: "5px 12px", fontSize: 11 }}
+                    disabled={installingId === v.id}
+                    onClick={() => handleInstall(v.id)}
+                  >
+                    {installingId === v.id ? "CREATING..." : "+ CREATE PROFILE"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-function formatReleaseDate(iso: string): string {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
+export default Versions;

@@ -1,369 +1,210 @@
-import { useEffect, useMemo, useState } from "react";
-import { Button, Card, Chip, Input, Tabs } from "@heroui/react";
-import {
-  api,
-  GameVersionTag,
-  Instance,
-  LoaderTag,
-  ProjectFile,
-  ProjectHit,
-  ProjectVersion,
-} from "../lib/types";
-import {
-  IconSearch,
-  IconCheck,
-  IconDownloads,
-  IconRefresh,
-  IconCube,
-  IconContent,
-} from "../lib/icons";
+import { useState, useEffect } from "react";
+import { api, Instance, ProjectHit } from "../lib/types";
 
-type ContentTab = "mod" | "modpack" | "resourcepack" | "shader";
-
-interface TabDef {
-  id: ContentTab;
-  label: string;
-}
-
-const TABS: TabDef[] = [
-  { id: "mod", label: "Mods" },
-  { id: "resourcepack", label: "Resource Packs" },
-  { id: "shader", label: "Shaders" },
-  { id: "modpack", label: "Modpacks" },
-];
-
-const ALLOWED_LOADER_PREFIXES = ["fabric", "forge", "neoforge", "quilt", "legacy-fabric"];
-
-type InstallStatus =
-  | { kind: "idle" }
-  | { kind: "installing" }
-  | { kind: "installed"; path: string; size: number }
-  | { kind: "error"; message: string };
-
-interface Props {
+interface ContentProps {
   selected: Instance | null;
 }
 
-export function Content({ selected }: Props) {
-  const [tab, setTab] = useState<ContentTab>("mod");
+export function Content({ selected }: ContentProps) {
   const [query, setQuery] = useState("");
-  const [gameVersion, setGameVersion] = useState<string>(selected?.version ?? "");
-  const [loader, setLoader] = useState<string>(
-    selected?.mod_loader?.kind ?? "any",
-  );
-  const [hits, setHits] = useState<ProjectHit[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<Record<string, InstallStatus>>({});
-  const [hasSearched, setHasSearched] = useState(false);
-
-  const [allLoaders, setAllLoaders] = useState<LoaderTag[]>([]);
-  const [allGameVersions, setAllGameVersions] = useState<GameVersionTag[]>([]);
-  const [tagsError, setTagsError] = useState<string | null>(null);
+  const [category, setCategory] = useState<string>("mod");
+  const [projects, setProjects] = useState<ProjectHit[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [installingSlug, setInstallingSlug] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [ls, gvs] = await Promise.all([
-          api.modrinthLoaders(),
-          api.modrinthGameVersions(),
-        ]);
-        if (cancelled) return;
-        setAllLoaders(ls);
-        setAllGameVersions(gvs);
-      } catch (e) {
-        if (!cancelled) setTagsError(errMsg(e));
-      }
-    })();
+    let active = true;
+    setLoading(true);
+    api
+      .modrinthSearch(query, category, selected?.version || "1.21.4")
+      .then((hits) => {
+        if (active) setProjects(hits);
+      })
+      .catch((err) => console.error("[NVIDIA Content Search]:", err))
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
     return () => {
-      cancelled = true;
+      active = false;
     };
-  }, []);
+  }, [query, category, selected]);
 
-  const loaderOptions = useMemo(() => {
-    const projectType = tab;
-    return allLoaders.filter(
-      (l) =>
-        ALLOWED_LOADER_PREFIXES.includes(l.name) &&
-        l.supported_project_types.includes(projectType),
-    );
-  }, [allLoaders, tab]);
-
-  useEffect(() => {
-    if (loader !== "any" && !loaderOptions.some((l) => l.name === loader)) {
-      setLoader("any");
+  const handleInstall = async (hit: ProjectHit) => {
+    if (!selected) {
+      alert("Please select a game profile first!");
+      return;
     }
-  }, [loaderOptions, loader]);
-
-  useEffect(() => {
-    if (!selected) return;
-    setGameVersion(selected.version);
-    setLoader(selected.mod_loader?.kind ?? "any");
-  }, [selected?.id, selected?.version, selected?.mod_loader?.kind]);
-
-  useEffect(() => {
-    setHits([]);
-    setError(null);
-    setStatus({});
-    setHasSearched(false);
-  }, [tab]);
-
-  const onSearch = async () => {
-    const q = query.trim();
-    if (!q) return;
-    setSearching(true);
-    setError(null);
-    setStatus({});
-    try {
-      const res = await api.modrinthSearch(
-        q,
-        tab,
-        gameVersion.trim() || undefined,
-        tab === "mod" && loader !== "any" ? loader : undefined,
-        24,
-      );
-      setHits(res);
-      setHasSearched(true);
-    } catch (e) {
-      setError(errMsg(e));
-      setHits([]);
-      setHasSearched(true);
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const onInstall = async (hit: ProjectHit) => {
-    if (!selected) return;
-    const id = hit.slug;
-    setStatus((s) => ({ ...s, [id]: { kind: "installing" } }));
+    setInstallingSlug(hit.slug);
     try {
       const versions = await api.modrinthVersions(
         hit.slug,
-        gameVersion.trim() || undefined,
-        tab === "mod" && loader !== "any" ? loader : undefined,
+        selected.version,
+        selected.mod_loader?.kind
       );
-      if (versions.length === 0) {
-        throw new Error(
-          "No matching version found for selected Minecraft version and mod loader.",
-        );
+      if (!versions || versions.length === 0) {
+        alert("No compatible release found for this Minecraft version/loader.");
+        return;
       }
-      const version = pickLatest(versions);
-      const file = pickPrimaryFile(version);
-      if (!file) {
-        throw new Error("Target version has no downloadable files.");
+      const targetVersion = versions[0];
+      const primaryFile =
+        targetVersion.files.find((f) => f.primary) || targetVersion.files[0];
+      if (!primaryFile) {
+        alert("No downloadable file artifact found.");
+        return;
       }
-      const sha1Base64 = hexToBase64(file.hashes.sha1);
-      const path = await api.instanceInstallContent(
+
+      await api.instanceInstallContent(
         selected.id,
-        tab,
-        file.url,
-        file.filename,
-        file.size,
-        sha1Base64,
+        category,
+        primaryFile.url,
+        primaryFile.filename,
+        primaryFile.size,
+        primaryFile.hashes.sha1
       );
-      setStatus((s) => ({
-        ...s,
-        [id]: { kind: "installed", path, size: file.size },
-      }));
-    } catch (e) {
-      setStatus((s) => ({ ...s, [id]: { kind: "error", message: errMsg(e) } }));
+      alert(`Installed '${hit.title}' to ${selected.name}!`);
+    } catch (err: any) {
+      console.error("[NVIDIA Install Content]:", err);
+      alert(`Install failed: ${err?.message || err}`);
+    } finally {
+      setInstallingSlug(null);
     }
   };
 
-  if (!selected) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0, color: "#ffffff" }}>
-          Content & Mods
-        </h2>
-        <div className="empty">
-          <div className="icon">
-            <IconContent size={40} />
-          </div>
-          <p style={{ fontSize: 16, fontWeight: 600, color: "#ffffff" }}>No instance selected</p>
-          <p className="faint" style={{ fontSize: 13, maxWidth: 420 }}>
-            Select an instance first to browse and install compatible mods, resource packs, and shaders.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      {/* Top Header */}
-      <div className="row between" style={{ flexWrap: "wrap", gap: 12 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0, color: "#ffffff" }}>
-          Content & Mods
-        </h2>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Category Pills & Search Filter */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {[
+            { id: "mod", label: "OPTIMIZATION & MODS" },
+            { id: "shader", label: "RTX SHADERS & LIGHTING" },
+            { id: "resourcepack", label: "HD TEXTURES & PACKS" },
+          ].map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              className={category === cat.id ? "btn-nvidia-primary" : "btn-nvidia-secondary"}
+              style={{ padding: "8px 16px", fontSize: 12 }}
+              onClick={() => setCategory(cat.id)}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
 
-        {/* Category Tabs */}
-        <Tabs
-          selectedKey={tab}
-          onSelectionChange={(key) => setTab(key as ContentTab)}
-        >
-          <Tabs.List>
-            {TABS.map((t) => (
-              <Tabs.Tab key={t.id} id={t.id}>
-                {t.label}
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-        </Tabs>
+        <input
+          type="text"
+          className="input-nvidia"
+          placeholder="Search mods, shaders, optimization..."
+          style={{ maxWidth: 320 }}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
       </div>
 
-      {/* Clean Filter & Search Bar */}
+      {/* Target Instance Banner */}
       <div
         style={{
+          padding: "10px 18px",
+          background: "var(--bg-surface)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius-xs)",
           display: "flex",
-          gap: 8,
-          flexWrap: "wrap",
           alignItems: "center",
-          padding: "10px 14px",
-          background: "#121215",
-          border: "1px solid #27272a",
-          borderRadius: "10px",
+          justifyContent: "space-between",
+          fontSize: 12,
         }}
       >
-        <div style={{ position: "relative", flex: 1, minWidth: 220 }}>
-          <Input
-            type="text"
-            className="search-bar"
-            placeholder={`Search ${tab === "mod" ? "mods" : tab === "shader" ? "shaders" : "content"} (e.g. Sodium, Iris)…`}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") onSearch();
-            }}
-            style={{
-              width: "100%",
-              fontSize: 13,
-            }}
-          />
-          {query && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onPress={() => setQuery("")}
-              style={{
-                position: "absolute",
-                right: 6,
-                top: "50%",
-                transform: "translateY(-50%)",
-                padding: "2px 6px",
-                fontSize: 12,
-                color: "#a1a1aa",
-              }}
-            >
-              ✕
-            </Button>
-          )}
-        </div>
-
-        <select
-          value={gameVersion}
-          onChange={(e) => setGameVersion(e.target.value)}
-          style={{ width: 140, fontSize: 12.5 }}
-          title="Minecraft Version"
-          disabled={allGameVersions.length === 0}
-        >
-          <option value="">Any Version</option>
-          {allGameVersions.map((v) => (
-            <option key={v.version} value={v.version}>
-              {v.version}
-            </option>
-          ))}
-        </select>
-
-        {tab === "mod" && (
-          <select
-            value={loader}
-            onChange={(e) => setLoader(e.target.value)}
-            style={{ width: 130, fontSize: 12.5 }}
-            title="Mod Loader"
-          >
-            <option value="any">Any Loader</option>
-            {loaderOptions.map((l) => (
-              <option key={l.name} value={l.name}>
-                {l.name}
-              </option>
-            ))}
-          </select>
-        )}
-
-        <Button
-          variant="primary"
-          size="sm"
-          onPress={onSearch}
-          isDisabled={searching || !query.trim()}
-          style={{ padding: "6px 14px", gap: 5 }}
-        >
-          {searching ? (
-            <IconRefresh size={14} style={{ animation: "indeterminate 1.5s infinite linear" }} />
-          ) : (
-            <IconSearch size={14} />
-          )}
-          <span>{searching ? "Searching…" : "Search"}</span>
-        </Button>
+        <span style={{ color: "#9da5b4" }}>
+          Target Profile: <strong style={{ color: "#ffffff" }}>{selected ? selected.name : "None Selected"}</strong>
+          {selected && ` (Minecraft ${selected.version} • ${selected.mod_loader?.kind?.toUpperCase() || "VANILLA"})`}
+        </span>
+        <span className="badge-rtx">MODRINTH REPOSITORY CONNECTED</span>
       </div>
 
-      {tagsError && (
-        <p style={{ color: "#ef4444", fontSize: 12, margin: 0 }}>
-          Could not retrieve filter tags: {tagsError}
-        </p>
-      )}
-
-      {error && (
-        <div
-          style={{
-            background: "rgba(239, 68, 68, 0.1)",
-            border: "1px solid rgba(239, 68, 68, 0.3)",
-            color: "#ef4444",
-            fontSize: 13,
-            padding: "10px 14px",
-            borderRadius: "8px",
-          }}
-        >
-          {error}
+      {/* Projects Grid */}
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 48, color: "#9da5b4", fontFamily: "var(--font-mono)" }}>
+          QUERYING REPOSITORY CATALOG...
         </div>
-      )}
-
-      {/* Results View */}
-      {searching ? (
-        <div className="empty">
-          <div className="icon">
-            <IconRefresh size={36} style={{ animation: "indeterminate 1.5s infinite linear" }} />
-          </div>
-          <p style={{ fontSize: 16, fontWeight: 600, color: "#ffffff" }}>Searching Modrinth database…</p>
-          <span className="muted" style={{ fontSize: 12 }}>
-            Filtering compatible {tab} packages
-          </span>
-        </div>
-      ) : hits.length === 0 ? (
-        <div className="empty">
-          <div className="icon">
-            <IconSearch size={36} />
-          </div>
-          <p style={{ fontSize: 16, fontWeight: 600, color: "#ffffff" }}>
-            {hasSearched ? "No matching packages found" : "Ready to discover content"}
-          </p>
-          <p className="faint" style={{ fontSize: 12.5, maxWidth: 420 }}>
-            {hasSearched
-              ? "Try searching with broader terms or loosening your version and loader filters."
-              : `Type a name or keyword above to search through ${tab} packages on Modrinth.`}
-          </p>
+      ) : projects.length === 0 ? (
+        <div style={{ textAlign: "center", padding: 48, color: "#656d7c" }}>
+          No content matches your search criteria.
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {hits.map((h) => (
-            <ModCard
-              key={h.slug}
-              hit={h}
-              status={status[h.slug]}
-              onInstall={() => onInstall(h)}
-            />
+        <div className="content-grid">
+          {projects.map((hit) => (
+            <div key={hit.slug} className="mod-card">
+              <div>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+                  {hit.icon_url ? (
+                    <img
+                      src={hit.icon_url}
+                      alt=""
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: "var(--radius-xs)",
+                        background: "var(--bg-canvas)",
+                        flexShrink: 0,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: "var(--radius-xs)",
+                        background: "var(--bg-interactive)",
+                        border: "1px solid var(--border)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 20,
+                        flexShrink: 0,
+                      }}
+                    >
+                      📦
+                    </div>
+                  )}
+
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span className="badge-channel" style={{ fontSize: 10, padding: "1px 5px" }}>
+                        {hit.project_type.toUpperCase()}
+                      </span>
+                    </div>
+                    <h3 style={{ fontSize: 16, fontWeight: 800, color: "#ffffff", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {hit.title}
+                    </h3>
+                    <div style={{ fontSize: 11.5, color: "#656d7c", fontFamily: "var(--font-mono)" }}>
+                      by {hit.author}
+                    </div>
+                  </div>
+                </div>
+
+                <p style={{ fontSize: 12.5, color: "#9da5b4", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                  {hit.description}
+                </p>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
+                <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "#656d7c" }}>
+                  {(hit.downloads / 1000000).toFixed(1)}M DLs
+                </span>
+
+                <button
+                  type="button"
+                  className="btn-nvidia-primary"
+                  style={{ padding: "6px 14px", fontSize: 11.5 }}
+                  disabled={installingSlug === hit.slug}
+                  onClick={() => handleInstall(hit)}
+                >
+                  {installingSlug === hit.slug ? "INSTALLING..." : "+ INSTALL"}
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -371,193 +212,4 @@ export function Content({ selected }: Props) {
   );
 }
 
-function ModCard({
-  hit,
-  status,
-  onInstall,
-}: {
-  hit: ProjectHit;
-  status: InstallStatus | undefined;
-  onInstall: () => void;
-}) {
-  const installing = status?.kind === "installing";
-  const installed = status?.kind === "installed";
-  const errored = status?.kind === "error";
-  const description = stripHtml(hit.description);
-  const truncated =
-    description.length > 160
-      ? description.slice(0, 160).trimEnd() + "…"
-      : description;
-
-  return (
-    <Card className="mod-card" style={{ padding: "14px 16px" }}>
-      <Card.Content
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 14,
-          padding: 0,
-          width: "100%",
-        }}
-      >
-        {hit.icon_url ? (
-          <img
-            src={hit.icon_url}
-            alt={hit.title}
-            width={44}
-            height={44}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: "8px",
-              objectFit: "cover",
-              flexShrink: 0,
-              border: "1px solid #27272a",
-            }}
-            loading="lazy"
-          />
-        ) : (
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: "8px",
-              background: "#18181b",
-              border: "1px solid #27272a",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#a1a1aa",
-              fontSize: 18,
-              flexShrink: 0,
-            }}
-          >
-            ✦
-          </div>
-        )}
-
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3, flexWrap: "wrap" }}>
-            <strong style={{ fontSize: 14.5, fontWeight: 700, color: "#ffffff" }}>
-              {hit.title}
-            </strong>
-            <span className="muted" style={{ fontSize: 11.5 }}>
-              by {hit.author}
-            </span>
-          </div>
-
-          <p
-            className="muted"
-            style={{
-              fontSize: 12,
-              lineHeight: 1.4,
-              marginBottom: 6,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {truncated || "No description provided."}
-          </p>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11 }}>
-            <Chip size="sm">
-              <IconDownloads size={12} style={{ color: "#0070f3", marginRight: 4 }} />
-              {hit.downloads.toLocaleString()}
-            </Chip>
-
-            {hit.versions.length > 0 && (
-              <Chip size="sm">
-                <IconCube size={12} style={{ color: "#10b981", marginRight: 4 }} />
-                {hit.versions.slice(0, 3).join(", ")}
-                {hit.versions.length > 3 ? "…" : ""}
-              </Chip>
-            )}
-          </div>
-        </div>
-
-        <div
-          style={{
-            minWidth: 120,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            gap: 4,
-            flexShrink: 0,
-          }}
-        >
-          {installing ? (
-            <Chip color="warning" size="sm">
-              <IconRefresh size={12} style={{ animation: "indeterminate 1.5s infinite linear", marginRight: 4 }} />
-              <span>Installing…</span>
-            </Chip>
-          ) : installed ? (
-            <Chip color="success" size="sm">
-              <IconCheck size={12} style={{ marginRight: 4 }} />
-              <span>Installed</span>
-            </Chip>
-          ) : (
-            <Button
-              variant="primary"
-              size="sm"
-              onPress={onInstall}
-              style={{ padding: "4px 14px", fontSize: 12 }}
-            >
-              Install
-            </Button>
-          )}
-
-          {errored && (
-            <span
-              style={{
-                fontSize: 10.5,
-                color: "#ef4444",
-                maxWidth: 130,
-                textAlign: "right",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-              title={status.message}
-            >
-              {status.message}
-            </span>
-          )}
-        </div>
-      </Card.Content>
-    </Card>
-  );
-}
-
-function stripHtml(s: string): string {
-  return s.replace(/<[^>]*>?/gm, "").trim();
-}
-
-function errMsg(e: unknown): string {
-  if (typeof e === "string") return e;
-  if (e && typeof e === "object" && "message" in e) {
-    return String((e as { message: unknown }).message);
-  }
-  return String(e);
-}
-
-function pickLatest(versions: ProjectVersion[]): ProjectVersion {
-  return versions[0]!;
-}
-
-function pickPrimaryFile(v: ProjectVersion): ProjectFile | null {
-  const p = v.files.find((f) => f.primary);
-  return p ?? v.files[0] ?? null;
-}
-
-function hexToBase64(hex: string): string {
-  const clean = hex.trim();
-  const bytes = new Uint8Array(clean.length / 2);
-  for (let i = 0; i < clean.length; i += 2) {
-    bytes[i / 2] = parseInt(clean.substring(i, i + 2), 16);
-  }
-  let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]!);
-  }
-  return btoa(binary);
-}
+export default Content;

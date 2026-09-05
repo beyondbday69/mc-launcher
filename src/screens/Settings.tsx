@@ -1,659 +1,356 @@
-import { useEffect, useState, ReactNode } from "react";
-import { open } from "@tauri-apps/plugin-dialog";
-import { Button, Card, Chip, Input, Label, Slider, Switch } from "@heroui/react";
+import { useState, useEffect } from "react";
+import { Label, Slider } from "@heroui/react";
 import { api, Config, JavaInstallation } from "../lib/types";
-import {
-  IconSettings,
-  IconCube,
-  IconRam,
-  IconDownloads,
-  IconRefresh,
-  IconCheck,
-  IconFolder,
-} from "../lib/icons";
 
-interface Props {
-  config: Config;
-  onChange: (c: Config) => void;
+interface SettingsProps {
+  config: Config | null;
+  onChange: (config: Config) => void;
 }
 
-type Tab = "general" | "java" | "jvm" | "downloads" | "about";
-
-interface SettingTabDef {
-  id: Tab;
-  label: string;
-  icon: ReactNode;
-}
-
-const TABS: SettingTabDef[] = [
-  { id: "general", label: "General", icon: <IconSettings size={16} /> },
-  { id: "java", label: "Java Runtimes", icon: <IconCube size={16} /> },
-  { id: "jvm", label: "JVM Tuning", icon: <IconRam size={16} /> },
-  { id: "downloads", label: "Downloads", icon: <IconDownloads size={16} /> },
-  { id: "about", label: "About", icon: <span style={{ fontSize: 13 }}>ℹ</span> },
-];
-
-export function Settings({ config, onChange }: Props) {
-  const [tab, setTab] = useState<Tab>("general");
-  const [java, setJava] = useState<JavaInstallation[]>([]);
+export function Settings({ config, onChange }: SettingsProps) {
+  const [tab, setTab] = useState<"perf" | "java" | "general" | "storage">("perf");
+  const [javaList, setJavaList] = useState<JavaInstallation[]>([]);
+  const [customJava, setCustomJava] = useState("");
 
   useEffect(() => {
-    api.javaList().then(setJava).catch(() => {});
+    api.javaDetect()
+      .then(setJavaList)
+      .catch((err) => console.error("[NVIDIA Java Detect]:", err));
   }, []);
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      {/* Header */}
-      <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: 0, color: "#ffffff" }}>
-          Launcher Settings
-        </h2>
-        <span className="muted" style={{ fontSize: 12 }}>
-          Customize runtime performance, Java environments, and preferences
-        </span>
-      </div>
+  if (!config) return null;
 
-      <div className="settings">
-        {/* Navigation Rail for Settings */}
-        <div className="settings-nav">
-          {TABS.map((t) => {
-            const isActive = tab === t.id;
-            return (
-              <div
-                key={t.id}
-                className={`settings-nav-item ${isActive ? "active" : ""}`}
-                onClick={() => setTab(t.id)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  cursor: "pointer",
-                }}
-              >
-                <span
-                  style={{
-                    color: isActive ? "#0070f3" : "#a1a1aa",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  {t.icon}
-                </span>
-                <span>{t.label}</span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Tab Content Cards */}
-        <div className="settings-content">
-          {tab === "general" && (
-            <GeneralTab config={config} onChange={onChange} />
-          )}
-          {tab === "java" && (
-            <JavaTab
-              config={config}
-              onChange={onChange}
-              installations={java}
-              onRefresh={() => api.javaList().then(setJava)}
-            />
-          )}
-          {tab === "jvm" && <JvmTab config={config} onChange={onChange} />}
-          {tab === "downloads" && (
-            <DownloadsTab config={config} onChange={onChange} />
-          )}
-          {tab === "about" && <AboutTab />}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ==========================================================================
-   General Preferences Tab
-   ========================================================================== */
-
-function GeneralTab({
-  config,
-  onChange,
-}: {
-  config: Config;
-  onChange: (c: Config) => void;
-}) {
   const ramMb = config.default_ram_mb || 2048;
 
+  const handleRamChange = (val: number) => {
+    onChange({
+      ...config,
+      default_ram_mb: val,
+    });
+  };
+
+  const handleAddJava = async () => {
+    if (!customJava.trim()) return;
+    try {
+      const added = await api.javaAdd(customJava.trim());
+      setJavaList((prev) => [...prev, added]);
+      setCustomJava("");
+    } catch (err) {
+      console.error("[NVIDIA Java Add]:", err);
+    }
+  };
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {/* Memory Allocation Card */}
-      <Card>
-        <Card.Header>
-          <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
-            Default Memory Allocation
-          </Card.Title>
-        </Card.Header>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Category Tab Bar (NVIDIA Control Panel Tabs) */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid var(--border)", paddingBottom: 12 }}>
+        {[
+          { id: "perf", label: "PERFORMANCE & RAM" },
+          { id: "java", label: "JAVA RUNTIMES" },
+          { id: "general", label: "GENERAL PREFERENCES" },
+          { id: "storage", label: "STORAGE & DIRECTORIES" },
+        ].map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className={tab === t.id ? "btn-nvidia-primary" : "btn-nvidia-secondary"}
+            style={{ padding: "8px 18px", fontSize: 12 }}
+            onClick={() => setTab(t.id as any)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-        <Card.Content>
-          <div className="field">
-            <Slider
-              className="w-full"
-              minValue={1024}
-              maxValue={16384}
-              step={512}
-              value={ramMb}
-              onChange={(v) => {
-                const val = Array.isArray(v) ? v[0] : v;
-                onChange({
-                  ...config,
-                  default_ram_mb: val || 2048,
-                });
-              }}
-              style={{ width: "100%", margin: "8px 0" }}
-            >
-              <Label>RAM allocated to new instances</Label>
-              <Slider.Output>
-                {({ state }) => `${state.values[0]} MB (${(state.values[0] / 1024).toFixed(1)} GB)`}
-              </Slider.Output>
-              <Slider.Track>
-                <Slider.Fill />
-                <Slider.Thumb />
-              </Slider.Track>
-            </Slider>
+      {/* Tab 1: Performance & Memory */}
+      {tab === "perf" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* RAM Slider Card */}
+          <div
+            style={{
+              background: "var(--bg-surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius-sm)",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: "#ffffff", textTransform: "uppercase" }}>
+                  SYSTEM MEMORY ALLOCATION (RAM)
+                </h3>
+                <span style={{ fontSize: 12, color: "#656d7c" }}>
+                  Maximum memory allocated to Minecraft instances and shader rendering
+                </span>
+              </div>
+              <span className="badge-rtx">GEFORCE OPTIMAL</span>
+            </div>
 
-            <div className="button-group" style={{ marginTop: 8 }}>
-              {[2048, 4096, 6144, 8192].map((mb) => (
-                <Button
+            <div style={{ margin: "12px 0" }}>
+              <Slider
+                className="w-full"
+                minValue={1024}
+                maxValue={16384}
+                step={512}
+                value={ramMb}
+                onChange={(v) => {
+                  const val = Array.isArray(v) ? v[0] : v;
+                  handleRamChange(val || 2048);
+                }}
+                style={{ width: "100%" }}
+              >
+                <Label>DEFAULT MEMORY FOR NEW PROFILES</Label>
+                <Slider.Output>
+                  {({ state }) => `${state.values[0]} MB (${(state.values[0] / 1024).toFixed(1)} GB)`}
+                </Slider.Output>
+                <Slider.Track>
+                  <Slider.Fill />
+                  <Slider.Thumb />
+                </Slider.Track>
+              </Slider>
+            </div>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              {[2048, 4096, 6144, 8192, 12288].map((mb) => (
+                <button
                   key={mb}
-                  variant={ramMb === mb ? "primary" : "secondary"}
-                  size="sm"
-                  onPress={() => onChange({ ...config, default_ram_mb: mb })}
+                  type="button"
+                  className={ramMb === mb ? "btn-nvidia-primary" : "btn-nvidia-secondary"}
+                  style={{ padding: "6px 14px", fontSize: 11.5 }}
+                  onClick={() => handleRamChange(mb)}
                 >
                   {mb / 1024} GB
-                </Button>
+                </button>
               ))}
             </div>
           </div>
-        </Card.Content>
-      </Card>
 
-      {/* Interface & Options Card */}
-      <Card>
-        <Card.Header>
-          <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
-            Interface & Options
-          </Card.Title>
-        </Card.Header>
-
-        <Card.Content>
-          <div className="form-grid">
-            <div className="field">
-              <label>Launcher Theme</label>
-              <select
-                value={config.theme}
-                onChange={(e) => onChange({ ...config, theme: e.target.value })}
-              >
-                <option value="dark">Solid Black (HeroUI v3 OLED)</option>
-              </select>
+          {/* JVM Profile Presets */}
+          <div
+            style={{
+              background: "var(--bg-surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius-sm)",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
+            }}
+          >
+            <div>
+              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#ffffff", textTransform: "uppercase" }}>
+                JVM TUNING PROFILES
+              </h3>
+              <span style={{ fontSize: 12, color: "#656d7c" }}>
+                Garbage collection and low-latency flags for optimal FPS stability
+              </span>
             </div>
 
-            <div className="field">
-              <label>Display Language</label>
-              <select
-                value={config.language}
-                onChange={(e) => onChange({ ...config, language: e.target.value })}
-              >
-                <option value="en-US">English (United States)</option>
-              </select>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+              {[
+                { id: "balanced", title: "GAME READY BALANCED", desc: "Recommended for most gameplay and shaders" },
+                { id: "aggressive", title: "LOW-LATENCY ESPORTS", desc: "Minimal GC frame stutters with ZGC / Shenandoah" },
+                { id: "default", title: "VANILLA DEFAULT", desc: "Standard Mojang launcher JVM configuration" },
+              ].map((prof) => {
+                const isSelected = config.default_jvm_profile === prof.id;
+                return (
+                  <div
+                    key={prof.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onChange({ ...config, default_jvm_profile: prof.id })}
+                    style={{
+                      padding: "16px",
+                      background: isSelected ? "var(--bg-surface-elevated)" : "var(--bg-canvas)",
+                      border: `1px solid ${isSelected ? "var(--nvidia-green)" : "var(--border)"}`,
+                      borderRadius: "var(--radius-xs)",
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 6,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: isSelected ? "#ffffff" : "var(--text-secondary)" }}>
+                        {prof.title}
+                      </span>
+                      {isSelected && (
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--nvidia-green)" }} />
+                      )}
+                    </div>
+                    <span style={{ fontSize: 11.5, color: "#656d7c" }}>{prof.desc}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
+        </div>
+      )}
 
-          <div className="divider" style={{ margin: "14px 0" }} />
+      {/* Tab 2: Java Runtimes */}
+      {tab === "java" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div
+            style={{
+              background: "var(--bg-surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius-sm)",
+              padding: "24px",
+            }}
+          >
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: "#ffffff", textTransform: "uppercase", marginBottom: 6 }}>
+              DETECTED JAVA RUNTIMES
+            </h3>
+            <p style={{ fontSize: 12.5, color: "#656d7c", marginBottom: 18 }}>
+              Modern versions of Minecraft (1.20+) require 64-Bit Java 17 or Java 21 for peak rendering and multithreading.
+            </p>
 
-          {/* HeroUI Switches */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <Switch
-              isSelected={config.close_on_launch}
-              onChange={(v) =>
-                onChange({ ...config, close_on_launch: v })
-              }
-            >
-              <Switch.Content>
-                <Switch.Control>
-                  <Switch.Thumb />
-                </Switch.Control>
-                <span style={{ fontSize: 13 }}>Close launcher automatically when Minecraft starts</span>
-              </Switch.Content>
-            </Switch>
-
-            <Switch
-              isSelected={config.show_snapshots}
-              onChange={(v) =>
-                onChange({ ...config, show_snapshots: v })
-              }
-            >
-              <Switch.Content>
-                <Switch.Control>
-                  <Switch.Thumb />
-                </Switch.Control>
-                <span style={{ fontSize: 13 }}>Show snapshot releases in the version picker</span>
-              </Switch.Content>
-            </Switch>
-
-            <Switch
-              isSelected={config.show_historical}
-              onChange={(v) =>
-                onChange({ ...config, show_historical: v })
-              }
-            >
-              <Switch.Content>
-                <Switch.Control>
-                  <Switch.Thumb />
-                </Switch.Control>
-                <span style={{ fontSize: 13 }}>Show historical (Alpha & Beta) versions in lists</span>
-              </Switch.Content>
-            </Switch>
-          </div>
-        </Card.Content>
-      </Card>
-
-      {/* Storage & Directories */}
-      <Card>
-        <Card.Header>
-          <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
-            Storage & Directories
-          </Card.Title>
-        </Card.Header>
-        <Card.Content>
-          <p className="muted" style={{ fontSize: 12.5, marginBottom: 12 }}>
-            Launcher data and cache are managed automatically. Override the default directory if needed.
-          </p>
-          <div className="field" style={{ margin: 0 }}>
-            <label>Data Directory Path</label>
-            <div style={{ display: "flex", gap: 8 }}>
-              <Input
-                value={config.data_dir_override ?? ""}
-                placeholder="Default platform storage path (~/.local/share/mc-launcher)"
-                onChange={(e) =>
-                  onChange({
-                    ...config,
-                    data_dir_override: e.target.value.trim() || null,
-                  })
-                }
-                style={{ flex: 1, fontSize: 12, fontFamily: "var(--mono)" }}
-              />
-              {config.data_dir_override && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onPress={() => onChange({ ...config, data_dir_override: null })}
-                  style={{ fontSize: 12 }}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {javaList.map((j) => (
+                <div
+                  key={j.path}
+                  style={{
+                    padding: "14px 18px",
+                    background: "var(--bg-canvas)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "var(--radius-xs)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
                 >
-                  Reset
-                </Button>
-              )}
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "#ffffff" }}>
+                      Java {j.version} ({j.vendor}) • {j.architecture}
+                    </div>
+                    <div style={{ fontSize: 11.5, fontFamily: "var(--font-mono)", color: "#656d7c" }}>
+                      {j.path}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span className="badge-rtx">WHQL COMPLIANT</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 24, paddingTop: 18, borderTop: "1px solid var(--border)", display: "flex", gap: 12 }}>
+              <input
+                type="text"
+                className="input-nvidia"
+                placeholder="Specify custom Java executable path (e.g. /usr/bin/java)..."
+                value={customJava}
+                onChange={(e) => setCustomJava(e.target.value)}
+              />
+              <button
+                type="button"
+                className="btn-nvidia-primary"
+                onClick={handleAddJava}
+              >
+                + ADD JAVA
+              </button>
             </div>
           </div>
-        </Card.Content>
-      </Card>
+        </div>
+      )}
+
+      {/* Tab 3: General Preferences */}
+      {tab === "general" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div
+            style={{
+              background: "var(--bg-surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius-sm)",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 18,
+            }}
+          >
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: "#ffffff", textTransform: "uppercase" }}>
+              APPLICATION & LAUNCH BEHAVIOR
+            </h3>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border-subtle)" }}>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#ffffff" }}>
+                  Minimize/Close Launcher on Game Launch
+                </div>
+                <div style={{ fontSize: 12, color: "#656d7c" }}>
+                  Frees background CPU cycles when Minecraft enters 3D rendering
+                </div>
+              </div>
+              <button
+                type="button"
+                className={config.close_on_launch ? "btn-nvidia-primary" : "btn-nvidia-secondary"}
+                style={{ padding: "6px 16px" }}
+                onClick={() => onChange({ ...config, close_on_launch: !config.close_on_launch })}
+              >
+                {config.close_on_launch ? "ENABLED" : "DISABLED"}
+              </button>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0" }}>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#ffffff" }}>
+                  Show Developer Snapshots in Catalog
+                </div>
+                <div style={{ fontSize: 12, color: "#656d7c" }}>
+                  Include experimental Mojang preview builds in version lists
+                </div>
+              </div>
+              <button
+                type="button"
+                className={config.show_snapshots ? "btn-nvidia-primary" : "btn-nvidia-secondary"}
+                style={{ padding: "6px 16px" }}
+                onClick={() => onChange({ ...config, show_snapshots: !config.show_snapshots })}
+              >
+                {config.show_snapshots ? "ENABLED" : "DISABLED"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 4: Storage */}
+      {tab === "storage" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div
+            style={{
+              background: "var(--bg-surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius-sm)",
+              padding: "24px",
+            }}
+          >
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: "#ffffff", textTransform: "uppercase", marginBottom: 6 }}>
+              DATA DIRECTORIES & CACHE
+            </h3>
+            <p style={{ fontSize: 12.5, color: "#656d7c", marginBottom: 18 }}>
+              Default Minecraft assets, libraries, and instance profiles are stored in the user local directory.
+            </p>
+
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", color: "#9da5b4", marginBottom: 6 }}>
+                Primary Storage Location
+              </label>
+              <input
+                type="text"
+                className="input-nvidia"
+                readOnly
+                value="~/.local/share/mc-launcher (Default OS Storage)"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-/* ==========================================================================
-   Java Runtimes Tab
-   ========================================================================== */
-
-function JavaTab({
-  config,
-  onChange,
-  installations,
-  onRefresh,
-}: {
-  config: Config;
-  onChange: (c: Config) => void;
-  installations: JavaInstallation[];
-  onRefresh: () => void;
-}) {
-  const [detecting, setDetecting] = useState(false);
-
-  return (
-    <Card>
-      <Card.Header className="row between" style={{ marginBottom: 14 }}>
-        <div>
-          <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700 }}>
-            Java Runtimes
-          </Card.Title>
-          <span className="muted" style={{ fontSize: 12 }}>
-            Detect and assign Java versions for Minecraft Java Edition
-          </span>
-        </div>
-
-        <div style={{ display: "flex", gap: 8 }}>
-          <Button
-            variant="secondary"
-            size="sm"
-            isDisabled={detecting}
-            onPress={async () => {
-              setDetecting(true);
-              try {
-                await api.javaDetect();
-                onRefresh();
-              } finally {
-                setDetecting(false);
-              }
-            }}
-            style={{ padding: "5px 12px", fontSize: 12, gap: 6 }}
-          >
-            <IconRefresh
-              size={14}
-              style={{ animation: detecting ? "indeterminate 1.5s infinite linear" : undefined }}
-            />
-            <span>{detecting ? "Scanning…" : "Re-detect"}</span>
-          </Button>
-
-          <Button
-            variant="primary"
-            size="sm"
-            onPress={async () => {
-              const path = await open({
-                multiple: false,
-                directory: false,
-                title: "Select Java executable (java / java.exe)",
-              });
-              if (typeof path === "string") {
-                try {
-                  await api.javaAdd(path);
-                  onRefresh();
-                } catch (e) {
-                  alert(String(e));
-                }
-              }
-            }}
-            style={{ padding: "5px 12px", fontSize: 12, gap: 6 }}
-          >
-            <IconFolder size={14} />
-            <span>Add Manually…</span>
-          </Button>
-        </div>
-      </Card.Header>
-
-      <Card.Content>
-        {installations.length === 0 ? (
-          <div
-            style={{
-              padding: "24px",
-              textAlign: "center",
-              background: "#18181b",
-              borderRadius: "8px",
-              border: "1px solid #27272a",
-            }}
-          >
-            <p className="muted" style={{ fontSize: 13, marginBottom: 6 }}>
-              No Java installations detected on your system.
-            </p>
-            <span className="faint" style={{ fontSize: 12 }}>
-              Install OpenJDK 17 or 21 (Temurin / Corretto / Oracle) or browse manually.
-            </span>
-          </div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Version</th>
-                  <th>Vendor</th>
-                  <th>Executable Path</th>
-                  <th style={{ textAlign: "right" }}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {installations.map((j) => {
-                  const isDefault = config.default_java_path === j.path;
-                  return (
-                    <tr key={j.path}>
-                      <td>
-                        <Chip color="success" size="sm">
-                          Java {j.version}
-                        </Chip>
-                      </td>
-                      <td style={{ fontWeight: 600, color: "#ffffff" }}>
-                        {j.vendor}
-                      </td>
-                      <td
-                        style={{
-                          fontFamily: "var(--mono)",
-                          fontSize: 11,
-                          color: "#a1a1aa",
-                          maxWidth: 240,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                        title={j.path}
-                      >
-                        {j.path}
-                      </td>
-                      <td style={{ textAlign: "right" }}>
-                        {isDefault ? (
-                          <Chip variant="primary" size="sm">
-                            <IconCheck size={12} style={{ marginRight: 4 }} />
-                            <span>Default</span>
-                          </Chip>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onPress={() =>
-                              onChange({ ...config, default_java_path: j.path })
-                            }
-                            style={{ fontSize: 11, padding: "2px 8px" }}
-                          >
-                            Set Default
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card.Content>
-    </Card>
-  );
-}
-
-/* ==========================================================================
-   JVM Tuning Tab
-   ========================================================================== */
-
-function JvmTab({
-  config,
-  onChange,
-}: {
-  config: Config;
-  onChange: (c: Config) => void;
-}) {
-  return (
-    <Card>
-      <Card.Header>
-        <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
-          Java Virtual Machine Profiles
-        </Card.Title>
-      </Card.Header>
-      <Card.Content>
-        <p className="muted" style={{ marginBottom: 14, fontSize: 12.5 }}>
-          Choose optimization presets for garbage collection and memory tuning.
-        </p>
-
-        <div className="field">
-          <label>Default Optimization Preset</label>
-          <select
-            value={config.default_jvm_profile}
-            onChange={(e) =>
-              onChange({ ...config, default_jvm_profile: e.target.value })
-            }
-          >
-            <option value="default">Default JVM Arguments</option>
-            <option value="low_ram">Low RAM Preset (Optimized for ≤ 2GB)</option>
-            <option value="balanced">Balanced (Shenandoah/G1GC Optimized)</option>
-            <option value="performance">High Performance (ZGC / High Heap)</option>
-            <option value="custom">Custom Arguments</option>
-          </select>
-        </div>
-
-        <div className="field" style={{ marginTop: 12 }}>
-          <label>Custom JVM Flags (one parameter per line)</label>
-          <textarea
-            value={config.default_custom_jvm_args.join("\n")}
-            onChange={(e) =>
-              onChange({
-                ...config,
-                default_custom_jvm_args: e.target.value
-                  .split("\n")
-                  .map((s) => s.trim())
-                  .filter(Boolean),
-              })
-            }
-            placeholder="-XX:+UseG1GC&#10;-XX:InitiatingHeapOccupancyPercent=45"
-            rows={5}
-            style={{ fontFamily: "var(--mono)", fontSize: 12 }}
-          />
-        </div>
-      </Card.Content>
-    </Card>
-  );
-}
-
-/* ==========================================================================
-   Downloads Tab
-   ========================================================================== */
-
-function DownloadsTab({
-  config,
-  onChange,
-}: {
-  config: Config;
-  onChange: (c: Config) => void;
-}) {
-  return (
-    <Card>
-      <Card.Header>
-        <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 15, fontWeight: 700, marginBottom: 14 }}>
-          Network & Download Manager
-        </Card.Title>
-      </Card.Header>
-
-      <Card.Content>
-        <div className="field">
-          <Slider
-            className="w-full"
-            minValue={1}
-            maxValue={32}
-            step={1}
-            value={config.download_concurrency}
-            onChange={(v) => {
-              const val = Array.isArray(v) ? v[0] : v;
-              onChange({
-                ...config,
-                download_concurrency: val || 8,
-              });
-            }}
-            style={{ width: "100%", margin: "8px 0" }}
-          >
-            <Label>Parallel Worker Concurrency</Label>
-            <Slider.Output>
-              {({ state }) => `${state.values[0]} threads`}
-            </Slider.Output>
-            <Slider.Track>
-              <Slider.Fill />
-              <Slider.Thumb />
-            </Slider.Track>
-          </Slider>
-        </div>
-
-        <div className="field" style={{ marginTop: 12 }}>
-          <label>Download Speed Limit (KB/s, 0 for unrestricted)</label>
-          <Input
-            type="number"
-            min={0}
-            value={config.download_speed_limit_kbps ? String(config.download_speed_limit_kbps) : ""}
-            onChange={(e) => {
-              const v = parseInt(e.target.value, 10) || 0;
-              onChange({
-                ...config,
-                download_speed_limit_kbps: v > 0 ? v : null,
-              });
-            }}
-            placeholder="0 (Unlimited)"
-          />
-        </div>
-      </Card.Content>
-    </Card>
-  );
-}
-
-/* ==========================================================================
-   About Tab
-   ========================================================================== */
-
-function AboutTab() {
-  return (
-    <Card>
-      <Card.Header>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: "8px",
-              background: "#0070f3",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#ffffff",
-              fontWeight: 800,
-              fontSize: 18,
-            }}
-          >
-            M
-          </div>
-          <div>
-            <Card.Title style={{ margin: 0, textTransform: "none", fontSize: 16, fontWeight: 700 }}>
-              MC Launcher
-            </Card.Title>
-            <span className="muted" style={{ fontSize: 12 }}>
-              Version 0.1.0 · Solid Black OLED Edition
-            </span>
-          </div>
-        </div>
-      </Card.Header>
-
-      <Card.Content>
-        <p className="muted" style={{ fontSize: 12.5, lineHeight: 1.6, marginBottom: 14 }}>
-          A lightweight, secure Minecraft Java Edition launcher designed for speed,
-          clarity, and minimal resource usage. Powered by Tauri 2.0, Rust, and HeroUI v3.
-        </p>
-
-        <div className="divider" style={{ margin: "12px 0" }} />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 12 }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span className="muted">Privacy:</span>
-            <span style={{ fontWeight: 600, color: "#10b981" }}>
-              Zero Telemetry · 100% Local
-            </span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span className="muted">Engine:</span>
-            <span style={{ fontWeight: 600 }}>Tauri v2 + Tokio Core</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span className="muted">Design System:</span>
-            <span style={{ fontWeight: 600 }}>HeroUI v3 Solid Black</span>
-          </div>
-        </div>
-      </Card.Content>
-    </Card>
-  );
-}
+export default Settings;
