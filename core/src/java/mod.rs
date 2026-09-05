@@ -489,10 +489,10 @@ pub async fn download_runtime(
         .header(reqwest::header::USER_AGENT, "MC-Launcher/1.0")
         .send()
         .await
-        .map_err(|e| LauncherError::Network(format!("Failed to request Java {version} from {url}: {e}")))?;
+        .map_err(|e| LauncherError::Download(format!("Failed to request Java {version} from {url}: {e}")))?;
 
     if !response.status().is_success() {
-        return Err(LauncherError::Network(format!(
+        return Err(LauncherError::Download(format!(
             "Adoptium returned HTTP {} for Java {version}",
             response.status()
         )));
@@ -505,7 +505,7 @@ pub async fn download_runtime(
     let bytes = response
         .bytes()
         .await
-        .map_err(|e| LauncherError::Network(format!("Failed to download Java {version} archive: {e}")))?;
+        .map_err(|e| LauncherError::Download(format!("Failed to download Java {version} archive: {e}")))?;
 
     tokio::fs::write(&temp_archive, &bytes)
         .await
