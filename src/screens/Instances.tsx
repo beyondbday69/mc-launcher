@@ -1,5 +1,14 @@
 import { useState, useMemo } from "react";
 import { api, Instance, ModInfo, formatDuration } from "../lib/types";
+import {
+  IconPlus,
+  IconSearch,
+  IconPlay,
+  IconFolder,
+  IconCopy,
+  IconTrash,
+  IconCheck,
+} from "../lib/icons";
 
 interface InstancesProps {
   instances: Instance[];
@@ -108,11 +117,15 @@ export function Instances({ instances, onChange, onSelect }: InstancesProps) {
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Top Action Bar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, maxWidth: 460 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, maxWidth: 460, position: "relative" }}>
+          <span style={{ position: "absolute", left: 14, color: "var(--nv-mute)", pointerEvents: "none", display: "flex", alignItems: "center" }}>
+            <IconSearch size={16} />
+          </span>
           <input
             type="text"
             className="text-input"
             placeholder="Search game profiles..."
+            style={{ paddingLeft: 38 }}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -123,7 +136,8 @@ export function Instances({ instances, onChange, onSelect }: InstancesProps) {
           className="button-primary"
           onClick={() => setShowCreateModal(true)}
         >
-          <span>+ NEW GAME PROFILE</span>
+          <IconPlus size={16} />
+          <span>NEW GAME PROFILE</span>
         </button>
       </div>
 
@@ -193,8 +207,9 @@ export function Instances({ instances, onChange, onSelect }: InstancesProps) {
                     fontSize: 11.5,
                   }}
                 >
-                  <span style={{ color: "var(--nv-mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    📁 {effectiveDir}
+                  <span style={{ color: "var(--nv-mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+                    <IconFolder size={14} style={{ color: "var(--nv-primary)", flexShrink: 0 }} />
+                    <span>{effectiveDir}</span>
                   </span>
                   <button
                     type="button"
@@ -231,7 +246,8 @@ export function Instances({ instances, onChange, onSelect }: InstancesProps) {
                   className="button-primary button-sm"
                   onClick={() => onSelect(inst)}
                 >
-                  ▶ PLAY
+                  <IconPlay size={14} />
+                  <span>PLAY</span>
                 </button>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -248,7 +264,8 @@ export function Instances({ instances, onChange, onSelect }: InstancesProps) {
                     onClick={() => handleDuplicate(inst)}
                     title="Duplicate Profile"
                   >
-                    CLONE
+                    <IconCopy size={13} />
+                    <span>CLONE</span>
                   </button>
                   <button
                     type="button"
@@ -257,7 +274,7 @@ export function Instances({ instances, onChange, onSelect }: InstancesProps) {
                     onClick={() => handleDelete(inst.id)}
                     title="Delete Profile"
                   >
-                    ✕
+                    <IconTrash size={14} />
                   </button>
                 </div>
               </div>
@@ -392,7 +409,8 @@ export function Instances({ instances, onChange, onSelect }: InstancesProps) {
                   className="button-outline"
                   onClick={() => handleCopyFolder(folderModalInst.game_dir_override || folderModalInst.game_dir)}
                 >
-                  {copiedPath ? "COPIED TO CLIPBOARD!" : "COPY DIRECTORY PATH"}
+                  {copiedPath ? <IconCheck size={14} /> : <IconCopy size={14} />}
+                  <span>{copiedPath ? "COPIED TO CLIPBOARD!" : "COPY DIRECTORY PATH"}</span>
                 </button>
               </div>
             </div>

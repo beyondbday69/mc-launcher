@@ -1,5 +1,6 @@
 import { useState, useTransition } from "react";
 import { api, Config, Instance, formatDuration } from "../lib/types";
+import { IconPlay, IconFolder, IconSettings, IconCheck } from "../lib/icons";
 
 interface HomeProps {
   config: Config | null;
@@ -60,23 +61,19 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
           {/* Signature NVIDIA 12px Corner Square */}
           <div className="corner-square" />
 
-          <div style={{ maxWidth: "68%" }}>
-            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+          <div style={{ maxWidth: "60%" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
               <span className="badge-tag badge-tag-primary">
-                GAME READY PROFILE
+                {selected.mod_loader ? `${selected.mod_loader.kind.toUpperCase()} ${selected.mod_loader.version}` : "VANILLA"}
               </span>
               <span className="badge-tag">
-                {selected.mod_loader
-                  ? `${selected.mod_loader.kind.toUpperCase()} ${selected.mod_loader.version}`
-                  : "VANILLA RELEASE"}
+                MC {selected.version}
               </span>
-              <span className="badge-tag">MC {selected.version}</span>
             </div>
 
             <h1 className="hero-title">{selected.name}</h1>
+
             <div className="hero-subhead">
-              <span>Installed: {new Date(selected.created).toLocaleDateString()}</span>
-              <span>•</span>
               <span>Playtime: {formatDuration(selected.play_time_secs)}</span>
               <span>•</span>
               <span style={{ color: "var(--nv-primary)", fontWeight: 700 }}>
@@ -92,9 +89,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                 disabled={launching}
                 onClick={handleLaunch}
               >
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
+                <IconPlay size={18} />
                 <span>{launchStatus || (launching ? "LAUNCHING..." : "PLAY GAME")}</span>
               </button>
 
@@ -105,9 +100,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                 onClick={handleCopyFolder}
                 title="Copy or view instance directory path"
               >
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>
+                {copiedFolder ? <IconCheck size={16} /> : <IconFolder size={16} />}
                 <span>{copiedFolder ? "PATH COPIED!" : "GAME FOLDER"}</span>
               </button>
 
@@ -119,7 +112,8 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                   window.location.search = "?screen=settings";
                 }}
               >
-                SETTINGS
+                <IconSettings size={15} />
+                <span>SETTINGS</span>
               </button>
             </div>
 
@@ -139,6 +133,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                 fontFamily: "var(--font-mono)",
               }}
             >
+              <IconFolder size={14} style={{ color: "var(--nv-primary)", flexShrink: 0 }} />
               <span style={{ color: "var(--nv-primary)", fontWeight: 700 }}>DIR:</span>
               <span style={{ color: "var(--nv-on-dark-mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {folderPath}
@@ -267,6 +262,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                   width: `${ramPercent}%`,
                   height: "100%",
                   background: "var(--nv-primary)",
+                  transition: "width 0.35s ease",
                 }}
               />
             </div>

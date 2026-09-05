@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api, ProgressSnapshot, formatBytes, formatSpeed } from "../lib/types";
+import { IconDownloads, IconCheck } from "../lib/icons";
 
 export function Downloads() {
   const [progress, setProgress] = useState<ProgressSnapshot>({
@@ -82,6 +83,7 @@ export function Downloads() {
                 width: `${percent}%`,
                 height: "100%",
                 background: "var(--nv-primary)",
+                transition: "width 0.35s ease",
               }}
             />
           </div>
@@ -117,11 +119,19 @@ export function Downloads() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div
             style={{
-              width: 8,
-              height: 8,
-              background: isIdle ? "var(--nv-mute)" : "var(--nv-primary)",
+              width: 24,
+              height: 24,
+              borderRadius: "var(--rounded-sm)",
+              background: "var(--nv-surface-dark)",
+              border: "1px solid var(--nv-hairline)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: isIdle ? "var(--nv-mute)" : "var(--nv-primary)",
             }}
-          />
+          >
+            <IconDownloads size={15} />
+          </div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#ffffff" }}>
               {isIdle ? "DOWNLOAD PIPELINE IDLE" : "SYNCING ASSETS & LIBRARIES"}
@@ -167,7 +177,10 @@ export function Downloads() {
               </td>
               <td style={{ fontFamily: "var(--font-mono)" }}>34.2 MB</td>
               <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-primary)" }}>
-                SHA-1 VERIFIED
+                <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <IconCheck size={14} />
+                  <span>SHA-1 VERIFIED</span>
+                </span>
               </td>
               <td style={{ textAlign: "right", color: "var(--nv-primary)", fontWeight: 700 }}>
                 COMPLETE
@@ -182,7 +195,10 @@ export function Downloads() {
               </td>
               <td style={{ fontFamily: "var(--font-mono)" }}>420 KB</td>
               <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-primary)" }}>
-                SHA-1 VERIFIED
+                <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <IconCheck size={14} />
+                  <span>SHA-1 VERIFIED</span>
+                </span>
               </td>
               <td style={{ textAlign: "right", color: "var(--nv-primary)", fontWeight: 700 }}>
                 COMPLETE
@@ -197,7 +213,10 @@ export function Downloads() {
               </td>
               <td style={{ fontFamily: "var(--font-mono)" }}>1.8 MB</td>
               <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-primary)" }}>
-                SHA-1 VERIFIED
+                <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <IconCheck size={14} />
+                  <span>SHA-1 VERIFIED</span>
+                </span>
               </td>
               <td style={{ textAlign: "right", color: "var(--nv-primary)", fontWeight: 700 }}>
                 COMPLETE

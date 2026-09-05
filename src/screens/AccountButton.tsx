@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, Account } from "../lib/types";
+import { IconUser } from "../lib/icons";
 
 export function AccountButton() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -74,7 +75,7 @@ export function AccountButton() {
           border: "1px solid var(--nv-hairline)",
           borderRadius: "var(--rounded-sm)",
           cursor: "pointer",
-          transition: "border-color 0.1s",
+          transition: "border-color 0.15s ease, background-color 0.15s ease",
         }}
         title="Manage Gamer Account"
       >
@@ -93,7 +94,7 @@ export function AccountButton() {
             color: "var(--nv-primary)",
           }}
         >
-          {selectedAcc ? selectedAcc.username.charAt(0).toUpperCase() : "P"}
+          {selectedAcc ? selectedAcc.username.charAt(0).toUpperCase() : <IconUser size={14} />}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
@@ -116,7 +117,10 @@ export function AccountButton() {
           <div className="modal-box">
             <div className="corner-square" />
             <div className="modal-header">
-              <h3>GAMER ID & ACCOUNTS</h3>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <IconUser size={16} style={{ color: "var(--nv-primary)" }} />
+                <h3>GAMER ID & ACCOUNTS</h3>
+              </div>
               <button
                 type="button"
                 style={{ background: "none", border: "none", color: "var(--nv-on-dark-mute)", fontSize: 18, cursor: "pointer" }}

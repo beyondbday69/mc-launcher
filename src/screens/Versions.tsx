@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { api, VersionEntry, LatestPair } from "../lib/types";
+import { IconDownloads, IconPlus, IconSearch, IconCheck } from "../lib/icons";
 
 interface VersionsProps {
   onInstalled: () => Promise<void>;
@@ -82,6 +83,7 @@ export function Versions({ onInstalled }: VersionsProps) {
               disabled={Boolean(installingId)}
               onClick={() => handleInstall(latest?.release || "1.21.4")}
             >
+              <IconDownloads size={16} />
               <span>
                 {installingId === (latest?.release || "1.21.4") ? "INSTALLING..." : "INSTALL GAME READY"}
               </span>
@@ -123,6 +125,7 @@ export function Versions({ onInstalled }: VersionsProps) {
               disabled={Boolean(installingId)}
               onClick={() => handleInstall(latest?.snapshot || "24w45a")}
             >
+              <IconDownloads size={16} />
               <span>
                 {installingId === (latest?.snapshot || "24w45a") ? "INSTALLING..." : "INSTALL SNAPSHOT"}
               </span>
@@ -150,14 +153,19 @@ export function Versions({ onInstalled }: VersionsProps) {
           </button>
         </div>
 
-        <input
-          type="text"
-          className="text-input"
-          placeholder="Filter version catalog..."
-          style={{ maxWidth: 300 }}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div style={{ position: "relative", display: "flex", alignItems: "center", maxWidth: 300, width: "100%" }}>
+          <span style={{ position: "absolute", left: 12, color: "var(--nv-mute)", pointerEvents: "none", display: "flex", alignItems: "center" }}>
+            <IconSearch size={15} />
+          </span>
+          <input
+            type="text"
+            className="text-input"
+            placeholder="Filter version catalog..."
+            style={{ paddingLeft: 34 }}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </div>
 
       {/* Versions Catalog Table */}
@@ -187,7 +195,10 @@ export function Versions({ onInstalled }: VersionsProps) {
                   {v.releaseTime ? new Date(v.releaseTime).toLocaleDateString() : "—"}
                 </td>
                 <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-primary)" }}>
-                  VERIFIED SIGNATURE
+                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <IconCheck size={14} />
+                    <span>VERIFIED SIGNATURE</span>
+                  </span>
                 </td>
                 <td style={{ textAlign: "right" }}>
                   <button
@@ -196,7 +207,8 @@ export function Versions({ onInstalled }: VersionsProps) {
                     disabled={installingId === v.id}
                     onClick={() => handleInstall(v.id)}
                   >
-                    {installingId === v.id ? "CREATING..." : "+ CREATE PROFILE"}
+                    <IconPlus size={13} />
+                    <span>{installingId === v.id ? "CREATING..." : "CREATE PROFILE"}</span>
                   </button>
                 </td>
               </tr>

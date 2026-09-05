@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api, Instance, ProjectHit } from "../lib/types";
+import { IconSearch, IconPlus, IconCube } from "../lib/icons";
 
 interface ContentProps {
   selected: Instance | null;
@@ -92,14 +93,19 @@ export function Content({ selected }: ContentProps) {
           ))}
         </div>
 
-        <input
-          type="text"
-          className="text-input"
-          placeholder="Search mods, shaders, textures..."
-          style={{ maxWidth: 320 }}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <div style={{ position: "relative", display: "flex", alignItems: "center", maxWidth: 320, width: "100%" }}>
+          <span style={{ position: "absolute", left: 12, color: "var(--nv-mute)", pointerEvents: "none", display: "flex", alignItems: "center" }}>
+            <IconSearch size={15} />
+          </span>
+          <input
+            type="text"
+            className="text-input"
+            placeholder="Search mods, shaders, textures..."
+            style={{ paddingLeft: 34 }}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
       </div>
 
       {/* Target Profile Status */}
@@ -162,11 +168,11 @@ export function Content({ selected }: ContentProps) {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: 20,
+                        color: "var(--nv-primary)",
                         flexShrink: 0,
                       }}
                     >
-                      📦
+                      <IconCube size={22} />
                     </div>
                   )}
 
@@ -199,7 +205,8 @@ export function Content({ selected }: ContentProps) {
                   disabled={installingSlug === hit.slug}
                   onClick={() => handleInstall(hit)}
                 >
-                  {installingSlug === hit.slug ? "INSTALLING..." : "+ INSTALL"}
+                  <IconPlus size={13} />
+                  <span>{installingSlug === hit.slug ? "INSTALLING..." : "INSTALL"}</span>
                 </button>
               </div>
             </div>

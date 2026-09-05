@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
 import { Label, Slider } from "@heroui/react";
 import { api, Config, JavaInstallation } from "../lib/types";
+import {
+  IconRam,
+  IconSpeed,
+  IconFolder,
+  IconSettings,
+  IconCopy,
+  IconCheck,
+  IconRefresh,
+  IconPlus,
+} from "../lib/icons";
 
 interface SettingsProps {
   config: Config | null;
@@ -40,21 +50,20 @@ export function Settings({ config, onChange }: SettingsProps) {
   const handleAddJava = async () => {
     if (!customJava.trim()) return;
     try {
-      const added = await api.javaAdd(customJava.trim());
-      setJavaList((prev) => [...prev, added]);
+      const res = await api.javaDetect();
+      setJavaList(res);
       setCustomJava("");
     } catch (err) {
-      console.error("[NVIDIA Java Add]:", err);
+      console.error("[NVIDIA Add Java]:", err);
     }
   };
 
   const handleSaveDataDir = () => {
-    const val = customDataDir.trim() ? customDataDir.trim() : null;
     onChange({
       ...config,
-      data_dir_override: val,
+      data_dir_override: customDataDir.trim() || null,
     });
-    alert("Storage folder location updated successfully!");
+    alert("Data storage location updated successfully.");
   };
 
   const handleResetDataDir = () => {
@@ -63,6 +72,7 @@ export function Settings({ config, onChange }: SettingsProps) {
       ...config,
       data_dir_override: null,
     });
+    alert("Restored default storage directory.");
   };
 
   const handleCopyDir = (path: string) => {
@@ -71,17 +81,17 @@ export function Settings({ config, onChange }: SettingsProps) {
     setTimeout(() => setCopiedDir(false), 2000);
   };
 
-  const currentFolder = config.data_dir_override || "~/.local/share/mc-launcher (Default OS Storage)";
+  const currentFolder = config.data_dir_override || "~/.local/share/mc-launcher";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* Category Tabs */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid var(--nv-hairline)", paddingBottom: 14 }}>
+      {/* Settings Navigation Tabs */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         {[
-          { id: "perf", label: "PERFORMANCE & RAM" },
-          { id: "java", label: "JAVA RUNTIMES" },
-          { id: "storage", label: "FOLDER & STORAGE LOCATION" },
-          { id: "general", label: "GENERAL PREFERENCES" },
+          { id: "perf", label: "PERFORMANCE & RAM", icon: <IconRam size={15} /> },
+          { id: "java", label: "JAVA RUNTIMES", icon: <IconSpeed size={15} /> },
+          { id: "storage", label: "FOLDER & STORAGE LOCATION", icon: <IconFolder size={15} /> },
+          { id: "general", label: "GENERAL PREFERENCES", icon: <IconSettings size={15} /> },
         ].map((t) => (
           <button
             key={t.id}
@@ -89,7 +99,8 @@ export function Settings({ config, onChange }: SettingsProps) {
             className={`pill-tab ${tab === t.id ? "active" : ""}`}
             onClick={() => setTab(t.id as any)}
           >
-            {t.label}
+            {t.icon}
+            <span>{t.label}</span>
           </button>
         ))}
       </div>
@@ -258,7 +269,8 @@ export function Settings({ config, onChange }: SettingsProps) {
                 className="button-primary"
                 onClick={handleAddJava}
               >
-                + ADD JAVA
+                <IconPlus size={14} />
+                <span>ADD JAVA</span>
               </button>
             </div>
           </div>
@@ -299,7 +311,8 @@ export function Settings({ config, onChange }: SettingsProps) {
                     className="button-primary"
                     onClick={handleSaveDataDir}
                   >
-                    SAVE LOCATION
+                    <IconCheck size={14} />
+                    <span>SAVE LOCATION</span>
                   </button>
                 </div>
               </div>
@@ -310,7 +323,8 @@ export function Settings({ config, onChange }: SettingsProps) {
                   className="button-outline-on-dark button-sm"
                   onClick={() => handleCopyDir(customDataDir || currentFolder)}
                 >
-                  {copiedDir ? "PATH COPIED!" : "COPY FOLDER PATH"}
+                  {copiedDir ? <IconCheck size={14} /> : <IconCopy size={14} />}
+                  <span>{copiedDir ? "PATH COPIED!" : "COPY FOLDER PATH"}</span>
                 </button>
 
                 {config.data_dir_override && (
@@ -320,7 +334,8 @@ export function Settings({ config, onChange }: SettingsProps) {
                     style={{ color: "var(--nv-warning)" }}
                     onClick={handleResetDataDir}
                   >
-                    RESTORE OS DEFAULT LOCATION
+                    <IconRefresh size={14} />
+                    <span>RESTORE OS DEFAULT LOCATION</span>
                   </button>
                 )}
               </div>
