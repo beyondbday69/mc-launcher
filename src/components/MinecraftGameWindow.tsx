@@ -282,7 +282,7 @@ export function MinecraftGameWindow() {
             </button>
             <button
               type="button"
-              className="button-stop button-sm"
+              className="button-stop button-sm btn-game-toolbar-stop"
               onClick={() => stopGame(gameSession.instanceId || undefined)}
             >
               STOP GAME

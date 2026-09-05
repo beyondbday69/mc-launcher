@@ -195,16 +195,16 @@ async function main() {
   await page.waitForTimeout(2500);
 
   // Step 13: Terminate Game cleanly
-  console.log("[record] Stopping game session via STOP GAME button...");
+  console.log("[record] Stopping game session via Game Window STOP controls...");
   const stopBtn = await page.waitForSelector(
-    ".button-stop, .btn-close-game, button:has-text('STOP GAME')",
+    ".btn-game-toolbar-stop, .btn-close-game, .mc-win-ctrl-btn-close",
     { state: "visible", timeout: 8000 }
   );
   const stopBox = await stopBtn.boundingBox();
   if (stopBox) {
     await page.mouse.move(stopBox.x + stopBox.width / 2, stopBox.y + stopBox.height / 2, { steps: 20 });
     await page.waitForTimeout(400);
-    await stopBtn.click();
+    await stopBtn.click({ force: true });
     console.log("[record] Game session stopped successfully!");
   }
 
