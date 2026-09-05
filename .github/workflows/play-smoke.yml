@@ -23,6 +23,8 @@ jobs:
     name: play smoke (linux, no gui build)
     runs-on: ubuntu-22.04
     timeout-minutes: 20
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -254,3 +256,44 @@ jobs:
           path: /tmp/launch-cli.log
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Display Minecraft Game Screenshot & Telemetry in Actions Summary
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -f /tmp/play-smoke.png ]; then
+            TEMP_DIR=$(mktemp -d)
+            cp /tmp/play-smoke*.png "$TEMP_DIR/" 2>/dev/null || true
+            cd "$TEMP_DIR"
+            git init
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git checkout -b media
+            git add *.png
+            git commit -m "chore(media): update real Minecraft 1.21 game screenshots" || true
+            git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+            git push origin media --force || echo "Warning: push to media branch failed"
+            cd "$GITHUB_WORKSPACE"
+
+            REPO="${{ github.repository }}"
+            RUN_ID="${{ github.run_id }}"
+            BASE="https://raw.githubusercontent.com/${REPO}/media"
+
+            cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          # 🎮 Real Minecraft 1.21.4 Execution in GitHub Actions
+
+          Minecraft Java Edition 1.21.4 was downloaded and launched directly via our launcher engine (`install-cli` + `launch-cli`).
+
+          ### In-Game Screenshot (LWJGL under Xvfb)
+          EOF
+
+            cat << EOF >> $GITHUB_STEP_SUMMARY
+          ![Minecraft 1.21 In-Game Screenshot](${BASE}/play-smoke.png?v=${RUN_ID})
+
+          EOF
+
+            if [ -f /tmp/play-smoke-stats.md ]; then
+              cat /tmp/play-smoke-stats.md >> $GITHUB_STEP_SUMMARY
+            fi
+          fi

@@ -179,25 +179,31 @@ async function main() {
     const finalWebm = path.join(RECORD_DIR, "minecraft_121_download_and_launch.webm");
     const finalGif = path.join(RECORD_DIR, "minecraft_121_download_and_launch.gif");
 
-    console.log("[record] Converting to high compatibility MP4 via ffmpeg...");
-    execSync(
-      `ffmpeg -y -i "${videoTempPath}" -c:v libx264 -pix_fmt yuv420p -profile:v high -crf 22 -preset medium -movflags +faststart "${finalMp4}"`,
-      { stdio: "inherit" }
-    );
-
-    console.log("[record] Generating WebM copy...");
+    console.log("[record] Finalizing WebM recording copy...");
     fs.copyFileSync(videoTempPath, finalWebm);
-
-    console.log("[record] Generating optimized animated GIF for README and summaries...");
-    execSync(
-      `ffmpeg -y -i "${videoTempPath}" -vf "fps=10,scale=800:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 "${finalGif}"`,
-      { stdio: "inherit" }
-    );
-
-    console.log("[record] Recording artifacts produced:");
-    console.log(` - MP4:  ${finalMp4} (${fs.statSync(finalMp4).size} bytes)`);
     console.log(` - WEBM: ${finalWebm} (${fs.statSync(finalWebm).size} bytes)`);
-    console.log(` - GIF:  ${finalGif} (${fs.statSync(finalGif).size} bytes)`);
+
+    try {
+      console.log("[record] Converting to high compatibility MP4 via ffmpeg...");
+      execSync(
+        `ffmpeg -y -i "${videoTempPath}" -c:v libx264 -pix_fmt yuv420p -profile:v high -crf 22 -preset medium -movflags +faststart "${finalMp4}"`,
+        { stdio: "inherit" }
+      );
+      console.log(` - MP4:  ${finalMp4} (${fs.statSync(finalMp4).size} bytes)`);
+    } catch (e) {
+      console.warn("[record] Warning: ffmpeg MP4 conversion failed:", e.message);
+    }
+
+    try {
+      console.log("[record] Generating optimized animated GIF for README and summaries...");
+      execSync(
+        `ffmpeg -y -i "${videoTempPath}" -vf "fps=10,scale=800:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 "${finalGif}"`,
+        { stdio: "inherit" }
+      );
+      console.log(` - GIF:  ${finalGif} (${fs.statSync(finalGif).size} bytes)`);
+    } catch (e) {
+      console.warn("[record] Warning: ffmpeg GIF conversion failed:", e.message);
+    }
   }
 }
 
