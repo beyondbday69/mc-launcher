@@ -106,16 +106,19 @@ export function IconContent({ size = 18, className, style }: IconProps) {
       strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={`icon-animated-sparkle ${className || ""}`}
+      className={`icon-animated-puzzle ${className || ""}`}
       style={style}
     >
       <path
-        className="sparkle-core"
-        d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4L12 2z"
+        className="puzzle-piece"
+        d="M4 7h3a1 1 0 0 0 1-1v-1a2 2 0 0 1 4 0v1a1 1 0 0 0 1 1h3a1 1 0 0 1 1 1v3a1 1 0 0 0 1 1h1a2 2 0 0 1 0 4h-1a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-1a2 2 0 0 0-4 0v1a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a2 2 0 0 0 0-4h-1a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1"
       />
     </svg>
   );
 }
+
+export const IconPuzzle = IconContent;
+export const IconMods = IconContent;
 
 export function IconSettings({ size = 18, className, style }: IconProps) {
   return (

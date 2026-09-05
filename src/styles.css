@@ -980,6 +980,7 @@ h1, h2, h3, h4 {
 .icon-animated-clock,
 .icon-animated-download,
 .icon-animated-sparkle,
+.icon-animated-puzzle,
 .icon-animated-gear,
 .icon-animated-play,
 .icon-animated-stop,
@@ -1050,15 +1051,19 @@ button:hover .icon-animated-download .download-arrow,
   transform: translateY(2.5px);
 }
 
-/* Content / Sparkle Icon: Star rotates and scales smoothly */
+/* Content / Puzzle Icon: Jigsaw piece tilts and scales smoothly */
+.icon-animated-puzzle .puzzle-piece,
 .icon-animated-sparkle .sparkle-core {
-  transform-origin: 12px 11px;
+  transform-origin: 12px 12px;
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+.nav-item:hover .icon-animated-puzzle .puzzle-piece,
+button:hover .icon-animated-puzzle .puzzle-piece,
+.icon-animated-puzzle:hover .puzzle-piece,
 .nav-item:hover .icon-animated-sparkle .sparkle-core,
 button:hover .icon-animated-sparkle .sparkle-core,
 .icon-animated-sparkle:hover .sparkle-core {
-  transform: scale(1.18) rotate(15deg);
+  transform: scale(1.15) rotate(12deg);
 }
 
 /* Settings / Gear Icon: Rotor spins 60deg */
