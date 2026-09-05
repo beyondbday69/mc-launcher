@@ -83,21 +83,19 @@ async function main() {
 
   // Step 3: Download Minecraft 1.21
   console.log("[record] Clicking Install for Release 1.21...");
-  let installBtn = await page.$("button:has-text('INSTALL RELEASE 1.21.4')");
-  if (!installBtn) {
-    installBtn = await page.$("button:has-text('CREATE PROFILE')");
-  }
-  if (installBtn) {
-    const box = await installBtn.boundingBox();
-    if (box) {
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 20 });
-      await page.waitForTimeout(400);
-      await installBtn.click();
-      console.log("[record] Triggered Minecraft 1.21 download");
-    }
+  const installBtn = await page.waitForSelector(
+    "button:has-text('INSTALL GAME READY'), button:has-text('CREATE PROFILE')",
+    { state: "visible", timeout: 8000 }
+  );
+  const installBox = await installBtn.boundingBox();
+  if (installBox) {
+    await page.mouse.move(installBox.x + installBox.width / 2, installBox.y + installBox.height / 2, { steps: 20 });
+    await page.waitForTimeout(400);
+    await installBtn.click();
+    console.log("[record] Triggered Minecraft 1.21 download");
   }
 
-  // Observe the download progress bar moving
+  // Observe download progress bar moving
   await page.waitForTimeout(3000);
 
   // Step 4: Switch to Transfers screen while download is active
@@ -114,9 +112,17 @@ async function main() {
   await page.waitForTimeout(1500);
 
   // Step 6: Launch Minecraft 1.21
-  console.log("[record] Launching Minecraft 1.21...");
-  const launchBtn = await smoothMove(page, "button:has-text('LAUNCH GAME')");
-  await launchBtn.click();
+  console.log("[record] Launching Minecraft 1.21 via PLAY GAME button...");
+  const playBtn = await page.waitForSelector(
+    "button:has-text('PLAY GAME'), button.button-primary:has-text('PLAY')",
+    { state: "visible", timeout: 10000 }
+  );
+  const playBox = await playBtn.boundingBox();
+  if (playBox) {
+    await page.mouse.move(playBox.x + playBox.width / 2, playBox.y + playBox.height / 2, { steps: 20 });
+    await page.waitForTimeout(400);
+    await playBtn.click();
+  }
 
   // Watch launch progress bar (Verifying -> Syncing -> Tuning -> Booting)
   console.log("[record] Observing launch preparation stages and progress fill...");
@@ -146,18 +152,16 @@ async function main() {
 
   // Step 10: Stop Game
   console.log("[record] Stopping game session via STOP GAME button...");
-  let stopBtn = await page.$(".button-stop");
-  if (!stopBtn) {
-    stopBtn = await page.$("button:has-text('STOP GAME')");
-  }
-  if (stopBtn) {
-    const box = await stopBtn.boundingBox();
-    if (box) {
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 20 });
-      await page.waitForTimeout(400);
-      await stopBtn.click();
-      console.log("[record] Game session stopped successfully!");
-    }
+  const stopBtn = await page.waitForSelector(
+    ".button-stop, button:has-text('STOP GAME')",
+    { state: "visible", timeout: 10000 }
+  );
+  const stopBox = await stopBtn.boundingBox();
+  if (stopBox) {
+    await page.mouse.move(stopBox.x + stopBox.width / 2, stopBox.y + stopBox.height / 2, { steps: 20 });
+    await page.waitForTimeout(400);
+    await stopBtn.click();
+    console.log("[record] Game session stopped successfully!");
   }
 
   await page.waitForTimeout(2000);
