@@ -32,7 +32,7 @@ interface TaskManagerContextType {
   activeDlCount: number;
   downloadsSnapshot: ProgressSnapshot;
   launchGame: (instance: Instance, onRefresh?: () => Promise<void>) => Promise<void>;
-  stopGame: (instanceId: string, onRefresh?: () => Promise<void>) => Promise<void>;
+  stopGame: (instanceId?: string, onRefresh?: () => Promise<void>) => Promise<void>;
   installVersion: (versionId: string, type?: string, onInstalled?: () => Promise<void>) => Promise<void>;
   installContent: (instanceId: string, hit: ProjectHit, category: string) => Promise<void>;
   cancelTask: (taskId: string) => void;
@@ -192,10 +192,12 @@ export function TaskManagerProvider({ children }: { children: React.ReactNode })
 
   // 2. STOP GAME
   const stopGame = useCallback(
-    async (instanceId: string, onRefresh?: () => Promise<void>) => {
+    async (instanceId?: string, onRefresh?: () => Promise<void>) => {
       setGameSession((prev) => ({ ...prev, status: "stopping", stage: "TERMINATING PROCESS..." }));
       try {
-        await api.launchKill(instanceId);
+        if (instanceId) {
+          await api.launchKill(instanceId);
+        }
       } catch (err) {
         console.warn("[NVIDIA Stop Game]:", err);
       }

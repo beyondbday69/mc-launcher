@@ -50,7 +50,7 @@ async function main() {
     cursor.style.border = "2px solid #ffffff";
     cursor.style.borderRadius = "50%";
     cursor.style.pointerEvents = "none";
-    cursor.style.zIndex = "9999999";
+    cursor.style.zIndex = "99999999";
     cursor.style.boxShadow = "0 0 14px rgba(118, 185, 0, 1)";
     cursor.style.transform = "translate(-50%, -50%)";
     cursor.style.transition = "transform 0.1s ease, background 0.15s ease";
@@ -124,37 +124,81 @@ async function main() {
     await playBtn.click();
   }
 
-  // Watch launch progress bar (Verifying -> Syncing -> Tuning -> Booting)
-  console.log("[record] Observing launch preparation stages and progress fill...");
+  // Watch launch preparation stages and progress fill
+  console.log("[record] Observing launch preparation stages (verifying -> assets -> JVM tuning)...");
   await page.waitForTimeout(3500);
 
-  // Confirm Game is now RUNNING
-  console.log("[record] Game session is running! Checking live playtime ticker and PID...");
-  await page.waitForTimeout(3000);
+  // Step 7: MINECRAFT GAME WINDOW LAUNCHES!
+  console.log("[record] Waiting for Minecraft 1.21 Game Window to launch on screen...");
+  const gameWin = await page.waitForSelector(".mc-game-window", { state: "visible", timeout: 12000 });
+  const gameBox = await gameWin.boundingBox();
 
-  // Step 7: Navigate to Game Library while game is running
-  console.log("[record] Navigating to Game Library while session runs uninterrupted...");
+  if (gameBox) {
+    console.log("[record] Minecraft 1.21 Game Window is open and running!");
+    // Move cursor across game titlebar and in-game controls
+    await page.mouse.move(gameBox.x + gameBox.width * 0.35, gameBox.y + 20, { steps: 20 });
+    await page.waitForTimeout(1200);
+
+    // Hover over game buttons area
+    await page.mouse.move(gameBox.x + gameBox.width * 0.5, gameBox.y + gameBox.height * 0.65, { steps: 20 });
+    await page.waitForTimeout(1500);
+
+    // Hover over FPS and HUD info
+    await page.mouse.move(gameBox.x + gameBox.width * 0.85, gameBox.y + gameBox.height * 0.2, { steps: 15 });
+    await page.waitForTimeout(1800);
+  }
+
+  // Step 8: Minimize game window to launcher background
+  console.log("[record] Switching to launcher background with game running in dock...");
+  const toLauncherBtn = await page.waitForSelector(
+    ".btn-to-launcher, .btn-min-game, button:has-text('SWITCH TO LAUNCHER')",
+    { state: "visible", timeout: 8000 }
+  );
+  const minBox = await toLauncherBtn.boundingBox();
+  if (minBox) {
+    await page.mouse.move(minBox.x + minBox.width / 2, minBox.y + minBox.height / 2, { steps: 15 });
+    await page.waitForTimeout(300);
+    await toLauncherBtn.click();
+  }
+  await page.waitForTimeout(1500);
+
+  // Step 9: Navigate to Game Library while game runs in background
+  console.log("[record] Navigating to Game Library while game runs in background...");
   const navInstances = await smoothMove(page, "button:has-text('Game Library')");
   await navInstances.click();
   await page.waitForTimeout(2000);
 
-  // Step 8: Navigate to Settings & Tuning
+  // Step 10: Navigate to Settings & Tuning
   console.log("[record] Navigating to Settings & Tuning...");
   const navSettings = await smoothMove(page, "button:has-text('Settings & Tuning')");
   await navSettings.click();
   await page.waitForTimeout(2000);
 
-  // Step 9: Return to Dashboard
-  console.log("[record] Returning to Dashboard to verify game session persistence...");
+  // Step 11: Return to Dashboard
+  console.log("[record] Returning to Dashboard...");
   const navHome2 = await smoothMove(page, "button:has-text('Dashboard')");
   await navHome2.click();
+  await page.waitForTimeout(1500);
+
+  // Step 12: Restore Game Window from dock
+  console.log("[record] Restoring Minecraft Game Window from dock...");
+  const showGameBtn = await page.waitForSelector(
+    ".btn-show-game, button:has-text('SHOW GAME')",
+    { state: "visible", timeout: 8000 }
+  );
+  const showBox = await showGameBtn.boundingBox();
+  if (showBox) {
+    await page.mouse.move(showBox.x + showBox.width / 2, showBox.y + showBox.height / 2, { steps: 15 });
+    await page.waitForTimeout(300);
+    await showGameBtn.click();
+  }
   await page.waitForTimeout(2500);
 
-  // Step 10: Stop Game
+  // Step 13: Terminate Game cleanly
   console.log("[record] Stopping game session via STOP GAME button...");
   const stopBtn = await page.waitForSelector(
-    ".button-stop, button:has-text('STOP GAME')",
-    { state: "visible", timeout: 10000 }
+    ".button-stop, .btn-close-game, button:has-text('STOP GAME')",
+    { state: "visible", timeout: 8000 }
   );
   const stopBox = await stopBtn.boundingBox();
   if (stopBox) {
