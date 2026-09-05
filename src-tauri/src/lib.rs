@@ -73,6 +73,7 @@ pub fn run_with_context(context: tauri::Context) {
             commands::java_list,
             commands::java_add,
             commands::java_recommend,
+            commands::java_auto_download,
             commands::instances_list,
             commands::instances_get,
             commands::instances_create,

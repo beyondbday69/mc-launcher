@@ -169,7 +169,7 @@ async fn main() -> ExitCode {
     // 4. Pick a Java. Prefer MC_LAUNCHER_JAVA env var (CI sets it),
     //    then any catalogued install. We must end up with a valid
     //    Java 17+ binary on disk.
-    let java = match pick_java(&state.java(), &paths.java_dir) {
+    let java = match pick_java(&state.java(), &paths.java_dir).await {
         Ok(j) => {
             eprintln!(
                 "[launch-cli] using java: path={} version={} vendor={}",
@@ -395,7 +395,7 @@ fn read_proc_memory(pid: u32) -> Option<(f64, f64, usize)> {
     Some((rss, peak, threads))
 }
 
-fn pick_java(catalog: &JavaCatalog, _java_dir: &PathBuf) -> LauncherResult<JavaInstallation> {
+async fn pick_java(catalog: &JavaCatalog, java_dir: &PathBuf) -> LauncherResult<JavaInstallation> {
     if let Ok(p) = std::env::var("MC_LAUNCHER_JAVA") {
         if let Some(install) = mc_launcher::java::detect_one(std::path::Path::new(&p)) {
             return Ok(install);
@@ -412,12 +412,12 @@ fn pick_java(catalog: &JavaCatalog, _java_dir: &PathBuf) -> LauncherResult<JavaI
         .filter(|j| j.version >= 17)
         .max_by_key(|j| j.version)
         .or_else(|| detected.iter().max_by_key(|j| j.version));
-    match picked {
-        Some(j) => Ok(j.clone()),
-        None => Err(LauncherError::Other(
-            "No Java installation found — install OpenJDK 17+ first".to_string(),
-        )),
+    if let Some(j) = picked {
+        return Ok(j.clone());
     }
+
+    eprintln!("[launch-cli] No local Java installation found — auto-downloading OpenJDK 21 (Adoptium Temurin)...");
+    mc_launcher::java::download_runtime(21, java_dir, catalog).await
 }
 
 /// Fallback path for instances with a mod loader. Looks up the

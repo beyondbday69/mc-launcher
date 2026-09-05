@@ -160,6 +160,15 @@ pub async fn java_recommend(
     Ok(state.java().recommend(minecraft_major))
 }
 
+#[tauri::command]
+pub async fn java_auto_download(
+    state: State<'_, AppState>,
+    version: u32,
+) -> LauncherResult<JavaInstallation> {
+    let paths = state.paths();
+    crate::java::download_runtime(version, &paths.java_dir, state.java()).await
+}
+
 // --------------------------------------------------------------------
 // Instances
 // --------------------------------------------------------------------
@@ -321,7 +330,7 @@ pub async fn launch_instance(
         .take()
         .ok_or_else(|| LauncherError::Launch("No prepared launch in flight".to_string()))?;
     let auth = current_account(&state).await?;
-    let (java_path, java_major) = resolve_java(&state, &inst)?;
+    let (java_path, java_major) = resolve_java(&state, &inst).await?;
     let req = LaunchRequest {
         instance: inst,
         version: prepared.version,
@@ -393,10 +402,13 @@ async fn current_account(state: &State<'_, AppState>) -> LauncherResult<Account>
     })
 }
 
-fn resolve_java(state: &State<'_, AppState>, inst: &Instance) -> LauncherResult<(PathBuf, u32)> {
+async fn resolve_java(state: &State<'_, AppState>, inst: &Instance) -> LauncherResult<(PathBuf, u32)> {
     if let Some(p) = &inst.java_path {
         if p.exists() {
             if let Some(j) = state.java().list().into_iter().find(|j| &j.path == p) {
+                return Ok((p.clone(), j.version));
+            }
+            if let Some(j) = crate::java::detect_one(p) {
                 return Ok((p.clone(), j.version));
             }
         }
@@ -406,11 +418,45 @@ fn resolve_java(state: &State<'_, AppState>, inst: &Instance) -> LauncherResult<
             if let Some(j) = state.java().list().into_iter().find(|j| &j.path == p) {
                 return Ok((p.clone(), j.version));
             }
+            if let Some(j) = crate::java::detect_one(p) {
+                return Ok((p.clone(), j.version));
+            }
         }
     }
-    let j = state.java().recommend(parse_mc_major(&inst.version));
+    let mc_major = parse_mc_major(&inst.version);
+    let target_version = crate::java::target_java_version_for_mc(mc_major);
+    let j = state.java().recommend(mc_major);
+    if j.version >= target_version && j.path.exists() {
+        return Ok((j.path.clone(), j.version));
+    }
+
+    let should_auto_download = state.config().read().auto_download_java;
+    if should_auto_download || j.version == 0 {
+        tracing::info!(
+            target_version,
+            "Auto-downloading required Java runtime for Minecraft {}",
+            inst.version
+        );
+        let paths = state.paths();
+        match crate::java::download_runtime(target_version, &paths.java_dir, state.java()).await {
+            Ok(installed) => {
+                return Ok((installed.path, installed.version));
+            }
+            Err(e) => {
+                tracing::warn!("Auto-download runtime failed: {e}; checking existing fallback");
+                if j.version > 0 && j.path.exists() {
+                    return Ok((j.path.clone(), j.version));
+                }
+                return Err(LauncherError::Other(format!(
+                    "Java {target_version} is required for Minecraft {} but was not found and auto-download failed: {e}",
+                    inst.version
+                )));
+            }
+        }
+    }
+
     if j.version == 0 {
-        return Err(LauncherError::JavaNotFound { recommended: 17 });
+        return Err(LauncherError::JavaNotFound { recommended: target_version });
     }
     Ok((j.path.clone(), j.version))
 }

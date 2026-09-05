@@ -50,6 +50,13 @@ pub struct LauncherConfig {
     pub last_manifest_refresh: Option<u64>,
     /// Onboarded flag.
     pub onboarded: bool,
+    /// Automatically download required Java runtime if missing or incompatible. Default true.
+    #[serde(default = "default_true")]
+    pub auto_download_java: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 impl Default for LauncherConfig {
@@ -72,6 +79,7 @@ impl Default for LauncherConfig {
             telemetry: false,
             last_manifest_refresh: None,
             onboarded: false,
+            auto_download_java: true,
         }
     }
 }

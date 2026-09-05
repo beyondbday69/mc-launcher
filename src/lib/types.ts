@@ -22,6 +22,7 @@ export interface Config {
   telemetry: boolean;
   last_manifest_refresh: number | null;
   onboarded: boolean;
+  auto_download_java: boolean;
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -42,6 +43,7 @@ export const DEFAULT_CONFIG: Config = {
   telemetry: false,
   last_manifest_refresh: null,
   onboarded: false,
+  auto_download_java: true,
 };
 
 export interface VersionEntry {
@@ -395,6 +397,20 @@ export const api = {
           vendor: "Adoptium",
           architecture: "x86_64",
           is_default: true,
+        }),
+  javaAutoDownload: (version: number) =>
+    isTauri
+      ? invoke<JavaInstallation>("java_auto_download", { version })
+      : new Promise<JavaInstallation>((resolve) => {
+          setTimeout(() => {
+            resolve({
+              path: `/opt/java/jdk-${version}/bin/java`,
+              version,
+              vendor: "Eclipse Adoptium Temurin",
+              architecture: "x64",
+              is_default: false,
+            });
+          }, 1200);
         }),
 
   instancesList: () => (isTauri ? invoke<Instance[]>("instances_list") : Promise.resolve(SAMPLE_INSTANCES)),

@@ -10,6 +10,7 @@ import {
   IconCheck,
   IconRefresh,
   IconPlus,
+  IconDownloads,
 } from "../lib/icons";
 
 interface SettingsProps {
@@ -23,6 +24,8 @@ export function Settings({ config, onChange }: SettingsProps) {
   const [customJava, setCustomJava] = useState("");
   const [customDataDir, setCustomDataDir] = useState(config?.data_dir_override || "");
   const [copiedDir, setCopiedDir] = useState(false);
+  const [downloadingRuntime, setDownloadingRuntime] = useState<number | null>(null);
+  const [runtimeToast, setRuntimeToast] = useState<string | null>(null);
 
   useEffect(() => {
     api.javaDetect()
@@ -56,6 +59,30 @@ export function Settings({ config, onChange }: SettingsProps) {
     } catch (err) {
       console.error("[NVIDIA Add Java]:", err);
     }
+  };
+
+  const handleAutoDownloadJava = async (ver: number) => {
+    setDownloadingRuntime(ver);
+    try {
+      await api.javaAutoDownload(ver);
+      const updated = await api.javaDetect();
+      setJavaList(updated);
+      setRuntimeToast(`Java ${ver} (Adoptium Temurin OpenJDK) successfully downloaded and ready!`);
+      setTimeout(() => setRuntimeToast(null), 4000);
+    } catch (err: any) {
+      console.error("[Auto Download Java]:", err);
+      setRuntimeToast(`Download error: ${err?.message || err}`);
+      setTimeout(() => setRuntimeToast(null), 5000);
+    } finally {
+      setDownloadingRuntime(null);
+    }
+  };
+
+  const handleToggleAutoDownload = () => {
+    onChange({
+      ...config,
+      auto_download_java: !config.auto_download_java,
+    });
   };
 
   const handleSaveDataDir = () => {
@@ -216,44 +243,235 @@ export function Settings({ config, onChange }: SettingsProps) {
 
       {/* Tab 2: Java Runtimes */}
       {tab === "java" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Toast Notification */}
+          {runtimeToast && (
+            <div
+              style={{
+                padding: "14px 20px",
+                background: "rgba(118, 185, 0, 0.15)",
+                border: "1px solid var(--nv-primary)",
+                borderRadius: "var(--rounded-sm)",
+                color: "#ffffff",
+                fontSize: 14,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <IconCheck size={18} style={{ color: "var(--nv-primary)" }} />
+              <span>{runtimeToast}</span>
+            </div>
+          )}
+
+          {/* Card 1: Auto-Download Runtime Setting */}
+          <div className="nv-card" style={{ padding: "28px" }}>
+            <div className="corner-square" />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8, flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#ffffff", textTransform: "uppercase" }}>
+                  AUTO-DOWNLOAD RUNTIME MANAGEMENT
+                </h3>
+                <span style={{ fontSize: 13, color: "var(--nv-mute)" }}>
+                  Automatically download and configure the required OpenJDK Java runtime when launching Minecraft
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleToggleAutoDownload}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  background: config.auto_download_java ? "rgba(118, 185, 0, 0.2)" : "var(--nv-surface-dark)",
+                  border: `1px solid ${config.auto_download_java ? "var(--nv-primary)" : "var(--nv-hairline)"}`,
+                  borderRadius: "20px",
+                  padding: "8px 18px",
+                  cursor: "pointer",
+                  color: config.auto_download_java ? "#ffffff" : "var(--nv-mute)",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <div
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    background: config.auto_download_java ? "var(--nv-primary)" : "var(--nv-mute)",
+                    boxShadow: config.auto_download_java ? "0 0 8px var(--nv-primary)" : "none",
+                  }}
+                />
+                <span>{config.auto_download_java ? "AUTO-DOWNLOAD ENABLED" : "DISABLED"}</span>
+              </button>
+            </div>
+            <p style={{ fontSize: 12, color: "var(--nv-on-dark-mute)", lineHeight: 1.5, marginTop: 6 }}>
+              When enabled, the launcher resolves the target version requirement (e.g. Java 21 for 1.20.5+, Java 17 for 1.18+, or Java 8 for legacy) and automatically downloads official Eclipse Adoptium Temurin binaries if no suitable runtime is detected on your system.
+            </p>
+          </div>
+
+          {/* Card 2: Official OpenJDK Temurin Runtimes Catalog */}
+          <div className="nv-card" style={{ padding: "28px" }}>
+            <div className="corner-square" />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#ffffff", textTransform: "uppercase" }}>
+                  OFFICIAL OPENJDK RUNTIMES (ADOPTIUM TEMURIN)
+                </h3>
+                <span style={{ fontSize: 13, color: "var(--nv-mute)" }}>
+                  Pre-configured, high-performance Java builds optimized for Minecraft and modern mod loaders
+                </span>
+              </div>
+              <button
+                type="button"
+                className="button-outline-on-dark button-sm"
+                onClick={() => api.javaDetect().then(setJavaList)}
+                title="Refresh detected runtimes"
+              >
+                <IconRefresh size={14} />
+                <span>SCAN RUNTIMES</span>
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
+              {[
+                {
+                  version: 21,
+                  title: "JAVA 21 (LTS)",
+                  tag: "MODERN RELEASES",
+                  desc: "Required for Minecraft 1.20.5 - 1.21.x and modern Fabric/NeoForge",
+                  recommendedFor: "1.21.4, 1.21.x, 1.20.6",
+                },
+                {
+                  version: 17,
+                  title: "JAVA 17 (LTS)",
+                  tag: "STABLE EXTENDED",
+                  desc: "Required for Minecraft 1.18 - 1.20.4, Forge, and Fabric",
+                  recommendedFor: "1.20.4, 1.19.4, 1.18.2",
+                },
+                {
+                  version: 8,
+                  title: "JAVA 8 (LEGACY)",
+                  tag: "RETRO & CLASSIC",
+                  desc: "Required for Minecraft 1.16.5 and older vintage modpacks",
+                  recommendedFor: "1.16.5, 1.12.2, 1.7.10",
+                },
+              ].map((rt) => {
+                const isInstalled = javaList.some((j) => j.version === rt.version && j.path);
+                const isDownloading = downloadingRuntime === rt.version;
+                return (
+                  <div
+                    key={rt.version}
+                    style={{
+                      padding: "20px",
+                      background: isInstalled ? "rgba(118, 185, 0, 0.04)" : "var(--nv-surface-dark)",
+                      border: `1px solid ${isInstalled ? "rgba(118, 185, 0, 0.3)" : "var(--nv-hairline)"}`,
+                      borderRadius: "var(--rounded-sm)",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      gap: 14,
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: "#ffffff" }}>
+                          {rt.title}
+                        </span>
+                        <span className={`badge-tag ${isInstalled ? "badge-tag-primary" : ""}`}>
+                          {rt.tag}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: 12, color: "var(--nv-mute)", marginBottom: 8, lineHeight: 1.4 }}>
+                        {rt.desc}
+                      </p>
+                      <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--nv-on-dark-mute)" }}>
+                        Target: {rt.recommendedFor}
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px solid var(--nv-hairline)" }}>
+                      {isInstalled ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--nv-primary)", fontSize: 12, fontWeight: 700 }}>
+                          <IconCheck size={14} />
+                          <span>INSTALLED & READY</span>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 12, color: "var(--nv-mute)" }}>
+                          Not detected
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        className={isInstalled ? "button-outline-on-dark button-sm" : "button-primary button-sm"}
+                        disabled={isDownloading}
+                        onClick={() => handleAutoDownloadJava(rt.version)}
+                      >
+                        {isDownloading ? (
+                          <>
+                            <IconRefresh size={14} className="spin" />
+                            <span>DOWNLOADING...</span>
+                          </>
+                        ) : (
+                          <>
+                            <IconDownloads size={14} />
+                            <span>{isInstalled ? "RE-DOWNLOAD" : "DOWNLOAD RUNTIME"}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card 3: All Detected System Runtimes */}
           <div className="nv-card" style={{ padding: "28px" }}>
             <div className="corner-square" />
             <h3 style={{ fontSize: 18, fontWeight: 700, color: "#ffffff", textTransform: "uppercase", marginBottom: 6 }}>
-              DETECTED JAVA RUNTIMES
+              ALL DETECTED SYSTEM RUNTIMES
             </h3>
             <p style={{ fontSize: 13, color: "var(--nv-mute)", marginBottom: 20 }}>
-              Modern Minecraft (1.20+) requires 64-Bit Java 17 or Java 21 for peak rendering throughput.
+              The launcher automatically catalogs JVMs found in standard locations, JAVA_HOME, and the launcher runtime directory.
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {javaList.map((j) => (
-                <div
-                  key={j.path}
-                  style={{
-                    padding: "16px 20px",
-                    background: "var(--nv-surface-dark)",
-                    border: "1px solid var(--nv-hairline)",
-                    borderRadius: "var(--rounded-sm)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "#ffffff" }}>
-                      Java {j.version} ({j.vendor}) • {j.architecture}
-                    </div>
-                    <div style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--nv-mute)" }}>
-                      {j.path}
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span className="badge-tag badge-tag-primary">COMPLIANT</span>
-                  </div>
+              {javaList.length === 0 ? (
+                <div style={{ padding: "20px", textAlign: "center", color: "var(--nv-mute)", fontSize: 13 }}>
+                  No Java runtimes detected. Click "DOWNLOAD RUNTIME" above to auto-download OpenJDK.
                 </div>
-              ))}
+              ) : (
+                javaList.map((j) => (
+                  <div
+                    key={j.path}
+                    style={{
+                      padding: "16px 20px",
+                      background: "var(--nv-surface-dark)",
+                      border: "1px solid var(--nv-hairline)",
+                      borderRadius: "var(--rounded-sm)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#ffffff" }}>
+                        Java {j.version} ({j.vendor}) • {j.architecture}
+                      </div>
+                      <div style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--nv-mute)" }}>
+                        {j.path}
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span className="badge-tag badge-tag-primary">COMPLIANT</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
             <div style={{ marginTop: 24, paddingTop: 18, borderTop: "1px solid var(--nv-hairline)", display: "flex", gap: 12 }}>
@@ -270,7 +488,7 @@ export function Settings({ config, onChange }: SettingsProps) {
                 onClick={handleAddJava}
               >
                 <IconPlus size={14} />
-                <span>ADD JAVA</span>
+                <span>ADD MANUAL JAVA</span>
               </button>
             </div>
           </div>
