@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { api, Instance, ProjectHit } from "../lib/types";
-import { IconSearch, IconPlus, IconCube } from "../lib/icons";
+import { IconSearch, IconPlus, IconCube, IconCheck } from "../lib/icons";
+import { useTaskManager } from "../lib/taskManager";
 
 interface ContentProps {
   selected: Instance | null;
@@ -11,7 +12,7 @@ export function Content({ selected }: ContentProps) {
   const [category, setCategory] = useState<string>("mod");
   const [projects, setProjects] = useState<ProjectHit[]>([]);
   const [loading, setLoading] = useState(false);
-  const [installingSlug, setInstallingSlug] = useState<string | null>(null);
+  const { installTasks, installContent } = useTaskManager();
 
   useEffect(() => {
     let active = true;
@@ -31,45 +32,12 @@ export function Content({ selected }: ContentProps) {
     };
   }, [query, category, selected]);
 
-  const handleInstall = async (hit: ProjectHit) => {
+  const handleInstall = (hit: ProjectHit) => {
     if (!selected) {
       alert("Please select a game profile first!");
       return;
     }
-    setInstallingSlug(hit.slug);
-    try {
-      const versions = await api.modrinthVersions(
-        hit.slug,
-        selected.version,
-        selected.mod_loader?.kind
-      );
-      if (!versions || versions.length === 0) {
-        alert("No compatible release found for this Minecraft version/loader.");
-        return;
-      }
-      const targetVersion = versions[0];
-      const primaryFile =
-        targetVersion.files.find((f) => f.primary) || targetVersion.files[0];
-      if (!primaryFile) {
-        alert("No downloadable file artifact found.");
-        return;
-      }
-
-      await api.instanceInstallContent(
-        selected.id,
-        category,
-        primaryFile.url,
-        primaryFile.filename,
-        primaryFile.size,
-        primaryFile.hashes.sha1
-      );
-      alert(`Installed '${hit.title}' to ${selected.name}!`);
-    } catch (err: any) {
-      console.error("[NVIDIA Install Content]:", err);
-      alert(`Install failed: ${err?.message || err}`);
-    } finally {
-      setInstallingSlug(null);
-    }
+    installContent(selected.id, hit, category);
   };
 
   return (
@@ -139,78 +107,99 @@ export function Content({ selected }: ContentProps) {
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-          {projects.map((hit) => (
-            <div key={hit.slug} className="nv-card" style={{ padding: "20px" }}>
-              <div className="corner-square" style={{ width: 8, height: 8 }} />
+          {projects.map((hit) => {
+            const task = installTasks[`content-${hit.slug}`];
+            const isDownloading = task && task.status === "downloading";
+            const isCompleted = task && task.status === "completed";
 
-              <div>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
-                  {hit.icon_url ? (
-                    <img
-                      src={hit.icon_url}
-                      alt=""
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: "var(--rounded-sm)",
-                        background: "var(--nv-surface-dark)",
-                        flexShrink: 0,
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: "var(--rounded-sm)",
-                        background: "var(--nv-surface-elevated)",
-                        border: "1px solid var(--nv-hairline)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "var(--nv-primary)",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <IconCube size={22} />
-                    </div>
-                  )}
+            return (
+              <div key={hit.slug} className="nv-card" style={{ padding: "20px" }}>
+                <div className="corner-square" style={{ width: 8, height: 8 }} />
 
-                  <div style={{ minWidth: 0 }}>
-                    <span className="badge-tag" style={{ fontSize: 10, padding: "2px 6px" }}>
-                      {hit.project_type.toUpperCase()}
-                    </span>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, color: "#ffffff", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {hit.title}
-                    </h3>
-                    <div style={{ fontSize: 12, color: "var(--nv-mute)" }}>
-                      by {hit.author}
+                <div>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+                    {hit.icon_url ? (
+                      <img
+                        src={hit.icon_url}
+                        alt=""
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: "var(--rounded-sm)",
+                          background: "var(--nv-surface-dark)",
+                          flexShrink: 0,
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: "var(--rounded-sm)",
+                          background: "var(--nv-surface-elevated)",
+                          border: "1px solid var(--nv-hairline)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "var(--nv-primary)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <IconCube size={22} />
+                      </div>
+                    )}
+
+                    <div style={{ minWidth: 0 }}>
+                      <span className="badge-tag" style={{ fontSize: 10, padding: "2px 6px" }}>
+                        {hit.project_type.toUpperCase()}
+                      </span>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, color: "#ffffff", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {hit.title}
+                      </h3>
+                      <div style={{ fontSize: 12, color: "var(--nv-mute)" }}>
+                        by {hit.author}
+                      </div>
                     </div>
                   </div>
+
+                  <p style={{ fontSize: 13, color: "var(--nv-on-dark-mute)", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    {hit.description}
+                  </p>
                 </div>
 
-                <p style={{ fontSize: 13, color: "var(--nv-on-dark-mute)", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                  {hit.description}
-                </p>
-              </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 12, borderTop: "1px solid var(--nv-hairline)", marginTop: 12 }}>
+                  <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--nv-mute)" }}>
+                    {(hit.downloads / 1000000).toFixed(1)}M DLs
+                  </span>
 
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 12, borderTop: "1px solid var(--nv-hairline)" }}>
-                <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--nv-mute)" }}>
-                  {(hit.downloads / 1000000).toFixed(1)}M DLs
-                </span>
-
-                <button
-                  type="button"
-                  className="button-primary button-sm"
-                  disabled={installingSlug === hit.slug}
-                  onClick={() => handleInstall(hit)}
-                >
-                  <IconPlus size={13} />
-                  <span>{installingSlug === hit.slug ? "INSTALLING..." : "INSTALL"}</span>
-                </button>
+                  {isDownloading ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 100, textAlign: "right" }}>
+                      <span style={{ fontSize: 10, color: "var(--nv-primary)", fontWeight: 700, fontFamily: "var(--font-mono)" }}>
+                        INSTALLING {task.progress}%
+                      </span>
+                      <div style={{ width: "100%", height: 4, background: "var(--nv-surface-soft)", borderRadius: 2, overflow: "hidden" }}>
+                        <div style={{ width: `${task.progress}%`, height: "100%", background: "var(--nv-primary)", transition: "width 0.25s ease" }} />
+                      </div>
+                    </div>
+                  ) : isCompleted ? (
+                    <span className="badge-tag badge-tag-primary" style={{ fontSize: 11, padding: "3px 8px" }}>
+                      <IconCheck size={12} />
+                      <span>INSTALLED</span>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="button-primary button-sm"
+                      onClick={() => handleInstall(hit)}
+                    >
+                      <IconPlus size={13} />
+                      <span>INSTALL</span>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

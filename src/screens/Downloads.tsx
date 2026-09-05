@@ -1,54 +1,30 @@
-import { useState, useEffect } from "react";
-import { api, ProgressSnapshot, formatBytes, formatSpeed } from "../lib/types";
+import { useState } from "react";
+import { formatBytes, formatSpeed } from "../lib/types";
 import { IconDownloads, IconCheck } from "../lib/icons";
+import { useTaskManager } from "../lib/taskManager";
 
 export function Downloads() {
-  const [progress, setProgress] = useState<ProgressSnapshot>({
-    active: 0,
-    completed: 48,
-    failed: 0,
-    bytes_downloaded: 245000000,
-    bytes_total: 245000000,
-    speed_bps: 0,
-  });
+  const { downloadsSnapshot, installTasks, cancelAllDownloads, cancelTask } = useTaskManager();
   const [cancelling, setCancelling] = useState(false);
 
-  useEffect(() => {
-    let mounted = true;
-    const poll = async () => {
-      try {
-        const snap = await api.downloadsProgress();
-        if (mounted) setProgress(snap);
-      } catch (err) {
-        console.error("[NVIDIA Downloads Poll]:", err);
-      }
-    };
+  const activeTasksList = Object.values(installTasks).filter((t) => t.status === "downloading");
+  const isIdle = downloadsSnapshot.active === 0 && activeTasksList.length === 0;
 
-    poll();
-    const interval = setInterval(poll, 1000);
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
-  }, []);
-
-  const handleCancel = async () => {
+  const handleCancelAll = () => {
     setCancelling(true);
-    try {
-      await api.downloadsCancel();
-    } catch (err) {
-      console.error("[NVIDIA Downloads Cancel]:", err);
-    } finally {
-      setCancelling(false);
-    }
+    cancelAllDownloads();
+    setTimeout(() => setCancelling(false), 500);
   };
 
   const percent =
-    progress.bytes_total > 0
-      ? Math.min(Math.round((progress.bytes_downloaded / progress.bytes_total) * 100), 100)
+    downloadsSnapshot.bytes_total > 0
+      ? Math.min(
+          Math.round(
+            (downloadsSnapshot.bytes_downloaded / downloadsSnapshot.bytes_total) * 100
+          ),
+          100
+        )
       : 100;
-
-  const isIdle = progress.active === 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -58,10 +34,12 @@ export function Downloads() {
           <div className="corner-square" style={{ width: 8, height: 8 }} />
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <span className="callout-stat-label">NETWORK THROUGHPUT</span>
-            <span className="badge-tag" style={{ fontSize: 11 }}>{isIdle ? "STANDBY" : "ACTIVE"}</span>
+            <span className="badge-tag" style={{ fontSize: 11 }}>
+              {isIdle ? "STANDBY" : "ACTIVE"}
+            </span>
           </div>
           <div className="callout-stat-num" style={{ color: isIdle ? "var(--nv-mute)" : "var(--nv-primary)" }}>
-            {formatSpeed(progress.speed_bps)}
+            {formatSpeed(downloadsSnapshot.speed_bps)}
           </div>
           <span style={{ fontSize: 12, color: "var(--nv-mute)" }}>
             Multi-threaded chunked downloader
@@ -72,10 +50,15 @@ export function Downloads() {
           <div className="corner-square" style={{ width: 8, height: 8 }} />
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <span className="callout-stat-label">PIPELINE PROGRESS</span>
-            <span className="badge-tag badge-tag-primary" style={{ fontSize: 11 }}>{percent}% SYNCED</span>
+            <span className="badge-tag badge-tag-primary" style={{ fontSize: 11 }}>
+              {percent}% SYNCED
+            </span>
           </div>
           <div className="callout-stat-num" style={{ fontSize: 24, color: "#ffffff" }}>
-            {formatBytes(progress.bytes_downloaded)} <span style={{ fontSize: 14, color: "var(--nv-mute)" }}>/ {formatBytes(progress.bytes_total)}</span>
+            {formatBytes(downloadsSnapshot.bytes_downloaded)}{" "}
+            <span style={{ fontSize: 14, color: "var(--nv-mute)" }}>
+              / {formatBytes(downloadsSnapshot.bytes_total)}
+            </span>
           </div>
           <div style={{ width: "100%", height: 4, background: "var(--nv-surface-soft)", overflow: "hidden", marginTop: 4 }}>
             <div
@@ -96,10 +79,11 @@ export function Downloads() {
             <span className="badge-tag" style={{ fontSize: 11 }}>HEALTHY</span>
           </div>
           <div className="callout-stat-num" style={{ fontSize: 24 }}>
-            {progress.completed} <span style={{ fontSize: 14, color: "var(--nv-on-dark-mute)" }}>COMPLETED</span>
+            {downloadsSnapshot.completed}{" "}
+            <span style={{ fontSize: 14, color: "var(--nv-on-dark-mute)" }}>COMPLETED</span>
           </div>
           <span style={{ fontSize: 12, color: "var(--nv-mute)" }}>
-            Active: {progress.active} • Failed: {progress.failed}
+            Active: {downloadsSnapshot.active} • Failed: {downloadsSnapshot.failed}
           </span>
         </div>
       </div>
@@ -137,7 +121,9 @@ export function Downloads() {
               {isIdle ? "DOWNLOAD PIPELINE IDLE" : "SYNCING ASSETS & LIBRARIES"}
             </div>
             <div style={{ fontSize: 12, color: "var(--nv-mute)" }}>
-              {isIdle ? "All assets and client libraries up to date" : "Downloading client jars and textures..."}
+              {isIdle
+                ? "All assets and client libraries up to date"
+                : `${activeTasksList.length} download tasks running in background...`}
             </div>
           </div>
         </div>
@@ -148,12 +134,56 @@ export function Downloads() {
             className="button-outline-on-dark button-sm"
             style={{ color: "var(--nv-error)" }}
             disabled={cancelling}
-            onClick={handleCancel}
+            onClick={handleCancelAll}
           >
-            {cancelling ? "ABORTING..." : "ABORT TRANSFERS"}
+            {cancelling ? "ABORTING..." : "ABORT ALL TRANSFERS"}
           </button>
         )}
       </div>
+
+      {/* Active Tasks In-Flight (if any) */}
+      {activeTasksList.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", color: "var(--nv-mute)", textTransform: "uppercase" }}>
+            ACTIVE DOWNLOAD TASKS ({activeTasksList.length})
+          </span>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
+            {activeTasksList.map((t) => (
+              <div key={t.id} className="nv-card" style={{ padding: "18px" }}>
+                <div className="corner-square" style={{ width: 8, height: 8 }} />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                  <div>
+                    <span className="badge-tag badge-tag-primary" style={{ fontSize: 10 }}>
+                      {t.type.toUpperCase()}
+                    </span>
+                    <h4 style={{ fontSize: 15, fontWeight: 700, color: "#ffffff", marginTop: 4 }}>
+                      {t.title}
+                    </h4>
+                  </div>
+                  <button
+                    type="button"
+                    style={{ background: "none", border: "none", color: "var(--nv-mute)", cursor: "pointer", fontSize: 12 }}
+                    onClick={() => cancelTask(t.id)}
+                  >
+                    CANCEL
+                  </button>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nv-mute)", marginBottom: 6 }}>
+                  <span>{t.stage}</span>
+                  <span style={{ color: "var(--nv-primary)", fontWeight: 700 }}>{t.progress}%</span>
+                </div>
+                <div style={{ width: "100%", height: 4, background: "var(--nv-surface-soft)", borderRadius: 2, overflow: "hidden", marginBottom: 8 }}>
+                  <div style={{ width: `${t.progress}%`, height: "100%", background: "var(--nv-primary)", transition: "width 0.25s ease" }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nv-mute)", fontFamily: "var(--font-mono)" }}>
+                  <span>{formatBytes(t.bytesDownloaded)} / {formatBytes(t.bytesTotal)}</span>
+                  <span>{formatSpeed(t.speedBps)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Transfer Log Table */}
       <div className="nvidia-table-wrap">

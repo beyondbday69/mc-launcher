@@ -1,6 +1,7 @@
-import { useState, useTransition } from "react";
-import { api, Config, Instance, formatDuration } from "../lib/types";
-import { IconPlay, IconFolder, IconSettings, IconCheck, IconGameReady } from "../lib/icons";
+import { useState } from "react";
+import { Config, Instance, formatDuration } from "../lib/types";
+import { IconPlay, IconStop, IconFolder, IconSettings, IconCheck, IconGameReady } from "../lib/icons";
+import { useTaskManager } from "../lib/taskManager";
 
 interface HomeProps {
   config: Config | null;
@@ -11,34 +12,11 @@ interface HomeProps {
 }
 
 export function Home({ config, instances, selected, onSelect, onRefresh }: HomeProps) {
-  const [launching, setLaunching] = useState(false);
-  const [launchStatus, setLaunchStatus] = useState<string | null>(null);
+  const { gameSession, launchGame, stopGame } = useTaskManager();
   const [copiedFolder, setCopiedFolder] = useState(false);
-  const [, startTransition] = useTransition();
 
-  const handleLaunch = async () => {
-    if (!selected) return;
-    setLaunching(true);
-    setLaunchStatus("PREPARING PIPELINE...");
-    try {
-      await api.prepareLaunch(selected.id);
-      setLaunchStatus("DISPATCHING JVM...");
-      await api.launchInstance(selected.id);
-      setLaunchStatus("GAME RUNNING");
-      setTimeout(() => {
-        setLaunching(false);
-        setLaunchStatus(null);
-        onRefresh();
-      }, 2500);
-    } catch (err: any) {
-      console.error("[NVIDIA Launch Error]:", err);
-      setLaunchStatus(`LAUNCH FAILED: ${err?.message || err}`);
-      setTimeout(() => {
-        setLaunching(false);
-        setLaunchStatus(null);
-      }, 4000);
-    }
-  };
+  const isThisInstanceRunning = gameSession.status === "running" && gameSession.instanceId === selected?.id;
+  const isThisInstancePreparing = gameSession.status === "preparing" && gameSession.instanceId === selected?.id;
 
   const folderPath = selected
     ? selected.game_dir_override || selected.game_dir
@@ -74,24 +52,81 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
             <h1 className="hero-title">{selected.name}</h1>
 
             <div className="hero-subhead">
-              <span>Playtime: {formatDuration(selected.play_time_secs)}</span>
+              <span>
+                Playtime:{" "}
+                {formatDuration(
+                  selected.play_time_secs + (isThisInstanceRunning ? gameSession.runTimeSecs : 0)
+                )}
+              </span>
               <span>•</span>
               <span style={{ color: "var(--nv-primary)", fontWeight: 700 }}>
-                OPTIMAL PERFORMANCE VERIFIED
+                {isThisInstanceRunning
+                  ? "SESSION RUNNING"
+                  : isThisInstancePreparing
+                  ? "INITIALIZING PIPELINE..."
+                  : "OPTIMAL PERFORMANCE VERIFIED"}
               </span>
             </div>
 
-            <div className="hero-actions">
-              {/* Primary CTA: button-primary */}
-              <button
-                type="button"
-                className="button-primary"
-                disabled={launching}
-                onClick={handleLaunch}
-              >
-                <IconPlay size={18} />
-                <span>{launchStatus || (launching ? "LAUNCHING..." : "PLAY GAME")}</span>
-              </button>
+            <div className="hero-actions" style={{ flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+              {/* If Preparing: Show Animated Launch Progress Bar */}
+              {isThisInstancePreparing ? (
+                <>
+                  <div className="launch-progress-box">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "var(--nv-primary)" }}>
+                        {gameSession.stage}
+                      </span>
+                      <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "#ffffff", fontWeight: 700 }}>
+                        {gameSession.progress}%
+                      </span>
+                    </div>
+                    <div className="launch-progress-bar">
+                      <div
+                        className="launch-progress-fill"
+                        style={{ width: `${gameSession.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="button-outline-on-dark"
+                    onClick={() => stopGame(selected.id, onRefresh)}
+                  >
+                    CANCEL
+                  </button>
+                </>
+              ) : isThisInstanceRunning ? (
+                /* If Running: Show Stop Game CTA & Running Session Badge */
+                <>
+                  <button
+                    type="button"
+                    className="button-stop"
+                    onClick={() => stopGame(selected.id, onRefresh)}
+                    title="Terminate active game process"
+                  >
+                    <IconStop size={16} />
+                    <span>STOP GAME</span>
+                  </button>
+                  <div className="running-session-badge">
+                    <span className="running-dot" />
+                    <span>ACTIVE: {formatDuration(gameSession.runTimeSecs)}</span>
+                    <span style={{ color: "var(--nv-mute)", fontSize: 11, fontFamily: "var(--font-mono)" }}>
+                      PID {gameSession.pid}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                /* Default Idle: Play Game CTA */
+                <button
+                  type="button"
+                  className="button-primary"
+                  onClick={() => launchGame(selected, onRefresh)}
+                >
+                  <IconPlay size={18} />
+                  <span>PLAY GAME</span>
+                </button>
+              )}
 
               {/* Secondary CTA: button-outline (2px green border) */}
               <button
@@ -365,9 +400,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                 tabIndex={0}
                 className="nv-card"
                 onClick={() => {
-                  startTransition(() => {
-                    onSelect(inst);
-                  });
+                  onSelect(inst);
                 }}
                 style={{
                   cursor: "pointer",

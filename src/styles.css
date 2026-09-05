@@ -508,6 +508,100 @@ h1, h2, h3, h4 {
   font-size: 13px;
 }
 
+/* button-stop (for stopping active game sessions) */
+.button-stop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 11px 22px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: var(--rounded-sm);
+  border: 2px solid #ef4444;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+.button-stop:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+.button-stop:active {
+  transform: scale(0.985);
+}
+
+/* Launch & Install Progress Containers */
+.launch-progress-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 280px;
+  padding: 10px 14px;
+  background: var(--nv-surface-elevated);
+  border: 1px solid var(--nv-primary);
+  border-radius: var(--rounded-sm);
+}
+.launch-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--nv-surface-soft);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.launch-progress-fill {
+  height: 100%;
+  background: var(--nv-primary);
+  box-shadow: 0 0 10px rgba(118, 185, 0, 0.5);
+  transition: width 0.35s ease;
+}
+
+/* Running Session Status Indicator */
+.running-session-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--nv-surface-elevated);
+  border: 1px solid var(--nv-primary);
+  border-radius: var(--rounded-sm);
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+.running-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--nv-primary);
+  box-shadow: 0 0 8px var(--nv-primary);
+  animation: nvPulse 1.5s infinite;
+}
+@keyframes nvPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+/* Header status variants */
+.header-status-badge.header-status-running {
+  border-color: var(--nv-primary);
+  background: rgba(118, 185, 0, 0.12);
+  color: var(--nv-primary);
+}
+.header-status-badge.header-status-preparing {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+.header-status-badge.header-status-dl {
+  border-color: var(--nv-primary);
+  background: rgba(118, 185, 0, 0.15);
+  color: #ffffff;
+}
+
 /* pill-tab & pill-tab-active (from .md) */
 .pill-tab {
   display: inline-flex;

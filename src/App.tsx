@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, ReactNode } from "react";
-import { api, Config, Instance } from "./lib/types";
+import { api, Config, Instance, formatDuration } from "./lib/types";
+import { TaskManagerProvider, useTaskManager } from "./lib/taskManager";
 import { Home } from "./screens/Home";
 import { Instances } from "./screens/Instances";
 import { Versions } from "./screens/Versions";
@@ -70,8 +71,9 @@ const SCREENS: NavScreen[] = [
   },
 ];
 
-export function App() {
+function AppContent() {
   const [screen, setScreen] = useState<Screen>("home");
+  const { gameSession, activeDlCount } = useTaskManager();
 
   // Deep linking and CLI / smoke test initial screen support
   useEffect(() => {
@@ -196,6 +198,18 @@ export function App() {
                 {s.id === "instances" && instances.length > 0 && (
                   <span className="nav-badge">{instances.length}</span>
                 )}
+                {s.id === "downloads" && activeDlCount > 0 && (
+                  <span
+                    className="nav-badge"
+                    style={{
+                      background: "var(--nv-primary)",
+                      color: "#000000",
+                      fontWeight: 800,
+                    }}
+                  >
+                    {activeDlCount}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -214,10 +228,31 @@ export function App() {
       <main className="main">
         <header className="header">
           <div className="header-left">
-            <div className="header-status-badge">
-              <span>●</span>
-              <span>ENGINE READY</span>
-            </div>
+            {gameSession.status === "running" ? (
+              <div className="header-status-badge header-status-running">
+                <div className="running-dot" style={{ width: 6, height: 6 }} />
+                <span>
+                  RUNNING: {gameSession.instanceName || "GAME"} (
+                  {formatDuration(gameSession.runTimeSecs)})
+                </span>
+              </div>
+            ) : gameSession.status === "preparing" ? (
+              <div className="header-status-badge header-status-preparing">
+                <span>●</span>
+                <span>PREPARING PIPELINE {gameSession.progress}%</span>
+              </div>
+            ) : activeDlCount > 0 ? (
+              <div className="header-status-badge header-status-dl">
+                <span>↓</span>
+                <span>DOWNLOADING ({activeDlCount} ACTIVE)</span>
+              </div>
+            ) : (
+              <div className="header-status-badge">
+                <span>●</span>
+                <span>ENGINE READY</span>
+              </div>
+            )}
+
             <div
               style={{
                 display: "flex",
@@ -276,8 +311,16 @@ export function App() {
           </div>
         </header>
 
-        <div key={screen} className="content">
-          {screen === "home" && (
+        {/* Persistent Viewport (Keeps screens mounted so progress, scroll, and filters never reset) */}
+        <div className="content">
+          <div
+            style={{
+              display: screen === "home" ? "flex" : "none",
+              flexDirection: "column",
+              gap: 28,
+              width: "100%",
+            }}
+          >
             <Home
               config={config}
               instances={instances}
@@ -285,8 +328,16 @@ export function App() {
               onSelect={onSelect}
               onRefresh={refresh}
             />
-          )}
-          {screen === "instances" && (
+          </div>
+
+          <div
+            style={{
+              display: screen === "instances" ? "flex" : "none",
+              flexDirection: "column",
+              gap: 24,
+              width: "100%",
+            }}
+          >
             <Instances
               instances={instances}
               onChange={refresh}
@@ -295,16 +346,62 @@ export function App() {
                 setScreen("home");
               }}
             />
-          )}
-          {screen === "versions" && <Versions onInstalled={refresh} />}
-          {screen === "downloads" && <Downloads />}
-          {screen === "content" && <Content selected={selected} />}
-          {screen === "settings" && (
+          </div>
+
+          <div
+            style={{
+              display: screen === "versions" ? "flex" : "none",
+              flexDirection: "column",
+              gap: 24,
+              width: "100%",
+            }}
+          >
+            <Versions onInstalled={refresh} />
+          </div>
+
+          <div
+            style={{
+              display: screen === "downloads" ? "flex" : "none",
+              flexDirection: "column",
+              gap: 24,
+              width: "100%",
+            }}
+          >
+            <Downloads />
+          </div>
+
+          <div
+            style={{
+              display: screen === "content" ? "flex" : "none",
+              flexDirection: "column",
+              gap: 24,
+              width: "100%",
+            }}
+          >
+            <Content selected={selected} />
+          </div>
+
+          <div
+            style={{
+              display: screen === "settings" ? "flex" : "none",
+              flexDirection: "column",
+              gap: 24,
+              width: "100%",
+            }}
+          >
             <Settings config={config} onChange={onConfigChange} />
-          )}
+          </div>
         </div>
       </main>
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <TaskManagerProvider>
+      <AppContent />
+    </TaskManagerProvider>
   );
 }
 
