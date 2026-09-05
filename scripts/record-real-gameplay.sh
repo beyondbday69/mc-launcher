@@ -21,6 +21,7 @@ if command -v fluxbox >/dev/null 2>&1; then
   echo "[Display] Starting fluxbox window manager..."
   fluxbox &
   sleep 1
+  pkill -9 xmessage 2>/dev/null || true
 fi
 
 # 2. Set dark background
@@ -245,9 +246,9 @@ if [ -f "$RAW_VIDEO" ] && [ -s "$RAW_VIDEO" ]; then
     -c:v libvpx-vp9 -b:v 1.5M -crf 30 -cpu-used 4 \
     /tmp/real_minecraft_121_launch.webm
 
-  # High Quality Animated GIF Preview
-  ffmpeg -y -ss 00:00:08 -t 25 -i "$RAW_VIDEO" \
-    -vf "fps=12,scale=800:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer:bayer_scale=3" \
+  # High Quality Animated GIF Preview (covering download completion, launch, and in-game window)
+  ffmpeg -y -ss 00:00:15 -to 00:01:25 -i "$RAW_VIDEO" \
+    -vf "fps=10,scale=720:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=96[p];[s1][p]paletteuse=dither=bayer:bayer_scale=3" \
     /tmp/real_minecraft_121_launch.gif
 
   echo "[Encoder] Generated videos:"
