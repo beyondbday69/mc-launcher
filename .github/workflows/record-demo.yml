@@ -1,0 +1,111 @@
+name: record-demo
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  record-download-and-launch:
+    name: record minecraft 1.21 download & launch
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Install Playwright Chromium & dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Start preview server & record video
+        run: |
+          npm run preview -- --port 4173 &
+          PREVIEW_PID=$!
+          echo "Waiting for preview server on http://localhost:4173..."
+          for i in {1..30}; do
+            if curl -s http://localhost:4173 >/dev/null; then
+              echo "Preview server is ready!"
+              break
+            fi
+            sleep 1
+          done
+          mkdir -p /tmp/demo_recordings
+          RECORD_DIR=/tmp/demo_recordings node scripts/record-launch-workflow.mjs
+          kill $PREVIEW_PID || true
+
+      - name: Upload video recording artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: minecraft-121-screen-recording
+          path: |
+            /tmp/demo_recordings/*.mp4
+            /tmp/demo_recordings/*.webm
+            /tmp/demo_recordings/*.gif
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish media and update Actions Summary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. Commit recording to media/screenshots branch
+          TEMP_DIR=$(mktemp -d)
+          cp /tmp/demo_recordings/* "$TEMP_DIR/"
+          cd "$TEMP_DIR"
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b media
+          git add *
+          git commit -m "chore(media): update Minecraft 1.21 screen recording for run ${{ github.run_id }}"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          git push origin media --force || echo "Warning: git push to media branch failed, continuing..."
+          cd "$GITHUB_WORKSPACE"
+
+          # 2. Append markdown to GITHUB_STEP_SUMMARY
+          REPO="${{ github.repository }}"
+          RUN_ID="${{ github.run_id }}"
+          BASE="https://raw.githubusercontent.com/${REPO}/media"
+
+          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          # 🎬 Screen Recording: Downloading Minecraft & Launching 1.21
+
+          This automated screen recording demonstrates:
+          - Downloading Minecraft 1.21 release from **Driver Catalog**
+          - Live progress bar with stage description, download speed, and bytes transferred
+          - Seamless transition to **Transfers** with persistent active queue
+          - Launching Minecraft 1.21 with verification, sync, tuning, and boot stages
+          - Uninterrupted game session with live playtime counter and process PID across screen navigation
+          - Clean session termination with **STOP GAME**
+
+          ---
+
+          EOF
+
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          ### Animated Workflow Preview
+          ![Minecraft 1.21 Download & Launch](${BASE}/minecraft_121_download_and_launch.gif?v=${RUN_ID})
+
+          ---
+
+          ### Video Files
+          - 🎬 **MP4 (H.264 High Profile)**: [Download MP4](${BASE}/minecraft_121_download_and_launch.mp4)
+          - 🎥 **WebM (VP8/VP9 Native)**: [Download WebM](${BASE}/minecraft_121_download_and_launch.webm)
+          - 🎞️ **Animated GIF**: [View GIF](${BASE}/minecraft_121_download_and_launch.gif)
+          EOF
