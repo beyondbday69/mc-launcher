@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, ReactNode } from "react";
-import { api, Config, Instance, formatDuration } from "./lib/types";
+import { api, Config, Instance, formatDuration, isTauri, SAMPLE_INSTANCES, DEFAULT_CONFIG } from "./lib/types";
 import { TaskManagerProvider, useTaskManager } from "./lib/taskManager";
 import { Home } from "./screens/Home";
 import { Instances } from "./screens/Instances";
@@ -109,9 +109,15 @@ function AppContent() {
       .catch(() => {});
   }, []);
 
-  const [config, setConfig] = useState<Config | null>(null);
-  const [instances, setInstances] = useState<Instance[]>([]);
-  const [selected, setSelected] = useState<Instance | null>(null);
+  const [config, setConfig] = useState<Config | null>(() =>
+    isTauri ? null : { ...DEFAULT_CONFIG, selected_instance: "fabric-1-21-4" }
+  );
+  const [instances, setInstances] = useState<Instance[]>(() =>
+    isTauri ? [] : SAMPLE_INSTANCES
+  );
+  const [selected, setSelected] = useState<Instance | null>(() =>
+    isTauri ? null : SAMPLE_INSTANCES[0]
+  );
 
   const refresh = useCallback(async () => {
     try {

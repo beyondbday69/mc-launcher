@@ -205,9 +205,9 @@ export interface VersionFileLookup {
   file: ProjectFile | null;
 }
 
-const isTauri = typeof window !== "undefined" && Boolean((window as any).__TAURI_INTERNALS__);
+export const isTauri = typeof window !== "undefined" && Boolean((window as any).__TAURI_INTERNALS__);
 
-const SAMPLE_INSTANCES: Instance[] = [
+export const SAMPLE_INSTANCES: Instance[] = [
   {
     id: "fabric-1-21-4",
     name: "Fabric 1.21.4 (Main)",
