@@ -7,8 +7,9 @@ export interface IconProps {
 }
 
 // 21st.dev inspired interactive animated SVGs:
-// Simple, clean vector paths with sub-element classes for smooth micro-animations
+// Pixel-precise vector geometry with sub-element classes for smooth micro-animations
 
+// 1. Dashboard / Home
 export function IconHome({ size = 18, className, style }: IconProps) {
   return (
     <svg
@@ -23,13 +24,14 @@ export function IconHome({ size = 18, className, style }: IconProps) {
       className={`icon-animated-home ${className || ""}`}
       style={style}
     >
-      <path className="home-roof" d="M3 10.5L12 3l9 7.5" />
-      <path className="home-walls" d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10" />
-      <path className="home-door" d="M9 21v-6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6" />
+      <path className="home-roof" d="m3 9 9-7 9 7" />
+      <path className="home-walls" d="M4 10v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V10" />
+      <polyline className="home-door" points="9 21 9 12 15 12 15 21" />
     </svg>
   );
 }
 
+// 2. Game Library / Instances (Voxel Box with lifting lid)
 export function IconInstances({ size = 18, className, style }: IconProps) {
   return (
     <svg
@@ -51,6 +53,7 @@ export function IconInstances({ size = 18, className, style }: IconProps) {
   );
 }
 
+// 3. Driver Catalog (High-tech GPU/Driver Microchip with pulsing silicon core)
 export function IconVersions({ size = 18, className, style }: IconProps) {
   return (
     <svg
@@ -62,16 +65,17 @@ export function IconVersions({ size = 18, className, style }: IconProps) {
       strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={`icon-animated-clock ${className || ""}`}
+      className={`icon-animated-chip ${className || ""}`}
       style={style}
     >
-      <circle cx="12" cy="12" r="10" />
-      <line className="clock-hour" x1="12" y1="12" x2="12" y2="7" />
-      <line className="clock-minute" x1="12" y1="12" x2="16" y2="12" />
+      <rect className="chip-board" x="4" y="4" width="16" height="16" rx="2" />
+      <rect className="chip-core" x="9" y="9" width="6" height="6" />
+      <path className="chip-pins" d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3" />
     </svg>
   );
 }
 
+// 4. Transfers / Downloads (Arrow dropping into tray with spring bounce)
 export function IconDownloads({ size = 18, className, style }: IconProps) {
   return (
     <svg
@@ -95,6 +99,7 @@ export function IconDownloads({ size = 18, className, style }: IconProps) {
   );
 }
 
+// 5. Mods & Packs (Universal Jigsaw Puzzle Piece)
 export function IconContent({ size = 18, className, style }: IconProps) {
   return (
     <svg
@@ -120,6 +125,7 @@ export function IconContent({ size = 18, className, style }: IconProps) {
 export const IconPuzzle = IconContent;
 export const IconMods = IconContent;
 
+// 6. Settings & Tuning (Precision Gear Rotor with rotation)
 export function IconSettings({ size = 18, className, style }: IconProps) {
   return (
     <svg
@@ -142,6 +148,45 @@ export function IconSettings({ size = 18, className, style }: IconProps) {
   );
 }
 
+// 7. Game Ready / Gamepad (Replaces Unicode Emoji with High-Tech Ergonomic Controller)
+export function IconGamepad({ size = 24, className, style }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`icon-animated-gamepad ${className || ""}`}
+      style={style}
+    >
+      {/* Ergonomic controller grips and body */}
+      <path
+        className="gamepad-body"
+        d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 19c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258A4 4 0 0 0 17.32 5z"
+      />
+      {/* D-Pad on left */}
+      <g className="gamepad-dpad">
+        <line x1="6" y1="12" x2="10" y2="12" />
+        <line x1="8" y1="10" x2="8" y2="14" />
+      </g>
+      {/* Action Buttons on right */}
+      <g className="gamepad-btns">
+        <circle cx="15" cy="13" r="0.75" fill="currentColor" stroke="none" />
+        <circle cx="18" cy="11" r="0.75" fill="currentColor" stroke="none" />
+      </g>
+      {/* Game Ready glowing status LED in center */}
+      <circle className="gamepad-led" cx="12" cy="10" r="1.25" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export const IconGameReady = IconGamepad;
+
+// 8. Launch / Play
 export function IconPlay({ size = 18, className, style }: IconProps) {
   return (
     <svg
@@ -157,6 +202,7 @@ export function IconPlay({ size = 18, className, style }: IconProps) {
   );
 }
 
+// 9. Stop
 export function IconStop({ size = 18, className, style }: IconProps) {
   return (
     <svg
@@ -172,6 +218,7 @@ export function IconStop({ size = 18, className, style }: IconProps) {
   );
 }
 
+// 10. Search (Magnifying glass with bounce)
 export function IconSearch({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -192,6 +239,7 @@ export function IconSearch({ size = 16, className, style }: IconProps) {
   );
 }
 
+// 11. Plus / Add (90deg spring spin)
 export function IconPlus({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -200,7 +248,7 @@ export function IconPlus({ size = 16, className, style }: IconProps) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2}
+      strokeWidth={2.5}
       strokeLinecap="round"
       strokeLinejoin="round"
       className={`icon-animated-plus ${className || ""}`}
@@ -212,6 +260,7 @@ export function IconPlus({ size = 16, className, style }: IconProps) {
   );
 }
 
+// 12. Check / Verified (Elastic pop)
 export function IconCheck({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -231,6 +280,7 @@ export function IconCheck({ size = 16, className, style }: IconProps) {
   );
 }
 
+// 13. Edit / Rename (Pencil tilt)
 export function IconEdit({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -251,6 +301,7 @@ export function IconEdit({ size = 16, className, style }: IconProps) {
   );
 }
 
+// 14. Copy / Duplicate (Front sheet offset)
 export function IconCopy({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -271,6 +322,7 @@ export function IconCopy({ size = 16, className, style }: IconProps) {
   );
 }
 
+// 15. Trash / Delete (Lid opens)
 export function IconTrash({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -290,10 +342,13 @@ export function IconTrash({ size = 16, className, style }: IconProps) {
         <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
       </g>
       <path className="trash-can" d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
     </svg>
   );
 }
 
+// 16. Game Folder (Folder flap tilts open)
 export function IconFolder({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -314,6 +369,7 @@ export function IconFolder({ size = 16, className, style }: IconProps) {
   );
 }
 
+// 17. User / Gamer Profile (Avatar head nods)
 export function IconUser({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -334,6 +390,7 @@ export function IconUser({ size = 16, className, style }: IconProps) {
   );
 }
 
+// 18. Clock / Playtime History
 export function IconClock({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -354,6 +411,7 @@ export function IconClock({ size = 16, className, style }: IconProps) {
   );
 }
 
+// 19. Calendar
 export function IconCalendar({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -376,6 +434,7 @@ export function IconCalendar({ size = 16, className, style }: IconProps) {
   );
 }
 
+// 20. 3D Voxel Cube (Minecraft block)
 export function IconCube({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -387,14 +446,17 @@ export function IconCube({ size = 16, className, style }: IconProps) {
       strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={className}
+      className={`icon-animated-cube ${className || ""}`}
       style={style}
     >
-      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <path className="cube-top" d="m12 3 8 4.5-8 4.5-8-4.5z" />
+      <path className="cube-left" d="m4 7.5v9l8 4.5v-9z" />
+      <path className="cube-right" d="m12 12v9l8-4.5v-9z" />
     </svg>
   );
 }
 
+// 21. RAM / Silicon Die
 export function IconRam({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -406,11 +468,11 @@ export function IconRam({ size = 16, className, style }: IconProps) {
       strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={className}
+      className={`icon-animated-chip ${className || ""}`}
       style={style}
     >
-      <rect x="4" y="4" width="16" height="16" rx="2" />
-      <rect x="9" y="9" width="6" height="6" />
+      <rect className="chip-board" x="4" y="4" width="16" height="16" rx="2" />
+      <rect className="chip-core" x="9" y="9" width="6" height="6" />
       <line x1="9" y1="1" x2="9" y2="4" />
       <line x1="15" y1="1" x2="15" y2="4" />
       <line x1="9" y1="20" x2="9" y2="23" />
@@ -423,6 +485,7 @@ export function IconRam({ size = 16, className, style }: IconProps) {
   );
 }
 
+// 22. Speed / Performance Gauge
 export function IconSpeed({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -434,7 +497,7 @@ export function IconSpeed({ size = 16, className, style }: IconProps) {
       strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={className}
+      className={`icon-animated-speed ${className || ""}`}
       style={style}
     >
       <path d="M12 2v4" />
@@ -449,6 +512,7 @@ export function IconSpeed({ size = 16, className, style }: IconProps) {
   );
 }
 
+// 23. Chevron Down
 export function IconChevronDown({ size = 14, className, style }: IconProps) {
   return (
     <svg
@@ -468,6 +532,7 @@ export function IconChevronDown({ size = 14, className, style }: IconProps) {
   );
 }
 
+// 24. Refresh / Sync (360deg spin)
 export function IconRefresh({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -482,13 +547,16 @@ export function IconRefresh({ size = 16, className, style }: IconProps) {
       className={`icon-animated-refresh ${className || ""}`}
       style={style}
     >
-      <polyline points="23 4 23 10 17 10" />
-      <polyline points="1 20 1 14 7 14" />
-      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+      <g className="refresh-arrows">
+        <polyline points="23 4 23 10 17 10" />
+        <polyline points="1 20 1 14 7 14" />
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+      </g>
     </svg>
   );
 }
 
+// 25. Grid View
 export function IconGrid({ size = 16, className, style }: IconProps) {
   return (
     <svg
@@ -511,6 +579,7 @@ export function IconGrid({ size = 16, className, style }: IconProps) {
   );
 }
 
+// 26. List View
 export function IconList({ size = 16, className, style }: IconProps) {
   return (
     <svg

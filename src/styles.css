@@ -981,6 +981,9 @@ h1, h2, h3, h4 {
 .icon-animated-download,
 .icon-animated-sparkle,
 .icon-animated-puzzle,
+.icon-animated-gamepad,
+.icon-animated-chip,
+.icon-animated-cube,
 .icon-animated-gear,
 .icon-animated-play,
 .icon-animated-stop,
@@ -1030,7 +1033,19 @@ button:hover .icon-animated-box .box-lid,
   transform: translateY(-3px);
 }
 
-/* Versions / Clock Icon: Minute hand rotates 90deg */
+/* Versions / Driver Catalog / Chip: Core pulses and scales */
+.icon-animated-chip .chip-core {
+  transform-origin: 12px 12px;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), fill 0.25s ease;
+}
+.nav-item:hover .icon-animated-chip .chip-core,
+button:hover .icon-animated-chip .chip-core,
+.icon-animated-chip:hover .chip-core {
+  transform: scale(1.3);
+  fill: var(--nv-primary);
+}
+
+/* Clock Icon: Minute hand rotates 90deg */
 .icon-animated-clock .clock-minute {
   transform-origin: 12px 12px;
   transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -1075,6 +1090,46 @@ button:hover .icon-animated-sparkle .sparkle-core,
 button:hover .icon-animated-gear .gear-rotor,
 .icon-animated-gear:hover .gear-rotor {
   transform: rotate(60deg);
+}
+
+/* Game Ready Card & Gamepad Icon */
+.game-ready-card {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+.game-ready-card:hover {
+  border-color: var(--nv-primary) !important;
+  box-shadow: 0 0 24px rgba(118, 185, 0, 0.18);
+}
+.icon-animated-gamepad {
+  overflow: visible;
+}
+.icon-animated-gamepad .gamepad-body {
+  transform-origin: 12px 12px;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.icon-animated-gamepad .gamepad-led {
+  transition: filter 0.3s ease;
+}
+.game-ready-card:hover .icon-animated-gamepad .gamepad-body,
+button:hover .icon-animated-gamepad .gamepad-body,
+.icon-animated-gamepad:hover .gamepad-body {
+  transform: rotate(-6deg) scale(1.08);
+}
+.game-ready-card:hover .icon-animated-gamepad .gamepad-led,
+button:hover .icon-animated-gamepad .gamepad-led,
+.icon-animated-gamepad:hover .gamepad-led {
+  filter: drop-shadow(0 0 8px var(--nv-primary));
+}
+
+/* Voxel Cube Icon: Top face lifts up */
+.icon-animated-cube .cube-top {
+  transform-origin: 12px 3px;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.icon-animated-cube:hover .cube-top,
+.nav-item:hover .icon-animated-cube .cube-top,
+button:hover .icon-animated-cube .cube-top {
+  transform: translateY(-2.5px);
 }
 
 /* Play Icon: Triangle nudges forward and scales */

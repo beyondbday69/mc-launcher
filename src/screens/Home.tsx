@@ -1,6 +1,6 @@
 import { useState, useTransition } from "react";
 import { api, Config, Instance, formatDuration } from "../lib/types";
-import { IconPlay, IconFolder, IconSettings, IconCheck } from "../lib/icons";
+import { IconPlay, IconFolder, IconSettings, IconCheck, IconGameReady } from "../lib/icons";
 
 interface HomeProps {
   config: Config | null;
@@ -143,6 +143,7 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
 
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
             <div
+              className="game-ready-card"
               style={{
                 width: 140,
                 height: 140,
@@ -153,12 +154,21 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 8,
+                gap: 10,
                 position: "relative",
               }}
             >
               <div className="corner-square" style={{ width: 8, height: 8 }} />
-              <span style={{ fontSize: 40 }}>🎮</span>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--nv-primary)",
+                }}
+              >
+                <IconGameReady size={44} />
+              </div>
               <span
                 style={{
                   fontSize: 11,
