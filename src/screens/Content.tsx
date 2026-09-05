@@ -72,20 +72,19 @@ export function Content({ selected }: ContentProps) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Category Pills & Search Filter */}
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* Category Tabs & Search Bar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {[
             { id: "mod", label: "OPTIMIZATION & MODS" },
-            { id: "shader", label: "RTX SHADERS & LIGHTING" },
-            { id: "resourcepack", label: "HD TEXTURES & PACKS" },
+            { id: "shader", label: "SHADERS & LIGHTING" },
+            { id: "resourcepack", label: "RESOURCE PACKS" },
           ].map((cat) => (
             <button
               key={cat.id}
               type="button"
-              className={category === cat.id ? "btn-nvidia-primary" : "btn-nvidia-secondary"}
-              style={{ padding: "8px 16px", fontSize: 12 }}
+              className={`pill-tab ${category === cat.id ? "active" : ""}`}
               onClick={() => setCategory(cat.id)}
             >
               {cat.label}
@@ -95,47 +94,49 @@ export function Content({ selected }: ContentProps) {
 
         <input
           type="text"
-          className="input-nvidia"
-          placeholder="Search mods, shaders, optimization..."
+          className="text-input"
+          placeholder="Search mods, shaders, textures..."
           style={{ maxWidth: 320 }}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
 
-      {/* Target Instance Banner */}
+      {/* Target Profile Status */}
       <div
         style={{
-          padding: "10px 18px",
-          background: "var(--bg-surface)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--radius-xs)",
+          padding: "12px 20px",
+          background: "var(--nv-surface-card)",
+          border: "1px solid var(--nv-hairline)",
+          borderRadius: "var(--rounded-sm)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          fontSize: 12,
+          fontSize: 13,
         }}
       >
-        <span style={{ color: "#9da5b4" }}>
-          Target Profile: <strong style={{ color: "#ffffff" }}>{selected ? selected.name : "None Selected"}</strong>
-          {selected && ` (Minecraft ${selected.version} • ${selected.mod_loader?.kind?.toUpperCase() || "VANILLA"})`}
+        <span style={{ color: "var(--nv-on-dark-mute)" }}>
+          Active Target: <strong style={{ color: "#ffffff" }}>{selected ? selected.name : "None Selected"}</strong>
+          {selected && ` (MC ${selected.version} • ${selected.mod_loader?.kind?.toUpperCase() || "VANILLA"})`}
         </span>
-        <span className="badge-rtx">MODRINTH REPOSITORY CONNECTED</span>
+        <span className="badge-tag badge-tag-primary">MODRINTH CATALOG CONNECTED</span>
       </div>
 
-      {/* Projects Grid */}
+      {/* Content Grid */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: 48, color: "#9da5b4", fontFamily: "var(--font-mono)" }}>
+        <div style={{ textAlign: "center", padding: 48, color: "var(--nv-mute)", fontFamily: "var(--font-mono)" }}>
           QUERYING REPOSITORY CATALOG...
         </div>
       ) : projects.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 48, color: "#656d7c" }}>
+        <div style={{ textAlign: "center", padding: 48, color: "var(--nv-mute)" }}>
           No content matches your search criteria.
         </div>
       ) : (
-        <div className="content-grid">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
           {projects.map((hit) => (
-            <div key={hit.slug} className="mod-card">
+            <div key={hit.slug} className="nv-card" style={{ padding: "20px" }}>
+              <div className="corner-square" style={{ width: 8, height: 8 }} />
+
               <div>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
                   {hit.icon_url ? (
@@ -145,8 +146,8 @@ export function Content({ selected }: ContentProps) {
                       style={{
                         width: 44,
                         height: 44,
-                        borderRadius: "var(--radius-xs)",
-                        background: "var(--bg-canvas)",
+                        borderRadius: "var(--rounded-sm)",
+                        background: "var(--nv-surface-dark)",
                         flexShrink: 0,
                       }}
                     />
@@ -155,9 +156,9 @@ export function Content({ selected }: ContentProps) {
                       style={{
                         width: 44,
                         height: 44,
-                        borderRadius: "var(--radius-xs)",
-                        background: "var(--bg-interactive)",
-                        border: "1px solid var(--border)",
+                        borderRadius: "var(--rounded-sm)",
+                        background: "var(--nv-surface-elevated)",
+                        border: "1px solid var(--nv-hairline)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -170,34 +171,31 @@ export function Content({ selected }: ContentProps) {
                   )}
 
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span className="badge-channel" style={{ fontSize: 10, padding: "1px 5px" }}>
-                        {hit.project_type.toUpperCase()}
-                      </span>
-                    </div>
-                    <h3 style={{ fontSize: 16, fontWeight: 800, color: "#ffffff", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <span className="badge-tag" style={{ fontSize: 10, padding: "2px 6px" }}>
+                      {hit.project_type.toUpperCase()}
+                    </span>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: "#ffffff", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {hit.title}
                     </h3>
-                    <div style={{ fontSize: 11.5, color: "#656d7c", fontFamily: "var(--font-mono)" }}>
+                    <div style={{ fontSize: 12, color: "var(--nv-mute)" }}>
                       by {hit.author}
                     </div>
                   </div>
                 </div>
 
-                <p style={{ fontSize: 12.5, color: "#9da5b4", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                <p style={{ fontSize: 13, color: "var(--nv-on-dark-mute)", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                   {hit.description}
                 </p>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
-                <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "#656d7c" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 12, borderTop: "1px solid var(--nv-hairline)" }}>
+                <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--nv-mute)" }}>
                   {(hit.downloads / 1000000).toFixed(1)}M DLs
                 </span>
 
                 <button
                   type="button"
-                  className="btn-nvidia-primary"
-                  style={{ padding: "6px 14px", fontSize: 11.5 }}
+                  className="button-primary button-sm"
                   disabled={installingSlug === hit.slug}
                   onClick={() => handleInstall(hit)}
                 >

@@ -58,13 +58,13 @@ const SCREENS: NavScreen[] = [
   },
   {
     id: "content",
-    label: "RTX Mods & Shaders",
-    category: "RTX HUB",
+    label: "Mods & Packs",
+    category: "CONTENT",
     icon: () => <IconContent size={18} />,
   },
   {
     id: "settings",
-    label: "Performance & JVM",
+    label: "Settings & Tuning",
     category: "TUNING",
     icon: () => <IconSettings size={18} />,
   },
@@ -160,17 +160,24 @@ export function App() {
 
   return (
     <div className="app">
-      {/* NVIDIA GeForce Style Navigation Rail */}
+      {/* NVIDIA Sidebar Navigation Rail */}
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-icon">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#000000" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path
+                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                stroke="#000000"
+                strokeWidth="2.5"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
           <div className="brand-info">
-            <span className="brand-title">GEFORCE LAUNCHER</span>
-            <span className="brand-sub">RTX MC EDITION</span>
+            <span className="brand-title">NVIDIA LAUNCHER</span>
+            <span className="brand-sub">SYSTEM RUNTIME</span>
           </div>
         </div>
 
@@ -196,25 +203,39 @@ export function App() {
 
         <div className="sidebar-footer">
           <div className="status-indicator-live">
-            <div className="status-dot-pulse" />
-            <span>RTX OPTIMAL</span>
+            <div className="status-dot-solid" />
+            <span>SYSTEM OPTIMAL</span>
           </div>
-          <span style={{ color: "#656d7c" }}>v0.1.0</span>
+          <span style={{ color: "var(--nv-mute)" }}>v0.1.0</span>
         </div>
       </aside>
 
-      {/* Main Experience Viewport */}
+      {/* Main Viewport */}
       <main className="main">
         <header className="header">
           <div className="header-left">
-            <div className="header-rtx-badge">
+            <div className="header-status-badge">
               <span>●</span>
-              <span>RTX ON</span>
+              <span>ENGINE READY</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#9da5b4" }}>
-              <span style={{ color: "#656d7c" }}>GEFORCE</span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: 13,
+                color: "var(--nv-on-dark-mute)",
+              }}
+            >
+              <span style={{ color: "var(--nv-mute)" }}>NVIDIA</span>
               <span>/</span>
-              <span style={{ color: "#f5f6f8", fontWeight: 700, textTransform: "uppercase" }}>
+              <span
+                style={{
+                  color: "#ffffff",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                }}
+              >
                 {SCREENS.find((s) => s.id === screen)?.label || "Dashboard"}
               </span>
             </div>
@@ -232,12 +253,21 @@ export function App() {
               >
                 <div className="header-chip-dot" />
                 <span>{selected.name}</span>
-                <span style={{ color: "#656d7c", fontSize: 11, fontFamily: "var(--font-mono)" }}>
+                <span
+                  style={{
+                    color: "var(--nv-mute)",
+                    fontSize: 12,
+                    fontFamily: "var(--font-mono)",
+                  }}
+                >
                   {selected.version}
                 </span>
               </div>
             ) : (
-              <div className="header-chip-instance" style={{ color: "#656d7c" }}>
+              <div
+                className="header-chip-instance"
+                style={{ color: "var(--nv-mute)" }}
+              >
                 <span>No profile active</span>
               </div>
             )}

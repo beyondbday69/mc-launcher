@@ -46,42 +46,39 @@ export function Versions({ onInstalled }: VersionsProps) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Dual Spotlight Banners */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* Dual Spotlight Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
         {/* Game Ready Stable */}
         <div
+          className="nv-card"
           style={{
-            background: "linear-gradient(135deg, #182012 0%, #12151c 100%)",
-            border: "1px solid var(--nvidia-green)",
-            borderRadius: "var(--radius-sm)",
-            padding: "20px 24px",
-            boxShadow: "0 0 20px rgba(118, 185, 0, 0.15)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            gap: 12,
+            border: "1px solid var(--nv-primary)",
+            background: "var(--nv-surface-card)",
+            padding: "28px 32px",
           }}
         >
+          <div className="corner-square" />
+
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <span className="badge-rtx">● GAME READY RELEASE</span>
-              <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "#76b900" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <span className="badge-tag badge-tag-primary">GAME READY RELEASE</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--nv-primary)" }}>
                 RECOMMENDED
               </span>
             </div>
-            <h2 style={{ fontSize: 24, fontWeight: 800, color: "#ffffff" }}>
+            <h2 style={{ fontSize: 26, fontWeight: 700, color: "#ffffff" }}>
               MINECRAFT {latest?.release || "1.21.4"}
             </h2>
-            <p style={{ fontSize: 12.5, color: "#9da5b4", marginTop: 4 }}>
-              Fully verified for optimal stability, shader rendering, and multiplayer compatibility.
+            <p style={{ fontSize: 14, color: "var(--nv-on-dark-mute)", marginTop: 6 }}>
+              Production release channel. Verified for stability, multithreading, and rendering compatibility.
             </p>
           </div>
 
           <div>
             <button
               type="button"
-              className="btn-nvidia-primary"
+              className="button-primary"
               disabled={Boolean(installingId)}
               onClick={() => handleInstall(latest?.release || "1.21.4")}
             >
@@ -94,38 +91,35 @@ export function Versions({ onInstalled }: VersionsProps) {
 
         {/* Developer Snapshot */}
         <div
+          className="nv-card"
           style={{
-            background: "var(--bg-surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius-sm)",
-            padding: "20px 24px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            gap: 12,
+            background: "var(--nv-surface-card)",
+            padding: "28px 32px",
           }}
         >
+          <div className="corner-square" style={{ background: "var(--nv-warning)" }} />
+
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <span className="badge-channel" style={{ color: "#f59e0b", borderColor: "rgba(245,158,11,0.4)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <span className="badge-tag" style={{ color: "var(--nv-warning)", borderColor: "var(--nv-warning)" }}>
                 DEVELOPER PREVIEW
               </span>
-              <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "#656d7c" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--nv-mute)" }}>
                 EXPERIMENTAL
               </span>
             </div>
-            <h2 style={{ fontSize: 24, fontWeight: 800, color: "#ffffff" }}>
+            <h2 style={{ fontSize: 26, fontWeight: 700, color: "#ffffff" }}>
               SNAPSHOT {latest?.snapshot || "24w45a"}
             </h2>
-            <p style={{ fontSize: 12.5, color: "#9da5b4", marginTop: 4 }}>
-              Bleeding-edge Mojang development channel. Early features & testbed.
+            <p style={{ fontSize: 14, color: "var(--nv-on-dark-mute)", marginTop: 6 }}>
+              Bleeding-edge Mojang development channel. Early features & testbed builds.
             </p>
           </div>
 
           <div>
             <button
               type="button"
-              className="btn-nvidia-secondary"
+              className="button-outline-on-dark"
               disabled={Boolean(installingId)}
               onClick={() => handleInstall(latest?.snapshot || "24w45a")}
             >
@@ -142,26 +136,24 @@ export function Versions({ onInstalled }: VersionsProps) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button
             type="button"
-            className={channel === "release" ? "btn-nvidia-primary" : "btn-nvidia-secondary"}
-            style={{ padding: "8px 16px", fontSize: 12 }}
+            className={`pill-tab ${channel === "release" ? "active" : ""}`}
             onClick={() => setChannel("release")}
           >
-            GAME READY CHANNELS ONLY
+            GAME READY ONLY
           </button>
           <button
             type="button"
-            className={channel === "all" ? "btn-nvidia-primary" : "btn-nvidia-secondary"}
-            style={{ padding: "8px 16px", fontSize: 12 }}
+            className={`pill-tab ${channel === "all" ? "active" : ""}`}
             onClick={() => setChannel("all")}
           >
-            SHOW ALL (INCL. SNAPSHOTS)
+            ALL (INCL. SNAPSHOTS)
           </button>
         </div>
 
         <input
           type="text"
-          className="input-nvidia"
-          placeholder="Filter driver versions..."
+          className="text-input"
+          placeholder="Filter version catalog..."
           style={{ maxWidth: 300 }}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -176,32 +168,31 @@ export function Versions({ onInstalled }: VersionsProps) {
               <th>CHANNEL</th>
               <th>VERSION ID</th>
               <th>RELEASE DATE</th>
-              <th>SHA-1 CHECKSUM</th>
-              <th style={{ textAlign: "right" }}>DEPLOY</th>
+              <th>INTEGRITY STATUS</th>
+              <th style={{ textAlign: "right" }}>ACTION</th>
             </tr>
           </thead>
           <tbody>
             {filteredVersions.map((v) => (
               <tr key={v.id}>
                 <td>
-                  <span className={v.type === "release" ? "badge-rtx" : "badge-channel"}>
+                  <span className={v.type === "release" ? "badge-tag badge-tag-primary" : "badge-tag"}>
                     {v.type === "release" ? "GAME READY" : "SNAPSHOT"}
                   </span>
                 </td>
-                <td style={{ fontWeight: 800, color: "#ffffff", fontFamily: "var(--font-mono)" }}>
+                <td style={{ fontWeight: 700, color: "#ffffff", fontFamily: "var(--font-mono)" }}>
                   {v.id}
                 </td>
-                <td style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>
+                <td style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>
                   {v.releaseTime ? new Date(v.releaseTime).toLocaleDateString() : "—"}
                 </td>
-                <td style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "#656d7c" }}>
-                  {v.sha1 ? `${v.sha1.slice(0, 10)}...` : "VERIFIED SIGNATURE"}
+                <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-primary)" }}>
+                  VERIFIED SIGNATURE
                 </td>
                 <td style={{ textAlign: "right" }}>
                   <button
                     type="button"
-                    className="btn-nvidia-secondary"
-                    style={{ padding: "5px 12px", fontSize: 11 }}
+                    className="button-outline-on-dark button-sm"
                     disabled={installingId === v.id}
                     onClick={() => handleInstall(v.id)}
                   >

@@ -69,12 +69,12 @@ export function AccountButton() {
           display: "flex",
           alignItems: "center",
           gap: 9,
-          padding: "4px 12px 4px 6px",
-          background: "var(--bg-surface)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--radius-xs)",
+          padding: "5px 12px 5px 6px",
+          background: "var(--nv-surface-elevated)",
+          border: "1px solid var(--nv-hairline)",
+          borderRadius: "var(--rounded-sm)",
           cursor: "pointer",
-          transition: "all 0.15s ease",
+          transition: "border-color 0.1s",
         }}
         title="Manage Gamer Account"
       >
@@ -82,33 +82,31 @@ export function AccountButton() {
           style={{
             width: 24,
             height: 24,
-            borderRadius: "var(--radius-xs)",
-            background: "var(--bg-interactive)",
-            border: "1px solid var(--border)",
+            borderRadius: "var(--rounded-sm)",
+            background: "var(--nv-surface-dark)",
+            border: "1px solid var(--nv-hairline)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontSize: 12,
-            fontWeight: 800,
-            color: "var(--nvidia-green)",
+            fontWeight: 700,
+            color: "var(--nv-primary)",
           }}
         >
           {selectedAcc ? selectedAcc.username.charAt(0).toUpperCase() : "P"}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1 }}>
-          <span style={{ fontSize: 12.5, fontWeight: 700, color: "#ffffff" }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#ffffff" }}>
             {selectedAcc ? selectedAcc.username : "Player"}
           </span>
         </div>
 
         <div
           style={{
-            width: 6,
-            height: 6,
-            borderRadius: "50%",
-            background: "var(--nvidia-green)",
-            boxShadow: "0 0 6px var(--nvidia-green)",
+            width: 7,
+            height: 7,
+            background: "var(--nv-primary)",
           }}
         />
       </div>
@@ -116,11 +114,12 @@ export function AccountButton() {
       {showModal && (
         <div className="modal-backdrop">
           <div className="modal-box">
+            <div className="corner-square" />
             <div className="modal-header">
-              <h3>GEFORCE GAMER ID & PROFILES</h3>
+              <h3>GAMER ID & ACCOUNTS</h3>
               <button
                 type="button"
-                style={{ background: "none", border: "none", color: "#9da5b4", fontSize: 18, cursor: "pointer" }}
+                style={{ background: "none", border: "none", color: "var(--nv-on-dark-mute)", fontSize: 18, cursor: "pointer" }}
                 onClick={() => setShowModal(false)}
               >
                 ✕
@@ -131,20 +130,20 @@ export function AccountButton() {
               {/* Active Profile */}
               <div
                 style={{
-                  padding: "14px",
-                  background: "var(--bg-canvas)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--radius-xs)",
+                  padding: "16px 20px",
+                  background: "var(--nv-surface-dark)",
+                  border: "1px solid var(--nv-hairline)",
+                  borderRadius: "var(--rounded-sm)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: "#ffffff" }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#ffffff" }}>
                     {selectedAcc ? selectedAcc.username : "Player (Offline)"}
                   </div>
-                  <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "#76b900" }}>
+                  <div style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--nv-primary)" }}>
                     {selectedAcc?.is_msa ? "MICROSOFT AUTHENTICATED" : "LOCAL OFFLINE PROFILE"}
                   </div>
                 </div>
@@ -152,8 +151,8 @@ export function AccountButton() {
                 {selectedAcc && (
                   <button
                     type="button"
-                    className="btn-nvidia-secondary"
-                    style={{ padding: "4px 10px", fontSize: 11, color: "#ef4444" }}
+                    className="button-outline-on-dark button-sm"
+                    style={{ color: "var(--nv-error)" }}
                     onClick={() => handleLogout(selectedAcc.id)}
                   >
                     DISCONNECT
@@ -163,20 +162,20 @@ export function AccountButton() {
 
               {/* Add Offline Profile */}
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", color: "#9da5b4", marginBottom: 6 }}>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", color: "var(--nv-mute)", marginBottom: 6 }}>
                   Quick Offline Username
                 </label>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ display: "flex", gap: 10 }}>
                   <input
                     type="text"
-                    className="input-nvidia"
+                    className="text-input"
                     placeholder="Enter offline username..."
                     value={offlineName}
                     onChange={(e) => setOfflineName(e.target.value)}
                   />
                   <button
                     type="button"
-                    className="btn-nvidia-secondary"
+                    className="button-outline-on-dark"
                     disabled={!offlineName.trim()}
                     onClick={handleAddOffline}
                   >
@@ -186,10 +185,10 @@ export function AccountButton() {
               </div>
 
               {/* Microsoft Account */}
-              <div style={{ paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
+              <div style={{ paddingTop: 16, borderTop: "1px solid var(--nv-hairline)" }}>
                 <button
                   type="button"
-                  className="btn-nvidia-primary"
+                  className="button-primary"
                   style={{ width: "100%" }}
                   disabled={busy}
                   onClick={handleMicrosoftLogin}
@@ -202,7 +201,7 @@ export function AccountButton() {
             <div className="modal-footer">
               <button
                 type="button"
-                className="btn-nvidia-secondary"
+                className="button-outline-on-dark"
                 onClick={() => setShowModal(false)}
               >
                 CLOSE

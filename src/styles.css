@@ -1,82 +1,73 @@
 @import "@heroui/styles";
 
 /* ==========================================================================
-   NVIDIA GEFORCE // RTX DESIGN SYSTEM — MC LAUNCHER
-   High-performance industrial gaming aesthetic:
-   Titanium charcoals, stealth black surfaces, signature GeForce Green (#76b900)
-   accents, precision telemetry HUDs, and hardware-accelerated styling.
+   NVIDIA DESIGN SYSTEM — MC LAUNCHER
+   Based strictly on the official NVIDIA Design Analysis specification:
+   - Single accent: NVIDIA Green (#76b900), active/pressed (#5a8d00)
+   - Two-mode surface architecture: #000000 dark canvas / #1a1a1a elevated
+   - Hyper-angular geometry: 2px radius across EVERY interactive element
+   - Zero drop shadows, zero decorative gradients, hairline rules (#2e2e2e / #5e5e5e)
+   - Signature 12px x 12px green corner-square on cards
    ========================================================================== */
 
 :root {
-  /* NVIDIA Brand Accents */
-  --nvidia-green: #76b900;
-  --nvidia-green-hover: #88d600;
-  --nvidia-green-active: #629900;
-  --nvidia-green-dim: #446900;
-  --nvidia-green-soft: rgba(118, 185, 0, 0.12);
-  --nvidia-green-softer: rgba(118, 185, 0, 0.06);
-  --nvidia-green-border: rgba(118, 185, 0, 0.38);
-  --nvidia-green-glow: rgba(118, 185, 0, 0.45);
-  --nvidia-green-grad: linear-gradient(135deg, #88d600 0%, #76b900 60%, #598c00 100%);
+  /* Colors from NVIDIA design spec */
+  --nv-primary: #76b900;
+  --nv-primary-dark: #5a8d00;
+  --nv-on-primary: #000000;
+  --nv-surface-dark: #000000;
+  --nv-surface-elevated: #1a1a1a;
+  --nv-surface-card: #111111;
+  --nv-surface-soft: #1f1f1f;
+  --nv-hairline: #2e2e2e;
+  --nv-hairline-strong: #5e5e5e;
+  --nv-body: #1a1a1a;
+  --nv-mute: #757575;
+  --nv-stone: #898989;
+  --nv-ash: #a7a7a7;
+  --nv-on-dark: #ffffff;
+  --nv-on-dark-mute: rgba(255, 255, 255, 0.7);
+  --nv-link-blue: #0046a4;
+  --nv-error: #e52020;
+  --nv-warning: #df6500;
+  --nv-success-deep: #3f8500;
 
-  /* Titanium & Stealth Surfaces */
-  --bg-canvas: #0a0b0e;
-  --bg-subtle: #0f1115;
-  --bg-surface: #14171d;
-  --bg-surface-elevated: #1a1e26;
-  --bg-interactive: #222732;
-  --bg-interactive-hover: #2b3240;
-  --bg-interactive-active: #343c4c;
+  /* Universal angular geometry: 2px strictly */
+  --rounded-none: 0px;
+  --rounded-xs: 1px;
+  --rounded-sm: 2px;
+  --rounded-full: 9999px;
 
-  /* Industrial Borders */
-  --border: #262b36;
-  --border-subtle: #1a1d24;
-  --border-strong: #373e4e;
-  --border-focus: var(--nvidia-green);
+  /* Spacing */
+  --space-xxs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
+  --space-section: 64px;
 
-  /* High-Contrast Typography */
-  --text-primary: #f5f6f8;
-  --text-secondary: #9da5b4;
-  --text-muted: #656d7c;
-  --text-disabled: #444a56;
+  /* Typography */
+  --font-sans: "Inter", Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
 
-  /* Telemetry Status Colors */
-  --status-ready: #76b900;
-  --status-warning: #f59e0b;
-  --status-error: #ef4444;
-  --status-info: #00b4d8;
-
-  /* Precision Radii */
-  --radius-xs: 3px;
-  --radius-sm: 5px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-full: 9999px;
-
-  /* Fonts */
-  --font-sans: "Rajdhani", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
-  --font-mono: "JetBrains Mono", "Cascadia Code", ui-monospace, monospace;
-
-  /* Backwards compatibility aliases */
-  --accent: var(--nvidia-green);
-  --accent-hover: var(--nvidia-green-hover);
-  --accent-soft: var(--nvidia-green-soft);
-  --solid-primary: var(--nvidia-green);
-  --solid-primary-hover: var(--nvidia-green-hover);
-  --solid-secondary: var(--bg-interactive);
-  --solid-secondary-hover: var(--bg-interactive-hover);
-  --solid-success: var(--nvidia-green);
-  --solid-warning: var(--status-warning);
-  --solid-danger: var(--status-error);
-  --md-sys-color-primary: var(--nvidia-green);
-  --md-sys-color-secondary: var(--bg-interactive);
-  --md-sys-color-surface: var(--bg-surface);
-  --md-sys-color-surface-container: var(--bg-surface);
-  --md-sys-color-surface-container-high: var(--bg-surface-elevated);
-  --md-sys-color-on-surface: var(--text-primary);
-  --md-sys-color-on-surface-variant: var(--text-secondary);
-  --md-sys-color-outline: var(--border);
+  /* Backwards-compatibility aliases */
+  --bg-canvas: var(--nv-surface-dark);
+  --bg-subtle: #080808;
+  --bg-surface: var(--nv-surface-card);
+  --bg-surface-elevated: var(--nv-surface-elevated);
+  --bg-interactive: #222222;
+  --bg-interactive-hover: #2c2c2c;
+  --border: var(--nv-hairline);
+  --border-subtle: #1e1e1e;
+  --border-strong: var(--nv-hairline-strong);
+  --border-focus: var(--nv-primary);
+  --text-primary: var(--nv-on-dark);
+  --text-secondary: var(--nv-on-dark-mute);
+  --text-muted: var(--nv-mute);
+  --accent: var(--nv-primary);
+  --solid-primary: var(--nv-primary);
 }
 
 /* ==========================================================================
@@ -87,12 +78,12 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  border-color: var(--border);
+  border-color: var(--nv-hairline);
 }
 
 ::selection {
-  background: var(--nvidia-green-soft);
-  color: #ffffff;
+  background: var(--nv-primary);
+  color: #000000;
 }
 
 html,
@@ -101,10 +92,10 @@ body,
   height: 100%;
   width: 100%;
   overflow: hidden;
-  background: var(--bg-canvas);
-  color: var(--text-primary);
+  background: var(--nv-surface-dark);
+  color: var(--nv-on-dark);
   font-family: var(--font-sans);
-  font-size: 13.5px;
+  font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -113,36 +104,35 @@ body,
 
 h1, h2, h3, h4 {
   font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--text-primary);
+  color: var(--nv-on-dark);
+  letter-spacing: 0;
 }
 
-/* Slim Industrial Scrollbars */
+/* Slim Flat Scrollbars (No rounded bubbles) */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #080808;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-interactive);
-  border-radius: var(--radius-xs);
-  border: 2px solid var(--bg-canvas);
+  background: #333333;
+  border-radius: 0;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--border-strong);
+  background: var(--nv-hairline-strong);
 }
 
 /* ==========================================================================
-   App Shell (NVIDIA GeForce App Layout)
+   App Shell (NVIDIA Two-Mode Navigation)
    ========================================================================== */
 
 .app {
   display: flex;
   height: 100vh;
   width: 100vw;
-  background: var(--bg-canvas);
+  background: var(--nv-surface-dark);
   overflow: hidden;
 }
 
@@ -153,18 +143,18 @@ h1, h2, h3, h4 {
   height: 100vh;
   min-width: 0;
   overflow: hidden;
-  background: radial-gradient(circle at 80% 0%, rgba(118, 185, 0, 0.03) 0%, transparent 60%);
+  background: #0a0a0a;
 }
 
 /* ==========================================================================
-   Sidebar Navigation (GeForce Rail)
+   Sidebar Navigation Rail
    ========================================================================== */
 
 .sidebar {
-  width: 220px;
+  width: 228px;
   flex-shrink: 0;
-  background: var(--bg-subtle);
-  border-right: 1px solid var(--border);
+  background: var(--nv-surface-dark);
+  border-right: 1px solid var(--nv-hairline);
   display: flex;
   flex-direction: column;
   z-index: 20;
@@ -174,23 +164,22 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 18px 16px;
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(20, 23, 29, 0.6) 0%, transparent 100%);
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--nv-hairline);
+  background: var(--nv-surface-dark);
 }
 
 .brand-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  background: var(--nvidia-green);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--rounded-sm);
+  background: var(--nv-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #000000;
   font-weight: 900;
-  font-size: 18px;
-  box-shadow: 0 0 16px var(--nvidia-green-glow);
+  font-size: 16px;
   flex-shrink: 0;
 }
 
@@ -202,26 +191,24 @@ h1, h2, h3, h4 {
 
 .brand-title {
   font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-primary);
-  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--nv-on-dark);
+  line-height: 1.2;
 }
 
 .brand-sub {
-  font-size: 10.5px;
-  font-family: var(--font-mono);
-  color: var(--nvidia-green);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 11px;
   font-weight: 700;
+  color: var(--nv-primary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   padding: 14px 10px;
   flex: 1;
 }
@@ -230,46 +217,44 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 9px 12px;
-  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  border-radius: var(--rounded-sm);
   border: 1px solid transparent;
   background: transparent;
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 600;
+  color: var(--nv-on-dark-mute);
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.1s, color 0.1s;
   position: relative;
   text-align: left;
 }
 
 .nav-item:hover {
-  background: var(--bg-interactive);
-  color: var(--text-primary);
-  border-color: var(--border);
+  background: var(--nv-surface-elevated);
+  color: var(--nv-on-dark);
+  border-color: var(--nv-hairline);
 }
 
 .nav-item.active {
-  background: var(--nvidia-green-soft);
-  color: #ffffff;
-  border-color: var(--nvidia-green-border);
-  font-weight: 700;
+  background: var(--nv-surface-elevated);
+  color: var(--nv-on-dark);
+  border-color: var(--nv-hairline);
 }
 
+/* NVIDIA active tab indicator: solid 3px green bar */
 .nav-item.active::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 6px;
-  bottom: 6px;
-  width: 3.5px;
-  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
-  background: var(--nvidia-green);
-  box-shadow: 0 0 10px var(--nvidia-green);
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--nv-primary);
 }
 
 .nav-item.active .nav-icon {
-  color: var(--nvidia-green);
+  color: var(--nv-primary);
 }
 
 .nav-icon {
@@ -279,74 +264,64 @@ h1, h2, h3, h4 {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--text-muted);
+  color: var(--nv-mute);
 }
 
 .nav-badge {
   margin-left: auto;
   font-size: 11px;
-  font-family: var(--font-mono);
   font-weight: 700;
   padding: 2px 7px;
-  border-radius: var(--radius-xs);
-  background: var(--bg-interactive);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
+  border-radius: var(--rounded-sm);
+  background: var(--nv-surface-soft);
+  color: var(--nv-on-dark-mute);
+  border: 1px solid var(--nv-hairline);
 }
 
 .nav-item.active .nav-badge {
-  background: var(--nvidia-green);
+  background: var(--nv-primary);
   color: #000000;
-  border-color: var(--nvidia-green);
+  border-color: var(--nv-primary);
 }
 
 .sidebar-footer {
-  padding: 14px 16px;
-  border-top: 1px solid var(--border);
+  padding: 14px 18px;
+  border-top: 1px solid var(--nv-hairline);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--text-muted);
-  background: var(--bg-canvas);
+  font-size: 12px;
+  color: var(--nv-mute);
+  background: var(--nv-surface-dark);
 }
 
 .status-indicator-live {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--nvidia-green);
+  color: var(--nv-primary);
   font-weight: 700;
-  letter-spacing: 0.05em;
 }
 
-.status-dot-pulse {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--nvidia-green);
-  box-shadow: 0 0 8px var(--nvidia-green);
-  animation: pulse-dot 2s infinite ease-in-out;
-}
-
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.85); }
+.status-dot-solid {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--rounded-none);
+  background: var(--nv-primary);
 }
 
 /* ==========================================================================
-   Header Bar (GeForce Top Bar)
+   Header Utility & Primary Nav Bar
    ========================================================================== */
 
 .header {
-  height: 56px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  background: var(--bg-subtle);
-  border-bottom: 1px solid var(--border);
+  background: var(--nv-surface-dark);
+  border-bottom: 1px solid var(--nv-hairline);
   z-index: 10;
   flex-shrink: 0;
 }
@@ -357,19 +332,17 @@ h1, h2, h3, h4 {
   gap: 16px;
 }
 
-.header-rtx-badge {
+.header-status-badge {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border-radius: var(--radius-xs);
-  background: var(--bg-surface);
-  border: 1px solid var(--nvidia-green-border);
-  font-size: 11.5px;
-  font-family: var(--font-mono);
-  font-weight: 800;
-  color: var(--nvidia-green);
-  letter-spacing: 0.08em;
+  border-radius: var(--rounded-sm);
+  background: var(--nv-surface-elevated);
+  border: 1px solid var(--nv-hairline-strong);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--nv-primary);
   text-transform: uppercase;
 }
 
@@ -383,218 +356,245 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 12px;
-  border-radius: var(--radius-xs);
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: var(--rounded-sm);
+  background: var(--nv-surface-elevated);
+  border: 1px solid var(--nv-hairline);
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--nv-on-dark);
 }
 
 .header-chip-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--nvidia-green);
-  box-shadow: 0 0 6px var(--nvidia-green);
+  width: 7px;
+  height: 7px;
+  background: var(--nv-primary);
 }
 
 /* ==========================================================================
-   Content Viewport
+   Main Content Viewport
    ========================================================================== */
 
 .content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 24px;
+  padding: 28px 32px;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 /* ==========================================================================
-   NVIDIA Action Buttons & Controls
+   NVIDIA Component Specifications (from .md)
    ========================================================================== */
 
+/* button-primary (44px height, #76b900 fill, 2px radius, 700 weight) */
+.button-primary,
 .btn-nvidia-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 22px;
-  background: var(--nvidia-green);
-  color: #000000;
+  height: 44px;
+  padding: 11px 24px;
+  background: var(--nv-primary);
+  color: var(--nv-on-primary);
   font-family: var(--font-sans);
-  font-size: 13.5px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border-radius: var(--radius-xs);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  border-radius: var(--rounded-sm);
   border: none;
   cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 0 16px rgba(118, 185, 0, 0.35);
+  transition: background-color 0.1s;
+  text-decoration: none;
 }
 
+.button-primary:hover,
 .btn-nvidia-primary:hover {
-  background: var(--nvidia-green-hover);
-  box-shadow: 0 0 24px rgba(118, 185, 0, 0.55);
-  transform: translateY(-1px);
+  background: #88d600;
 }
 
+.button-primary:active,
 .btn-nvidia-primary:active {
-  transform: translateY(0);
+  background: var(--nv-primary-dark);
 }
 
+.button-primary:disabled,
+.btn-nvidia-primary:disabled {
+  background: #2b2b2b;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+/* button-outline (transparent, 2px solid #76b900, 2px radius) */
+.button-outline,
+.btn-nvidia-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 11px 20px;
+  background: transparent;
+  color: var(--nv-on-dark);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: var(--rounded-sm);
+  border: 2px solid var(--nv-primary);
+  cursor: pointer;
+  transition: background-color 0.1s;
+  text-decoration: none;
+}
+
+.button-outline:hover,
+.btn-nvidia-outline:hover {
+  background: rgba(118, 185, 0, 0.1);
+  color: #ffffff;
+}
+
+/* button-outline-on-dark (1px solid #5e5e5e on dark canvas) */
+.button-outline-on-dark,
 .btn-nvidia-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 9px 18px;
-  background: var(--bg-interactive);
-  color: var(--text-primary);
+  height: 44px;
+  padding: 11px 18px;
+  background: transparent;
+  color: var(--nv-on-dark);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  border-radius: var(--radius-xs);
-  border: 1px solid var(--border);
+  border-radius: var(--rounded-sm);
+  border: 1px solid var(--nv-hairline-strong);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: border-color 0.1s, background-color 0.1s;
 }
 
+.button-outline-on-dark:hover,
 .btn-nvidia-secondary:hover {
-  background: var(--bg-interactive-hover);
-  border-color: var(--nvidia-green-border);
-  color: var(--nvidia-green);
+  border-color: var(--nv-primary);
+  color: var(--nv-primary);
+  background: var(--nv-surface-elevated);
 }
 
-/* High-Tech Telemetry Cards */
-.telemetry-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  position: relative;
-  transition: all 0.15s ease;
+/* Compact button variant */
+.button-sm {
+  height: 34px;
+  padding: 6px 14px;
+  font-size: 13px;
 }
 
-.telemetry-card:hover {
-  border-color: var(--border-strong);
-  background: var(--bg-surface-elevated);
-}
-
-.telemetry-label {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  display: flex;
+/* pill-tab & pill-tab-active (from .md) */
+.pill-tab {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.telemetry-value {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-}
-
-.telemetry-tag {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--nvidia-green);
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: transparent;
+  color: var(--nv-on-dark-mute);
+  font-size: 14px;
   font-weight: 700;
+  border-radius: var(--rounded-sm);
+  border: 1px solid var(--nv-hairline);
+  cursor: pointer;
+  transition: background-color 0.1s, color 0.1s;
+}
+
+.pill-tab:hover {
+  background: var(--nv-surface-elevated);
+  color: var(--nv-on-dark);
+}
+
+.pill-tab.active {
+  background: var(--nv-primary);
+  color: #000000;
+  border-color: var(--nv-primary);
+}
+
+/* badge-tag (from .md: caption-md, 2px radius, uppercase) */
+.badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--nv-surface-elevated);
+  color: var(--nv-on-dark);
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: var(--rounded-sm);
+  border: 1px solid var(--nv-hairline);
+  text-transform: uppercase;
+}
+
+.badge-tag-primary {
+  background: rgba(118, 185, 0, 0.15);
+  border-color: var(--nv-primary);
+  color: var(--nv-primary);
+}
+
+/* Signature 12px x 12px corner-square (from .md) */
+.corner-square {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  background: var(--nv-primary);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.corner-square-br {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background: var(--nv-primary);
+  z-index: 2;
+  pointer-events: none;
 }
 
 /* ==========================================================================
-   Hero Game Ready Spotlight (Home Screen)
+   Hero Card Dark (from .md component spec)
    ========================================================================== */
 
-.hero-game-card {
-  background: linear-gradient(135deg, #161a22 0%, #0e1015 100%);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  padding: 28px;
+.hero-card-dark {
+  background: var(--nv-surface-dark);
+  border: 1px solid var(--nv-hairline);
+  border-radius: var(--rounded-sm);
+  padding: 36px 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
 }
 
-.hero-game-card::after {
-  content: "";
-  position: absolute;
-  right: -60px;
-  top: -60px;
-  width: 220px;
-  height: 220px;
-  background: radial-gradient(circle, rgba(118, 185, 0, 0.15) 0%, transparent 70%);
-  pointer-events: none;
+.hero-card-dark .corner-square {
+  top: 0;
+  left: 0;
 }
 
-.hero-badge-strip {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.badge-rtx {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
-  background: rgba(118, 185, 0, 0.15);
-  border: 1px solid var(--nvidia-green);
-  border-radius: var(--radius-xs);
-  color: var(--nvidia-green);
-  font-size: 11px;
-  font-family: var(--font-mono);
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.badge-channel {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 8px;
-  background: var(--bg-interactive);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xs);
-  color: var(--text-secondary);
-  font-size: 11px;
-  font-family: var(--font-mono);
+.hero-title {
+  font-size: 32px;
   font-weight: 700;
-  text-transform: uppercase;
-}
-
-.hero-game-title {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
   color: #ffffff;
-  margin-bottom: 6px;
+  line-height: 1.25;
+  margin-bottom: 8px;
 }
 
-.hero-game-meta {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 20px;
+.hero-subhead {
+  font-size: 15px;
+  color: var(--nv-on-dark-mute);
+  margin-bottom: 24px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -604,39 +604,104 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.hero-btn-launch {
-  height: 48px;
-  padding: 0 32px;
-  font-size: 15px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  background: var(--nvidia-green);
-  color: #000000;
-  border: none;
-  border-radius: var(--radius-xs);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 0 24px rgba(118, 185, 0, 0.4);
-  transition: all 0.15s ease;
-}
-
-.hero-btn-launch:hover {
-  background: var(--nvidia-green-hover);
-  box-shadow: 0 0 36px rgba(118, 185, 0, 0.65);
-  transform: translateY(-1px);
-}
-
-.hero-btn-launch:active {
-  transform: translateY(0);
+  flex-wrap: wrap;
 }
 
 /* ==========================================================================
-   NVIDIA GeForce Slider Specification (RAM Allocation)
+   NVIDIA Card System (feature-card, product-card, resource-card)
+   ========================================================================== */
+
+.nv-card {
+  background: var(--nv-surface-card);
+  border: 1px solid var(--nv-hairline);
+  border-radius: var(--rounded-sm);
+  padding: 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  transition: border-color 0.15s;
+}
+
+.nv-card:hover {
+  border-color: var(--nv-hairline-strong);
+}
+
+.nv-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nv-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.nv-card-body {
+  font-size: 14px;
+  color: var(--nv-on-dark-mute);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Callout Stats / Telemetry (from .md) */
+.callout-stat {
+  background: var(--nv-surface-card);
+  border: 1px solid var(--nv-hairline);
+  border-radius: var(--rounded-sm);
+  padding: 22px 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.callout-stat-num {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--nv-primary);
+  line-height: 1.2;
+}
+
+.callout-stat-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--nv-mute);
+}
+
+/* ==========================================================================
+   Inputs (from .md: 44px height, 2px radius, focused: 2px solid #76b900)
+   ========================================================================== */
+
+.text-input,
+.input-nvidia {
+  width: 100%;
+  height: 44px;
+  background: var(--nv-surface-dark);
+  border: 1px solid var(--nv-hairline-strong);
+  border-radius: var(--rounded-sm);
+  padding: 10px 16px;
+  color: var(--nv-on-dark);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.1s;
+}
+
+.text-input:focus,
+.input-nvidia:focus {
+  border: 2px solid var(--nv-primary);
+  padding: 9px 15px; /* offset 2px border */
+}
+
+/* ==========================================================================
+   NVIDIA Slider (RAM Allocation)
    ========================================================================== */
 
 .slider {
@@ -652,18 +717,18 @@ h1, h2, h3, h4 {
 .slider [data-slot="label"] {
   grid-area: label;
   font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--nv-on-dark);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .slider__output {
   grid-area: output;
-  font-size: 13px;
+  font-size: 14px;
   font-family: var(--font-mono);
   font-weight: 700;
-  color: var(--nvidia-green);
+  color: var(--nv-primary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -672,9 +737,9 @@ h1, h2, h3, h4 {
   position: relative;
   width: 100%;
   height: 18px;
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-xs);
+  background: var(--nv-surface-elevated);
+  border: 1px solid var(--nv-hairline-strong);
+  border-radius: var(--rounded-sm);
   cursor: pointer;
 }
 
@@ -682,63 +747,49 @@ h1, h2, h3, h4 {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: var(--nvidia-green);
-  border-radius: var(--radius-xs) 0 0 var(--radius-xs);
-  box-shadow: 0 0 12px var(--nvidia-green-glow);
+  background: var(--nv-primary);
+  border-radius: var(--rounded-sm) 0 0 var(--rounded-sm);
   pointer-events: none;
 }
 
 .slider__thumb {
   position: absolute;
   top: 50%;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   background: #000000;
-  border: 2px solid var(--nvidia-green);
-  border-radius: var(--radius-xs);
-  box-shadow: 0 0 12px rgba(118, 185, 0, 0.6);
+  border: 2px solid var(--nv-primary);
+  border-radius: var(--rounded-sm);
   transform: translate(-50%, -50%);
   cursor: grab;
   outline: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .slider__thumb::after {
   content: "";
   width: 6px;
   height: 6px;
-  background: var(--nvidia-green);
+  background: var(--nv-primary);
   border-radius: 1px;
-}
-
-.slider__thumb:hover {
-  border-color: #ffffff;
-  box-shadow: 0 0 18px var(--nvidia-green);
 }
 
 .slider__thumb[data-dragging="true"],
 .slider__thumb:active {
   cursor: grabbing;
-  transform: translate(-50%, -50%) scale(1.1);
-  box-shadow: 0 0 24px var(--nvidia-green);
-}
-
-.slider__thumb:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: 2px;
+  border-color: #ffffff;
 }
 
 /* ==========================================================================
-   Data Tables & Grids (GeForce Versions & Downloads)
+   Data Table (Driver Catalog / Transfers)
    ========================================================================== */
 
 .nvidia-table-wrap {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  background: var(--nv-surface-card);
+  border: 1px solid var(--nv-hairline);
+  border-radius: var(--rounded-sm);
   overflow: hidden;
 }
 
@@ -749,27 +800,26 @@ h1, h2, h3, h4 {
 }
 
 .nvidia-table th {
-  background: var(--bg-surface-elevated);
-  padding: 12px 16px;
-  font-size: 11px;
-  font-family: var(--font-mono);
+  background: var(--nv-surface-elevated);
+  padding: 14px 18px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
+  color: var(--nv-mute);
+  border-bottom: 1px solid var(--nv-hairline);
 }
 
 .nvidia-table td {
-  padding: 13px 16px;
-  border-bottom: 1px solid var(--border-subtle);
-  font-size: 13px;
-  color: var(--text-secondary);
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--nv-hairline);
+  font-size: 14px;
+  color: var(--nv-on-dark-mute);
 }
 
 .nvidia-table tr:hover td {
-  background: var(--bg-interactive);
-  color: var(--text-primary);
+  background: var(--nv-surface-elevated);
+  color: var(--nv-on-dark);
 }
 
 .nvidia-table tr:last-child td {
@@ -777,43 +827,13 @@ h1, h2, h3, h4 {
 }
 
 /* ==========================================================================
-   Mod & Content Cards
-   ========================================================================== */
-
-.content-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-}
-
-.mod-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 14px;
-  transition: all 0.15s ease;
-}
-
-.mod-card:hover {
-  border-color: var(--nvidia-green-border);
-  background: var(--bg-surface-elevated);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
-
-/* ==========================================================================
-   Modal Dialogs (GeForce Style)
+   Modals & Overlays
    ========================================================================== */
 
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(6, 7, 10, 0.82);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -822,65 +842,44 @@ h1, h2, h3, h4 {
 
 .modal-box {
   width: 90%;
-  max-width: 540px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75), 0 0 24px rgba(118, 185, 0, 0.15);
+  max-width: 560px;
+  background: var(--nv-surface-card);
+  border: 1px solid var(--nv-hairline-strong);
+  border-radius: var(--rounded-sm);
+  position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
 .modal-header {
-  padding: 18px 22px;
-  background: var(--bg-surface-elevated);
-  border-bottom: 1px solid var(--border);
+  padding: 18px 24px;
+  background: var(--nv-surface-elevated);
+  border-bottom: 1px solid var(--nv-hairline);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .modal-header h3 {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 16px;
+  font-weight: 700;
   color: #ffffff;
+  letter-spacing: 0.02em;
 }
 
 .modal-body {
-  padding: 22px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .modal-footer {
-  padding: 16px 22px;
-  background: var(--bg-subtle);
-  border-top: 1px solid var(--border);
+  padding: 16px 24px;
+  background: var(--nv-surface-dark);
+  border-top: 1px solid var(--nv-hairline);
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-}
-
-/* Form inputs */
-.input-nvidia {
-  width: 100%;
-  height: 38px;
-  background: var(--bg-canvas);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xs);
-  padding: 0 12px;
-  color: var(--text-primary);
-  font-size: 13.5px;
-  font-family: var(--font-sans);
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.input-nvidia:focus {
-  border-color: var(--nvidia-green);
-  box-shadow: 0 0 10px var(--nvidia-green-glow);
+  gap: 12px;
 }

@@ -50,63 +50,65 @@ export function Downloads() {
   const isIdle = progress.active === 0;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Telemetry HUD Cards */}
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* Telemetry Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
-        <div className="telemetry-card">
-          <div className="telemetry-label">
-            <span>NETWORK THROUGHPUT</span>
-            <span className="telemetry-tag">{isIdle ? "STANDBY" : "TRANSFERRING"}</span>
+        <div className="callout-stat">
+          <div className="corner-square" style={{ width: 8, height: 8 }} />
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span className="callout-stat-label">NETWORK THROUGHPUT</span>
+            <span className="badge-tag" style={{ fontSize: 11 }}>{isIdle ? "STANDBY" : "ACTIVE"}</span>
           </div>
-          <div className="telemetry-value" style={{ color: isIdle ? "#9da5b4" : "var(--nvidia-green)" }}>
+          <div className="callout-stat-num" style={{ color: isIdle ? "var(--nv-mute)" : "var(--nv-primary)" }}>
             {formatSpeed(progress.speed_bps)}
           </div>
-          <span style={{ fontSize: 12, color: "#656d7c" }}>
+          <span style={{ fontSize: 12, color: "var(--nv-mute)" }}>
             Multi-threaded chunked downloader
           </span>
         </div>
 
-        <div className="telemetry-card">
-          <div className="telemetry-label">
-            <span>PIPELINE PROGRESS</span>
-            <span className="telemetry-tag">{percent}% SYNCED</span>
+        <div className="callout-stat">
+          <div className="corner-square" style={{ width: 8, height: 8 }} />
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span className="callout-stat-label">PIPELINE PROGRESS</span>
+            <span className="badge-tag badge-tag-primary" style={{ fontSize: 11 }}>{percent}% SYNCED</span>
           </div>
-          <div className="telemetry-value">
-            {formatBytes(progress.bytes_downloaded)} <span style={{ fontSize: 13, color: "#656d7c" }}>/ {formatBytes(progress.bytes_total)}</span>
+          <div className="callout-stat-num" style={{ fontSize: 24, color: "#ffffff" }}>
+            {formatBytes(progress.bytes_downloaded)} <span style={{ fontSize: 14, color: "var(--nv-mute)" }}>/ {formatBytes(progress.bytes_total)}</span>
           </div>
-          <div style={{ width: "100%", height: 6, background: "var(--bg-canvas)", borderRadius: 2, overflow: "hidden", marginTop: 4 }}>
+          <div style={{ width: "100%", height: 4, background: "var(--nv-surface-soft)", overflow: "hidden", marginTop: 4 }}>
             <div
               style={{
                 width: `${percent}%`,
                 height: "100%",
-                background: "var(--nvidia-green)",
-                boxShadow: "0 0 10px var(--nvidia-green)",
+                background: "var(--nv-primary)",
               }}
             />
           </div>
         </div>
 
-        <div className="telemetry-card">
-          <div className="telemetry-label">
-            <span>QUEUED ASSETS</span>
-            <span className="telemetry-tag">{progress.failed > 0 ? "WARNING" : "HEALTHY"}</span>
+        <div className="callout-stat">
+          <div className="corner-square" style={{ width: 8, height: 8 }} />
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span className="callout-stat-label">ASSET QUEUE</span>
+            <span className="badge-tag" style={{ fontSize: 11 }}>HEALTHY</span>
           </div>
-          <div className="telemetry-value">
-            {progress.completed} <span style={{ fontSize: 13, color: "#9da5b4" }}>COMPLETED</span>
+          <div className="callout-stat-num" style={{ fontSize: 24 }}>
+            {progress.completed} <span style={{ fontSize: 14, color: "var(--nv-on-dark-mute)" }}>COMPLETED</span>
           </div>
-          <span style={{ fontSize: 12, color: "#656d7c" }}>
+          <span style={{ fontSize: 12, color: "var(--nv-mute)" }}>
             Active: {progress.active} • Failed: {progress.failed}
           </span>
         </div>
       </div>
 
-      {/* Transfer Pipeline Action Bar */}
+      {/* Transfer Pipeline Status Bar */}
       <div
         style={{
-          background: "var(--bg-surface)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--radius-sm)",
-          padding: "16px 20px",
+          background: "var(--nv-surface-card)",
+          border: "1px solid var(--nv-hairline)",
+          borderRadius: "var(--rounded-sm)",
+          padding: "18px 24px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -115,18 +117,16 @@ export function Downloads() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div
             style={{
-              width: 10,
-              height: 10,
-              borderRadius: "50%",
-              background: isIdle ? "#656d7c" : "var(--nvidia-green)",
-              boxShadow: isIdle ? "none" : "0 0 10px var(--nvidia-green)",
+              width: 8,
+              height: 8,
+              background: isIdle ? "var(--nv-mute)" : "var(--nv-primary)",
             }}
           />
           <div>
-            <div style={{ fontSize: 13.5, fontWeight: 700, color: "#ffffff" }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#ffffff" }}>
               {isIdle ? "DOWNLOAD PIPELINE IDLE" : "SYNCING ASSETS & LIBRARIES"}
             </div>
-            <div style={{ fontSize: 11.5, fontFamily: "var(--font-mono)", color: "#656d7c" }}>
+            <div style={{ fontSize: 12, color: "var(--nv-mute)" }}>
               {isIdle ? "All assets and client libraries up to date" : "Downloading client jars and textures..."}
             </div>
           </div>
@@ -135,8 +135,8 @@ export function Downloads() {
         {!isIdle && (
           <button
             type="button"
-            className="btn-nvidia-secondary"
-            style={{ color: "#ef4444", borderColor: "rgba(239, 68, 68, 0.4)" }}
+            className="button-outline-on-dark button-sm"
+            style={{ color: "var(--nv-error)" }}
             disabled={cancelling}
             onClick={handleCancel}
           >
@@ -145,7 +145,7 @@ export function Downloads() {
         )}
       </div>
 
-      {/* Simulated Transfer Log Table */}
+      {/* Transfer Log Table */}
       <div className="nvidia-table-wrap">
         <table className="nvidia-table">
           <thead>
@@ -160,46 +160,46 @@ export function Downloads() {
           <tbody>
             <tr>
               <td>
-                <span className="badge-rtx">CLIENT JAR</span>
+                <span className="badge-tag badge-tag-primary">CLIENT JAR</span>
               </td>
               <td style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "#ffffff" }}>
                 mojang-client-1.21.4.jar
               </td>
               <td style={{ fontFamily: "var(--font-mono)" }}>34.2 MB</td>
-              <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#76b900" }}>
+              <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-primary)" }}>
                 SHA-1 VERIFIED
               </td>
-              <td style={{ textAlign: "right", color: "#76b900", fontWeight: 700 }}>
+              <td style={{ textAlign: "right", color: "var(--nv-primary)", fontWeight: 700 }}>
                 COMPLETE
               </td>
             </tr>
             <tr>
               <td>
-                <span className="badge-channel">ASSET INDEX</span>
+                <span className="badge-tag">ASSET INDEX</span>
               </td>
               <td style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "#ffffff" }}>
                 1.21.json (index hash)
               </td>
               <td style={{ fontFamily: "var(--font-mono)" }}>420 KB</td>
-              <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#76b900" }}>
+              <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-primary)" }}>
                 SHA-1 VERIFIED
               </td>
-              <td style={{ textAlign: "right", color: "#76b900", fontWeight: 700 }}>
+              <td style={{ textAlign: "right", color: "var(--nv-primary)", fontWeight: 700 }}>
                 COMPLETE
               </td>
             </tr>
             <tr>
               <td>
-                <span className="badge-channel">NATIVE LIBS</span>
+                <span className="badge-tag">NATIVE LIBS</span>
               </td>
               <td style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "#ffffff" }}>
                 lwjgl-vulkan-natives-linux.jar
               </td>
               <td style={{ fontFamily: "var(--font-mono)" }}>1.8 MB</td>
-              <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "#76b900" }}>
+              <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-primary)" }}>
                 SHA-1 VERIFIED
               </td>
-              <td style={{ textAlign: "right", color: "#76b900", fontWeight: 700 }}>
+              <td style={{ textAlign: "right", color: "var(--nv-primary)", fontWeight: 700 }}>
                 COMPLETE
               </td>
             </tr>
