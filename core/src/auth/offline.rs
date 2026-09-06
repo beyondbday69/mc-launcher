@@ -54,7 +54,7 @@ pub fn new_offline_account(username: &str) -> LauncherResult<Account> {
         id: format!("offline:{}", username),
         username: username.to_string(),
         uuid,
-        access_token: String::new(),
+        access_token: "0".to_string(),
         refresh_token: String::new(),
         expires_at,
         is_msa: false,
