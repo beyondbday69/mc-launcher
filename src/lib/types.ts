@@ -480,10 +480,10 @@ export const api = {
       ? invoke<ProgressSnapshot>("downloads_progress")
       : Promise.resolve({
           active: 0,
-          completed: 48,
+          completed: 0,
           failed: 0,
-          bytes_downloaded: 245000000,
-          bytes_total: 245000000,
+          bytes_downloaded: 0,
+          bytes_total: 0,
           speed_bps: 0,
         }),
   downloadsCancel: () => (isTauri ? invoke<void>("downloads_cancel") : Promise.resolve()),
@@ -491,7 +491,7 @@ export const api = {
   prepareLaunch: (instanceId: string) =>
     isTauri ? invoke<void>("prepare_launch", { instanceId }) : Promise.resolve(),
   launchInstance: (instanceId: string) =>
-    isTauri ? invoke<void>("launch_instance", { instanceId }) : Promise.resolve(),
+    isTauri ? invoke<number>("launch_instance", { instanceId }) : Promise.resolve(0),
   launchKill: (instanceId: string) =>
     isTauri ? invoke<void>("launch_kill", { instanceId }) : Promise.resolve(),
   launchList: () => (isTauri ? invoke<[string, number][]>("launch_list") : Promise.resolve([])),
@@ -525,6 +525,18 @@ export const api = {
           },
         ]),
   authRemove: (id: string) => (isTauri ? invoke<void>("auth_remove", { id }) : Promise.resolve()),
+  authAddOffline: (username: string) =>
+    isTauri
+      ? invoke<Account>("auth_add_offline", { username })
+      : Promise.resolve({
+          id: `offline-${Date.now()}`,
+          username,
+          uuid: "00000000-0000-0000-0000-000000000000",
+          access_token: "offline-token",
+          refresh_token: "offline-refresh",
+          expires_at: "2099-01-01T00:00:00Z",
+          is_msa: false,
+        }),
 
   loaderVersions: (kind: string, minecraftVersion: string) =>
     isTauri
@@ -536,7 +548,7 @@ export const api = {
   updateCheck: () =>
     isTauri
       ? invoke<UpdateInfo>("update_check")
-      : Promise.resolve({ has_update: false, latest_version: "0.1.0", release_notes: "", download_url: "" }),
+      : Promise.resolve({ current_version: "0.1.0", latest_version: "0.1.0", update_available: false, release_notes: "", download_url: "" }),
 
   modrinthSearch: (
     query: string,

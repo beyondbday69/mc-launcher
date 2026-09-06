@@ -7,7 +7,7 @@ import { Versions } from "./screens/Versions";
 import { Downloads } from "./screens/Downloads";
 import { Content } from "./screens/Content";
 import { Settings } from "./screens/Settings";
-import { MinecraftGameWindow } from "./components/MinecraftGameWindow";
+
 import { AccountButton } from "./screens/AccountButton";
 import {
   IconHome,
@@ -400,8 +400,7 @@ function AppContent() {
           </div>
         </div>
 
-        {/* Live Launched Minecraft Game Window */}
-        <MinecraftGameWindow />
+
       </main>
     </div>
   );

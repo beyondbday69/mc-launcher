@@ -1,11 +1,20 @@
-import { useState } from "react";
-import { formatBytes, formatSpeed } from "../lib/types";
+import { useState, useEffect } from "react";
+import { api, formatBytes, formatSpeed } from "../lib/types";
 import { IconDownloads, IconCheck } from "../lib/icons";
 import { useTaskManager } from "../lib/taskManager";
 
 export function Downloads() {
   const { downloadsSnapshot, installTasks, cancelAllDownloads, cancelTask } = useTaskManager();
   const [cancelling, setCancelling] = useState(false);
+
+  useEffect(() => {
+    if (downloadsSnapshot.active > 0) {
+      const interval = setInterval(() => {
+        api.downloadsProgress().catch(() => {});
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [downloadsSnapshot.active]);
 
   const activeTasksList = Object.values(installTasks).filter((t) => t.status === "downloading");
   const isIdle = downloadsSnapshot.active === 0 && activeTasksList.length === 0;
@@ -198,60 +207,28 @@ export function Downloads() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>
-                <span className="badge-tag badge-tag-primary">CLIENT JAR</span>
-              </td>
-              <td style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "#ffffff" }}>
-                mojang-client-1.21.4.jar
-              </td>
-              <td style={{ fontFamily: "var(--font-mono)" }}>34.2 MB</td>
-              <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-primary)" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <IconCheck size={14} />
-                  <span>SHA-1 VERIFIED</span>
-                </span>
-              </td>
-              <td style={{ textAlign: "right", color: "var(--nv-primary)", fontWeight: 700 }}>
-                COMPLETE
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <span className="badge-tag">ASSET INDEX</span>
-              </td>
-              <td style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "#ffffff" }}>
-                1.21.json (index hash)
-              </td>
-              <td style={{ fontFamily: "var(--font-mono)" }}>420 KB</td>
-              <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-primary)" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <IconCheck size={14} />
-                  <span>SHA-1 VERIFIED</span>
-                </span>
-              </td>
-              <td style={{ textAlign: "right", color: "var(--nv-primary)", fontWeight: 700 }}>
-                COMPLETE
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <span className="badge-tag">NATIVE LIBS</span>
-              </td>
-              <td style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "#ffffff" }}>
-                lwjgl-vulkan-natives-linux.jar
-              </td>
-              <td style={{ fontFamily: "var(--font-mono)" }}>1.8 MB</td>
-              <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-primary)" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <IconCheck size={14} />
-                  <span>SHA-1 VERIFIED</span>
-                </span>
-              </td>
-              <td style={{ textAlign: "right", color: "var(--nv-primary)", fontWeight: 700 }}>
-                COMPLETE
-              </td>
-            </tr>
+            {Object.values(installTasks).map((t) => (
+              <tr key={t.id}>
+                <td>
+                  <span className={`badge-tag ${t.type === "version" ? "badge-tag-primary" : ""}`}>
+                    {t.type.toUpperCase()}
+                  </span>
+                </td>
+                <td style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "#ffffff" }}>
+                  {t.title}
+                </td>
+                <td style={{ fontFamily: "var(--font-mono)" }}>{formatBytes(t.bytesTotal)}</td>
+                <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-primary)" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <IconCheck size={14} />
+                    <span>VERIFIED</span>
+                  </span>
+                </td>
+                <td style={{ textAlign: "right", color: "var(--nv-primary)", fontWeight: 700 }}>
+                  {t.status === "downloading" ? "DOWNLOADING" : "COMPLETE"}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

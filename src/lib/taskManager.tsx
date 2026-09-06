@@ -90,30 +90,19 @@ export function TaskManagerProvider({ children }: { children: React.ReactNode })
 
   // Compute aggregated downloads snapshot
   const downloadsSnapshot: ProgressSnapshot = (() => {
-    let active = activeDlCount;
-    let bytesDownloaded = 245000000;
-    let bytesTotal = 245000000;
+    let bytesDownloaded = 0;
+    let bytesTotal = 0;
     let speedBps = 0;
 
-    if (activeTasksList.length > 0) {
-      for (const t of activeTasksList) {
-        bytesDownloaded += t.bytesDownloaded;
-        bytesTotal += t.bytesTotal;
-        speedBps += t.speedBps;
-      }
-    }
-
-    if (isGamePreparing) {
-      const gameBytesTotal = 150000000;
-      const gameDownloaded = Math.round((gameBytesTotal * gameSession.progress) / 100);
-      bytesDownloaded += gameDownloaded;
-      bytesTotal += gameBytesTotal;
-      speedBps += 28500000;
+    for (const t of activeTasksList) {
+      bytesDownloaded += t.bytesDownloaded || 0;
+      bytesTotal += t.bytesTotal || 0;
+      speedBps += t.speedBps || 0;
     }
 
     return {
-      active,
-      completed: 48 + Object.values(installTasks).filter((t) => t.status === "completed").length,
+      active: activeDlCount,
+      completed: Object.values(installTasks).filter((t) => t.status === "completed").length,
       failed: Object.values(installTasks).filter((t) => t.status === "failed").length,
       bytes_downloaded: bytesDownloaded,
       bytes_total: bytesTotal,
@@ -132,48 +121,50 @@ export function TaskManagerProvider({ children }: { children: React.ReactNode })
         instanceId: instance.id,
         instanceName: instance.name,
         status: "preparing",
-        stage: "PREPARING PIPELINE & NATIVE LIBRARIES...",
-        progress: 10,
+        stage: "PREPARING GAME FILES...",
+        progress: 0,
         pid: null,
         runTimeSecs: 0,
         error: null,
       });
 
-      // Pipeline progression stages
-      const stages = [
-        { progress: 25, stage: "CHECKING RUNTIME ASSETS & SHA-1 SIGNATURES..." },
-        { progress: 50, stage: "SYNCING CLIENT JAR & ASSET INDEX..." },
-        { progress: 75, stage: "RESOLVING MODLOADER & LIBRARIES..." },
-        { progress: 90, stage: "ALLOCATING SYSTEM MEMORY & JVM FLAGS..." },
-        { progress: 98, stage: "DISPATCHING JAVA RUNTIME SUBPROCESS..." },
-      ];
-
-      for (const s of stages) {
-        await new Promise((resolve) => setTimeout(resolve, 450));
-        setGameSession((prev) => {
-          if (prev.status !== "preparing") return prev;
-          return { ...prev, progress: s.progress, stage: s.stage };
-        });
-      }
+      const progressInterval = setInterval(async () => {
+        try {
+          const snap = await api.downloadsProgress();
+          setGameSession((prev) => {
+            if (prev.status !== "preparing") return prev;
+            const progress = snap.bytes_total > 0
+              ? Math.min(Math.round((snap.bytes_downloaded / snap.bytes_total) * 100), 99)
+              : prev.progress;
+            return {
+              ...prev,
+              progress,
+              stage: snap.active > 0 ? "DOWNLOADING GAME FILES..." : prev.stage,
+            };
+          });
+        } catch {}
+      }, 500);
 
       try {
         await api.prepareLaunch(instance.id);
-        await api.launchInstance(instance.id);
+        clearInterval(progressInterval);
+        
+        const pid = await api.launchInstance(instance.id) as number;
 
-        const assignedPid = Math.floor(12000 + Math.random() * 18000);
         setGameSession({
           instanceId: instance.id,
           instanceName: instance.name,
           status: "running",
           stage: "GAME RUNNING",
           progress: 100,
-          pid: assignedPid,
+          pid,
           runTimeSecs: 0,
           error: null,
         });
 
         if (onRefresh) onRefresh();
       } catch (err: any) {
+        clearInterval(progressInterval);
         console.error("[NVIDIA Launch Error]:", err);
         setGameSession({
           instanceId: instance.id,
@@ -215,7 +206,6 @@ export function TaskManagerProvider({ children }: { children: React.ReactNode })
   const installVersion = useCallback(
     async (versionId: string, _type = "release", onInstalled?: () => Promise<void>) => {
       const taskId = `version-${versionId}`;
-      const totalBytes = 460000000; // ~460 MB for full release
 
       setInstallTasks((prev) => ({
         ...prev,
@@ -224,44 +214,58 @@ export function TaskManagerProvider({ children }: { children: React.ReactNode })
           type: "version",
           title: `Minecraft ${versionId}`,
           versionId,
-          stage: "CONNECTING TO MOJANG SERVERS...",
-          progress: 5,
-          bytesDownloaded: 23000000,
-          bytesTotal: totalBytes,
-          speedBps: 28400000,
+          stage: "CREATING GAME PROFILE...",
+          progress: 0,
+          bytesDownloaded: 0,
+          bytesTotal: 0,
+          speedBps: 0,
           status: "downloading",
         },
       }));
 
-      const steps = [
-        { progress: 20, stage: "DOWNLOADING VERSION MANIFEST & CLIENT JAR..." },
-        { progress: 45, stage: "FETCHING ASSET INDEX & SOUNDS (185 MB)..." },
-        { progress: 70, stage: "EXTRACTING NATIVES & LIBRARIES..." },
-        { progress: 90, stage: "VERIFYING CRYPTOGRAPHIC CHECKSUMS..." },
-        { progress: 98, stage: "INITIALIZING GAME PROFILE..." },
-      ];
-
-      for (const step of steps) {
-        await new Promise((res) => setTimeout(res, 550));
+      try {
+        const newInstance = await api.instancesCreate(`Minecraft ${versionId}`, versionId);
+        
         setInstallTasks((prev) => {
           const cur = prev[taskId];
-          if (!cur || cur.status !== "downloading") return prev;
-          const downloaded = Math.round((totalBytes * step.progress) / 100);
+          if (!cur) return prev;
           return {
             ...prev,
             [taskId]: {
               ...cur,
-              progress: step.progress,
-              stage: step.stage,
-              bytesDownloaded: downloaded,
-              speedBps: Math.round(24000000 + Math.random() * 8000000),
+              stage: "DOWNLOADING GAME FILES...",
+              progress: 10,
             },
           };
         });
-      }
 
-      try {
-        await api.instancesCreate(`Minecraft ${versionId}`, versionId);
+        const progressInterval = setInterval(async () => {
+          try {
+            const snap = await api.downloadsProgress();
+            setInstallTasks((prev) => {
+              const cur = prev[taskId];
+              if (!cur || cur.status !== "downloading") return prev;
+              const progress = snap.bytes_total > 0
+                ? Math.min(Math.round((snap.bytes_downloaded / snap.bytes_total) * 100), 99)
+                : cur.progress;
+              return {
+                ...prev,
+                [taskId]: {
+                  ...cur,
+                  progress,
+                  bytesDownloaded: snap.bytes_downloaded,
+                  bytesTotal: snap.bytes_total,
+                  speedBps: snap.speed_bps,
+                  stage: snap.active > 0 ? "DOWNLOADING GAME FILES..." : cur.stage,
+                },
+              };
+            });
+          } catch {}
+        }, 500);
+
+        await api.prepareLaunch(newInstance.id);
+        clearInterval(progressInterval);
+        
         if (onInstalled) await onInstalled();
 
         setInstallTasks((prev) => {
@@ -273,7 +277,7 @@ export function TaskManagerProvider({ children }: { children: React.ReactNode })
               ...cur,
               progress: 100,
               stage: "INSTALLATION COMPLETE",
-              bytesDownloaded: totalBytes,
+              bytesDownloaded: cur.bytesTotal,
               status: "completed",
             },
           };
@@ -302,55 +306,82 @@ export function TaskManagerProvider({ children }: { children: React.ReactNode })
   const installContent = useCallback(
     async (instanceId: string, hit: ProjectHit, category: string) => {
       const taskId = `content-${hit.slug}`;
-      const totalBytes = 18500000; // ~18 MB
-
       setInstallTasks((prev) => ({
         ...prev,
         [taskId]: {
           id: taskId,
           type: "mod",
           title: hit.title,
-          stage: "QUERYING MODRINTH ARTIFACTS...",
-          progress: 10,
-          bytesDownloaded: 1850000,
-          bytesTotal: totalBytes,
-          speedBps: 18000000,
+          stage: "RESOLVING COMPATIBLE VERSION...",
+          progress: 5,
+          bytesDownloaded: 0,
+          bytesTotal: 0,
+          speedBps: 0,
           status: "downloading",
         },
       }));
 
-      const steps = [
-        { progress: 35, stage: "DOWNLOADING COMPATIBLE RELEASE..." },
-        { progress: 70, stage: "VERIFYING SHA-1 HASH INTEGRITY..." },
-        { progress: 95, stage: "LINKING TO PROFILE CONTAINER..." },
-      ];
+      try {
+        // Get real versions from Modrinth
+        const versions = await api.modrinthVersions(hit.slug);
+        if (!versions || versions.length === 0) {
+          throw new Error(`No versions found for ${hit.title}`);
+        }
+        const version = versions[0];
+        const file = version.files.find((f: any) => f.primary) || version.files[0];
+        if (!file) {
+          throw new Error(`No downloadable file found for ${hit.title}`);
+        }
 
-      for (const step of steps) {
-        await new Promise((res) => setTimeout(res, 400));
         setInstallTasks((prev) => {
           const cur = prev[taskId];
-          if (!cur || cur.status !== "downloading") return prev;
+          if (!cur) return prev;
           return {
             ...prev,
             [taskId]: {
               ...cur,
-              progress: step.progress,
-              stage: step.stage,
-              bytesDownloaded: Math.round((totalBytes * step.progress) / 100),
+              stage: "DOWNLOADING...",
+              progress: 20,
+              bytesTotal: file.size,
             },
           };
         });
-      }
 
-      try {
+        // Start polling real progress
+        const progressInterval = setInterval(async () => {
+          try {
+            const snap = await api.downloadsProgress();
+            setInstallTasks((prev) => {
+              const cur = prev[taskId];
+              if (!cur || cur.status !== "downloading") return prev;
+              const progress = snap.bytes_total > 0
+                ? Math.min(Math.round((snap.bytes_downloaded / snap.bytes_total) * 100), 95)
+                : cur.progress;
+              return {
+                ...prev,
+                [taskId]: {
+                  ...cur,
+                  progress,
+                  bytesDownloaded: snap.bytes_downloaded,
+                  bytesTotal: snap.bytes_total || file.size,
+                  speedBps: snap.speed_bps,
+                  stage: snap.active > 0 ? "DOWNLOADING..." : cur.stage,
+                },
+              };
+            });
+          } catch {}
+        }, 500);
+
         await api.instanceInstallContent(
           instanceId,
           category,
-          "https://cdn.modrinth.com/fake.jar",
-          `${hit.slug}.jar`,
-          totalBytes,
-          "sha1hash"
+          file.url,
+          file.filename,
+          file.size,
+          file.hashes.sha1
         );
+
+        clearInterval(progressInterval);
 
         setInstallTasks((prev) => {
           const cur = prev[taskId];
@@ -360,6 +391,8 @@ export function TaskManagerProvider({ children }: { children: React.ReactNode })
             [taskId]: {
               ...cur,
               progress: 100,
+              bytesDownloaded: file.size,
+              bytesTotal: file.size,
               stage: "INSTALLED",
               status: "completed",
             },

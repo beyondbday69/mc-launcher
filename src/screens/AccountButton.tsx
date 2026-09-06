@@ -32,21 +32,17 @@ export function AccountButton() {
     }
   };
 
-  const handleAddOffline = () => {
+  const handleAddOffline = async () => {
     if (!offlineName.trim()) return;
-    const offlineAcc: Account = {
-      id: `offline-${Date.now()}`,
-      username: offlineName.trim(),
-      uuid: "00000000-0000-0000-0000-000000000000",
-      access_token: "offline-token",
-      refresh_token: "offline-refresh",
-      expires_at: "2099-01-01T00:00:00Z",
-      is_msa: false,
-    };
-    setAccounts((prev) => [...prev, offlineAcc]);
-    setSelectedAcc(offlineAcc);
-    setOfflineName("");
-    setShowModal(false);
+    try {
+      const offlineAcc = await api.authAddOffline(offlineName.trim());
+      setAccounts((prev) => [...prev, offlineAcc]);
+      setSelectedAcc(offlineAcc);
+      setOfflineName("");
+      setShowModal(false);
+    } catch (err) {
+      console.error("Failed to add offline account:", err);
+    }
   };
 
   const handleLogout = async (id: string) => {

@@ -53,6 +53,7 @@ export function Settings({ config, onChange }: SettingsProps) {
   const handleAddJava = async () => {
     if (!customJava.trim()) return;
     try {
+      await api.javaAdd(customJava.trim());
       const res = await api.javaDetect();
       setJavaList(res);
       setCustomJava("");

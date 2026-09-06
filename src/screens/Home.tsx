@@ -321,10 +321,10 @@ export function Home({ config, instances, selected, onSelect, onRefresh }: HomeP
               <span className="badge-tag badge-tag-primary">VERIFIED</span>
             </div>
             <div className="callout-stat-num" style={{ fontSize: 24 }}>
-              JAVA 21 <span style={{ fontSize: 14, color: "var(--nv-on-dark-mute)" }}>64-BIT</span>
+              AUTO <span style={{ fontSize: 14, color: "var(--nv-on-dark-mute)" }}>MANAGED</span>
             </div>
             <span style={{ fontSize: 12, color: "var(--nv-mute)" }}>
-              Optimized for Minecraft 1.21+ rendering pipeline
+              Runtime auto-selected for MC {selected?.version || "—"}
             </span>
           </div>
 
