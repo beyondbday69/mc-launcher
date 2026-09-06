@@ -92,7 +92,7 @@ jobs:
 
   backend-tauri-windows:
     name: tauri shell (windows)
-    runs-on: blacksmith-4vcpu-windows-2025
+    runs-on: windows-2022
     needs: backend-core
     steps:
       - uses: actions/checkout@v4
@@ -151,7 +151,7 @@ jobs:
 
   release-windows:
     name: tauri release build (windows .exe)
-    runs-on: blacksmith-4vcpu-windows-2025
+    runs-on: windows-2022
     needs: [backend-core, backend-tauri-windows]
     steps:
       - uses: actions/checkout@v4
