@@ -207,25 +207,25 @@ export function Downloads() {
             </tr>
           </thead>
           <tbody>
-            {Object.values(installTasks).map((t) => (
-              <tr key={t.id}>
+            {(downloadsSnapshot.active_files || []).slice(0, 15).map((f, i) => (
+              <tr key={i}>
                 <td>
-                  <span className={`badge-tag ${t.type === "version" ? "badge-tag-primary" : ""}`}>
-                    {t.type.toUpperCase()}
+                  <span className={`badge-tag ${f.url.includes("mojang") ? "badge-tag-primary" : ""}`}>
+                    {f.url.includes("mojang") ? "MOJANG" : f.url.includes("fabric") ? "FABRIC" : "ASSET"}
                   </span>
                 </td>
-                <td style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "#ffffff" }}>
-                  {t.title}
+                <td style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "#ffffff", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={f.url}>
+                  {f.url.split('/').pop() || "unknown"}
                 </td>
-                <td style={{ fontFamily: "var(--font-mono)" }}>{formatBytes(t.bytesTotal)}</td>
-                <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-primary)" }}>
+                <td style={{ fontFamily: "var(--font-mono)" }}>{formatBytes(f.total)}</td>
+                <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nv-mute)" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <IconCheck size={14} />
-                    <span>VERIFIED</span>
+                    <IconCheck size={14} style={{ opacity: 0.5 }} />
+                    <span>VERIFYING</span>
                   </span>
                 </td>
                 <td style={{ textAlign: "right", color: "var(--nv-primary)", fontWeight: 700 }}>
-                  {t.status === "downloading" ? "DOWNLOADING" : "COMPLETE"}
+                  {f.total > 0 ? Math.round((f.downloaded / f.total) * 100) : 0}%
                 </td>
               </tr>
             ))}

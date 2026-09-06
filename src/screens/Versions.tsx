@@ -117,7 +117,7 @@ export function Versions({ onInstalled }: VersionsProps) {
               <button
                 type="button"
                 className="button-primary"
-                onClick={() => installVersion(releaseId, "release", onInstalled)}
+                onClick={() => installVersion(releaseId, "release", false, onInstalled)}
               >
                 <IconDownloads size={16} />
                 <span>INSTALL GAME READY</span>
@@ -198,7 +198,7 @@ export function Versions({ onInstalled }: VersionsProps) {
               <button
                 type="button"
                 className="button-outline-on-dark"
-                onClick={() => installVersion(snapshotId, "snapshot", onInstalled)}
+                onClick={() => installVersion(snapshotId, "snapshot", false, onInstalled)}
               >
                 <IconDownloads size={16} />
                 <span>INSTALL SNAPSHOT</span>
@@ -295,14 +295,24 @@ export function Versions({ onInstalled }: VersionsProps) {
                         ✓ INSTALLED
                       </span>
                     ) : (
-                      <button
-                        type="button"
-                        className="button-outline-on-dark button-sm"
-                        onClick={() => installVersion(v.id, v.type, onInstalled)}
-                      >
-                        <IconPlus size={13} />
-                        <span>CREATE PROFILE</span>
-                      </button>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button
+                          type="button"
+                          className="button-outline-on-dark button-sm"
+                          onClick={() => installVersion(v.id, v.type, false, onInstalled)}
+                        >
+                          <IconPlus size={13} />
+                          <span>VANILLA</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="button-outline-on-dark button-sm"
+                          onClick={() => installVersion(v.id, v.type, true, onInstalled)}
+                        >
+                          <IconPlus size={13} />
+                          <span>FABRIC</span>
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>

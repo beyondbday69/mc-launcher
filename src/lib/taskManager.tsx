@@ -33,7 +33,7 @@ interface TaskManagerContextType {
   downloadsSnapshot: ProgressSnapshot;
   launchGame: (instance: Instance, onRefresh?: () => Promise<void>) => Promise<void>;
   stopGame: (instanceId?: string, onRefresh?: () => Promise<void>) => Promise<void>;
-  installVersion: (versionId: string, type?: string, onInstalled?: () => Promise<void>) => Promise<void>;
+  installVersion: (versionId: string, type?: string, useFabric?: boolean, onInstalled?: () => Promise<void>) => Promise<void>;
   installContent: (instanceId: string, hit: ProjectHit, category: string) => Promise<void>;
   cancelTask: (taskId: string) => void;
   cancelAllDownloads: () => void;
@@ -107,6 +107,7 @@ export function TaskManagerProvider({ children }: { children: React.ReactNode })
       bytes_downloaded: bytesDownloaded,
       bytes_total: bytesTotal,
       speed_bps: speedBps,
+      active_files: [],
     };
   })();
 
@@ -204,15 +205,15 @@ export function TaskManagerProvider({ children }: { children: React.ReactNode })
 
   // 3. INSTALL MINECRAFT VERSION
   const installVersion = useCallback(
-    async (versionId: string, _type = "release", onInstalled?: () => Promise<void>) => {
-      const taskId = `version-${versionId}`;
+    async (versionId: string, _type = "release", useFabric = false, onInstalled?: () => Promise<void>) => {
+      const taskId = `version-${versionId}${useFabric ? "-fabric" : ""}`;
 
       setInstallTasks((prev) => ({
         ...prev,
         [taskId]: {
           id: taskId,
           type: "version",
-          title: `Minecraft ${versionId}`,
+          title: `Minecraft ${versionId}${useFabric ? " (Fabric)" : ""}`,
           versionId,
           stage: "CREATING GAME PROFILE...",
           progress: 0,
@@ -224,7 +225,11 @@ export function TaskManagerProvider({ children }: { children: React.ReactNode })
       }));
 
       try {
-        const newInstance = await api.instancesCreate(`Minecraft ${versionId}`, versionId);
+        let newInstance = await api.instancesCreate(`Minecraft ${versionId}${useFabric ? " Fabric" : ""}`, versionId);
+        if (useFabric) {
+          newInstance.mod_loader = { kind: "fabric", version: "0.16.5" };
+          await api.instancesUpdate(newInstance);
+        }
         
         setInstallTasks((prev) => {
           const cur = prev[taskId];

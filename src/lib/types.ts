@@ -106,6 +106,15 @@ export interface ProgressSnapshot {
   bytes_downloaded: number;
   bytes_total: number;
   speed_bps: number;
+  active_files: ProgressEntry[];
+}
+
+export interface ProgressEntry {
+  url: string;
+  downloaded: number;
+  total: number;
+  speed_bps: number;
+  eta_secs: number | null;
 }
 
 export interface Account {
@@ -485,6 +494,7 @@ export const api = {
           bytes_downloaded: 0,
           bytes_total: 0,
           speed_bps: 0,
+          active_files: [],
         }),
   downloadsCancel: () => (isTauri ? invoke<void>("downloads_cancel") : Promise.resolve()),
 

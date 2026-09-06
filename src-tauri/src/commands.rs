@@ -271,6 +271,7 @@ pub struct ProgressSnapshot {
     pub bytes_downloaded: u64,
     pub bytes_total: u64,
     pub speed_bps: f64,
+    pub active_files: Vec<crate::downloads::ProgressEntry>,
 }
 
 #[tauri::command]
@@ -283,6 +284,7 @@ pub async fn downloads_progress(cmd: State<'_, CommandState>) -> LauncherResult<
         bytes_downloaded: s.bytes_downloaded,
         bytes_total: s.total_bytes,
         speed_bps: s.bytes_per_sec,
+        active_files: s.active,
     })
 }
 
@@ -390,16 +392,8 @@ async fn current_account(state: &State<'_, AppState>) -> LauncherResult<Account>
         }
         return Ok(a);
     }
-    // Offline fallback: launch in demo mode.
-    Ok(Account {
-        id: "offline".to_string(),
-        username: "Player".to_string(),
-        uuid: "00000000-0000-0000-0000-000000000000".to_string(),
-        access_token: "0".to_string(),
-        refresh_token: "0".to_string(),
-        expires_at: chrono::Utc::now() + chrono::Duration::days(365),
-        is_msa: false,
-    })
+    // Offline fallback: launch in offline mode.
+    Ok(crate::auth::new_offline_account("Player").unwrap())
 }
 
 async fn resolve_java(state: &State<'_, AppState>, inst: &Instance) -> LauncherResult<(PathBuf, u32)> {
