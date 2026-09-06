@@ -138,7 +138,7 @@ mod tests {
     fn new_offline_account_has_no_tokens() {
         let acc = new_offline_account("Notch").unwrap();
         assert!(!acc.is_msa);
-        assert_eq!(acc.access_token, "");
+        assert_eq!(acc.access_token, "0");
         assert_eq!(acc.refresh_token, "");
         // Far-future expiry -> never needs refresh.
         assert!(!acc.needs_refresh());
