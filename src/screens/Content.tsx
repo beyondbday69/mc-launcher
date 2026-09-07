@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { api, Instance, ProjectHit, ProjectDetail, ProjectDependency } from "../lib/types";
-import { IconSearch, IconPlus, IconCube, IconCheck, IconChevronLeft } from "../lib/icons";
+import { IconSearch, IconPlus, IconCube, IconChevronLeft } from "../lib/icons";
 import { useTaskManager } from "../lib/taskManager";
 
 interface ContentProps {
