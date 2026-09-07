@@ -287,27 +287,34 @@ fn build_game_args(
 }
 
 fn arg_allowed(arg: &Arg, _context: &HashMap<&'static str, String>) -> bool {
+    if arg.rules().is_empty() {
+        return true;
+    }
     let os = std::env::consts::OS;
     let os_name = match os {
         "windows" => "windows",
         "macos" => "osx",
         _ => "linux",
     };
+    
+    let mut allowed = false;
     for r in arg.rules() {
-        let matches = r
+        let matches_os = r
             .os
             .as_ref()
             .map(|o| o.name.as_deref().map(|n| n == os_name).unwrap_or(true))
             .unwrap_or(true);
-        if !matches {
-            continue;
-        }
-        match r.action {
-            RuleAction::Allow => return true,
-            RuleAction::Disallow => return false,
+            
+        let matches_features = r.features.is_none();
+        
+        if matches_os && matches_features {
+            match r.action {
+                RuleAction::Allow => allowed = true,
+                RuleAction::Disallow => allowed = false,
+            }
         }
     }
-    true
+    allowed
 }
 
 async fn extract_natives(
