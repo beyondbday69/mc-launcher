@@ -141,6 +141,30 @@ export interface UpdateInfo {
 }
 
 /** Modrinth project search hit. */
+export interface GalleryImage {
+  url: string;
+  featured: boolean;
+  title: string | null;
+  description: string | null;
+  created: string;
+}
+
+export interface ProjectDetail {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  project_type: string;
+  downloads: number;
+  icon_url: string | null;
+  body: string;
+  gallery: GalleryImage[];
+  source_url: string | null;
+  issues_url: string | null;
+  wiki_url: string | null;
+  discord_url: string | null;
+}
+
 export interface ProjectHit {
   slug: string;
   title: string;
@@ -578,8 +602,17 @@ export const api = {
       : Promise.resolve(SAMPLE_MODS),
   modrinthProject: (slugOrId: string) =>
     isTauri
-      ? invoke<ProjectHit>("modrinth_project", { slugOrId })
-      : Promise.resolve(SAMPLE_MODS[0]),
+      ? invoke<ProjectDetail>("modrinth_project", { slugOrId })
+      : Promise.resolve({
+          ...SAMPLE_MODS[0],
+          id: "local",
+          body: "Sample description",
+          gallery: [],
+          source_url: null,
+          issues_url: null,
+          wiki_url: null,
+          discord_url: null,
+        } as ProjectDetail),
   modrinthVersions: (
     slugOrId: string,
     gameVersion?: string,

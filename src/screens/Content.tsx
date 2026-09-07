@@ -1,33 +1,179 @@
 import { useState, useEffect } from "react";
-import { api, Instance, ProjectHit } from "../lib/types";
-import { IconSearch, IconPlus, IconCube, IconCheck } from "../lib/icons";
+import { api, Instance, ProjectHit, ProjectDetail, ProjectDependency } from "../lib/types";
+import { IconSearch, IconPlus, IconCube, IconCheck, IconChevronLeft } from "../lib/icons";
 import { useTaskManager } from "../lib/taskManager";
 
 interface ContentProps {
   selected: Instance | null;
 }
 
-export function Content({ selected }: ContentProps) {
+function ProjectDetailView({ 
+  hit, 
+  onBack, 
+  onInstall,
+  installing
+}: { 
+  hit: ProjectHit, 
+  onBack: () => void, 
+  onInstall: () => void,
+  installing: boolean
+}) {
+  const [detail, setDetail] = useState<ProjectDetail | null>(null);
+  const [deps, setDeps] = useState<ProjectDependency[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [d, ds] = await Promise.all([
+          api.modrinthProject(hit.slug),
+          api.modrinthProjectDependencies(hit.slug)
+        ]);
+        if (active) {
+          setDetail(d);
+          setDeps(ds);
+          setLoading(false);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+    return () => { active = false; };
+  }, [hit.slug]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24, animation: "fadeIn 0.2s ease" }}>
+      <button 
+        type="button" 
+        onClick={onBack}
+        style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", color: "var(--nv-primary)", cursor: "pointer", padding: 0, fontWeight: 700 }}
+      >
+        <IconChevronLeft size={16} /> BACK TO SEARCH
+      </button>
+
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+        {hit.icon_url && (
+          <img src={hit.icon_url} alt="" style={{ width: 96, height: 96, borderRadius: "var(--rounded-md)", flexShrink: 0 }} />
+        )}
+        <div style={{ flex: 1 }}>
+          <h2 style={{ fontSize: 32, margin: 0, color: "#fff" }}>{hit.title}</h2>
+          <p style={{ color: "var(--nv-mute)", margin: "4px 0 16px 0", fontSize: 16 }}>by {hit.author}</p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button 
+              className="button-primary" 
+              onClick={onInstall} 
+              disabled={installing}
+            >
+              <IconPlus size={16} /> {installing ? "INSTALLING..." : "INSTALL"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ color: "var(--nv-mute)", padding: 40, textAlign: "center" }}>LOADING ASSETS & METADATA...</div>
+      ) : detail && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+          {/* Gallery Carousel */}
+          {detail.gallery && detail.gallery.length > 0 && (
+            <div>
+              <h3 style={{ color: "var(--nv-mute)", fontSize: 12, letterSpacing: "0.06em", marginBottom: 12 }}>MEDIA GALLERY</h3>
+              <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 12 }}>
+                {detail.gallery.map((img, i) => (
+                  <img 
+                    key={i} 
+                    src={img.url} 
+                    alt={img.title || "Gallery image"} 
+                    style={{ height: 200, borderRadius: "var(--rounded-sm)", objectFit: "cover", flexShrink: 0, border: "1px solid var(--nv-surface-card)" }} 
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 32 }}>
+            <div style={{ flex: 2 }}>
+              <h3 style={{ color: "var(--nv-mute)", fontSize: 12, letterSpacing: "0.06em", marginBottom: 12 }}>DESCRIPTION</h3>
+              <div 
+                style={{ 
+                  color: "#e2e2e2", 
+                  lineHeight: 1.6, 
+                  background: "var(--nv-surface-card)",
+                  padding: 24,
+                  borderRadius: "var(--rounded-md)",
+                  border: "1px solid var(--nv-hairline)",
+                  whiteSpace: "pre-wrap",
+                  fontFamily: "var(--font-sans)"
+                }}
+              >
+                {detail.body.substring(0, 1000)}{detail.body.length > 1000 ? "..." : ""}
+              </div>
+            </div>
+
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 24 }}>
+              {/* Dependencies */}
+              {deps.length > 0 && (
+                <div>
+                  <h3 style={{ color: "var(--nv-mute)", fontSize: 12, letterSpacing: "0.06em", marginBottom: 12 }}>DEPENDENCIES</h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {deps.map((dep, i) => (
+                      <div key={i} style={{ padding: 12, background: "var(--nv-surface-card)", borderRadius: "var(--rounded-sm)", border: "1px solid var(--nv-hairline)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ color: "#fff", fontWeight: 700, fontSize: 13 }}>{dep.project_id}</span>
+                          <span className="badge-tag" style={{ fontSize: 10 }}>{dep.dependency_type.toUpperCase()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div>
+                <h3 style={{ color: "var(--nv-mute)", fontSize: 12, letterSpacing: "0.06em", marginBottom: 12 }}>INFO</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13, color: "var(--nv-mute)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>Downloads:</span> <span style={{color: "#fff"}}>{detail.downloads.toLocaleString()}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>Followers:</span> <span style={{color: "#fff"}}>{hit.follows.toLocaleString()}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Content({ selected }: ContentProps) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("mod");
   const [projects, setProjects] = useState<ProjectHit[]>([]);
   const [loading, setLoading] = useState(false);
+  const [viewing, setViewing] = useState<ProjectHit | null>(null);
   const { installTasks, installContent } = useTaskManager();
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    api
-      .modrinthSearch(query, category, selected?.version || "1.21.4")
-      .then((hits) => {
+    const fetchModrinth = async () => {
+      setLoading(true);
+      try {
+        const hits = await api.modrinthSearch(
+          query,
+          category,
+          selected?.version,
+          selected?.mod_loader?.kind
+        );
         if (active) setProjects(hits);
-      })
-      .catch((err) => console.error("[NVIDIA Content Search]:", err))
-      .finally(() => {
+      } catch (err) {
+        console.error("Failed to search modrinth", err);
+      } finally {
         if (active) setLoading(false);
-      });
+      }
+    };
 
+    const timer = setTimeout(fetchModrinth, 400);
     return () => {
+      clearTimeout(timer);
       active = false;
     };
   }, [query, category, selected]);
@@ -39,6 +185,17 @@ export function Content({ selected }: ContentProps) {
     }
     installContent(selected.id, hit, category);
   };
+
+  if (viewing) {
+    return (
+      <ProjectDetailView 
+        hit={viewing} 
+        onBack={() => setViewing(null)} 
+        onInstall={() => handleInstall(viewing)}
+        installing={!!installTasks[`content-${viewing.slug}`]}
+      />
+    );
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -54,69 +211,57 @@ export function Content({ selected }: ContentProps) {
               key={cat.id}
               type="button"
               className={`pill-tab ${category === cat.id ? "active" : ""}`}
-              onClick={() => setCategory(cat.id)}
+              onClick={() => {
+                setCategory(cat.id);
+                setViewing(null);
+              }}
             >
               {cat.label}
             </button>
           ))}
         </div>
 
-        <div style={{ position: "relative", display: "flex", alignItems: "center", maxWidth: 320, width: "100%" }}>
-          <span style={{ position: "absolute", left: 12, color: "var(--nv-mute)", pointerEvents: "none", display: "flex", alignItems: "center" }}>
-            <IconSearch size={15} />
-          </span>
+        <div style={{ position: "relative", width: 280 }}>
+          <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--nv-mute)", display: "flex" }}>
+            <IconSearch size={14} />
+          </div>
           <input
             type="text"
-            className="text-input"
-            placeholder="Search mods, shaders, textures..."
-            style={{ paddingLeft: 34 }}
+            className="input-text"
+            placeholder="Search Modrinth library..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            style={{ width: "100%", paddingLeft: 36, background: "rgba(0,0,0,0.2)" }}
           />
         </div>
       </div>
 
-      {/* Target Profile Status */}
-      <div
-        style={{
-          padding: "12px 20px",
-          background: "var(--nv-surface-card)",
-          border: "1px solid var(--nv-hairline)",
-          borderRadius: "var(--rounded-sm)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          fontSize: 13,
-        }}
-      >
-        <span style={{ color: "var(--nv-on-dark-mute)" }}>
-          Active Target: <strong style={{ color: "#ffffff" }}>{selected ? selected.name : "None Selected"}</strong>
-          {selected && ` (MC ${selected.version} • ${selected.mod_loader?.kind?.toUpperCase() || "VANILLA"})`}
-        </span>
-        <span className="badge-tag badge-tag-primary">MODRINTH CATALOG CONNECTED</span>
-      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {loading ? (
+          <div style={{ padding: "40px 0", textAlign: "center", color: "var(--nv-mute)" }}>
+            SCANNING REPOSITORIES...
+          </div>
+        ) : projects.length === 0 ? (
+          <div style={{ padding: "40px 0", textAlign: "center", color: "var(--nv-mute)" }}>
+            NO ASSETS FOUND FOR CURRENT FILTERS
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
+            {projects.map((hit) => {
+              const taskId = `content-${hit.slug}`;
+              const task = installTasks[taskId];
+              const isInstalled = task?.status === "completed";
+              const isDownloading = task?.status === "downloading";
 
-      {/* Content Grid */}
-      {loading ? (
-        <div style={{ textAlign: "center", padding: 48, color: "var(--nv-mute)", fontFamily: "var(--font-mono)" }}>
-          QUERYING REPOSITORY CATALOG...
-        </div>
-      ) : projects.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 48, color: "var(--nv-mute)" }}>
-          No content matches your search criteria.
-        </div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-          {projects.map((hit) => {
-            const task = installTasks[`content-${hit.slug}`];
-            const isDownloading = task && task.status === "downloading";
-            const isCompleted = task && task.status === "completed";
-
-            return (
-              <div key={hit.slug} className="nv-card" style={{ padding: "20px" }}>
-                <div className="corner-square" style={{ width: 8, height: 8 }} />
-
-                <div>
+              return (
+                <div 
+                  key={hit.slug} 
+                  className="nv-card" 
+                  style={{ padding: "20px", cursor: "pointer", transition: "border-color 0.2s" }}
+                  onClick={() => setViewing(hit)}
+                >
+                  <div className="corner-square" style={{ width: 8, height: 8 }} />
+                  
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
                     {hit.icon_url ? (
                       <img
@@ -136,74 +281,77 @@ export function Content({ selected }: ContentProps) {
                           width: 44,
                           height: 44,
                           borderRadius: "var(--rounded-sm)",
-                          background: "var(--nv-surface-elevated)",
+                          background: "var(--nv-surface-dark)",
                           border: "1px solid var(--nv-hairline)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          color: "var(--nv-primary)",
                           flexShrink: 0,
+                          color: "var(--nv-mute)",
                         }}
                       >
-                        <IconCube size={22} />
+                        <IconCube size={20} />
                       </div>
                     )}
 
-                    <div style={{ minWidth: 0 }}>
-                      <span className="badge-tag" style={{ fontSize: 10, padding: "2px 6px" }}>
-                        {hit.project_type.toUpperCase()}
-                      </span>
-                      <h3 style={{ fontSize: 16, fontWeight: 700, color: "#ffffff", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#ffffff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {hit.title}
-                      </h3>
-                      <div style={{ fontSize: 12, color: "var(--nv-mute)" }}>
+                      </h4>
+                      <div style={{ fontSize: 12, color: "var(--nv-mute)", marginTop: 2 }}>
                         by {hit.author}
                       </div>
                     </div>
                   </div>
 
-                  <p style={{ fontSize: 13, color: "var(--nv-on-dark-mute)", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                  <p
+                    style={{
+                      fontSize: 13,
+                      lineHeight: 1.5,
+                      color: "var(--nv-mute)",
+                      margin: "0 0 16px 0",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      height: 38,
+                    }}
+                  >
                     {hit.description}
                   </p>
-                </div>
 
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 12, borderTop: "1px solid var(--nv-hairline)", marginTop: 12 }}>
-                  <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--nv-mute)" }}>
-                    {(hit.downloads / 1000000).toFixed(1)}M DLs
-                  </span>
-
-                  {isDownloading ? (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 100, textAlign: "right" }}>
-                      <span style={{ fontSize: 10, color: "var(--nv-primary)", fontWeight: 700, fontFamily: "var(--font-mono)" }}>
-                        INSTALLING {task.progress}%
-                      </span>
-                      <div style={{ width: "100%", height: 4, background: "var(--nv-surface-soft)", borderRadius: 2, overflow: "hidden" }}>
-                        <div style={{ width: `${task.progress}%`, height: "100%", background: "var(--nv-primary)", transition: "width 0.25s ease" }} />
-                      </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <span className="badge-tag">{(hit.downloads / 1000000).toFixed(1)}M DLs</span>
                     </div>
-                  ) : isCompleted ? (
-                    <span className="badge-tag badge-tag-primary" style={{ fontSize: 11, padding: "3px 8px" }}>
-                      <IconCheck size={12} />
-                      <span>INSTALLED</span>
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      className="button-primary button-sm"
-                      onClick={() => handleInstall(hit)}
-                    >
-                      <IconPlus size={13} />
-                      <span>INSTALL</span>
-                    </button>
-                  )}
+
+                    {isInstalled ? (
+                      <span className="badge-tag badge-tag-primary" style={{ fontSize: 11 }}>
+                        ✓ INSTALLED
+                      </span>
+                    ) : isDownloading ? (
+                      <span className="badge-tag" style={{ color: "var(--nv-primary)", borderColor: "var(--nv-primary)" }}>
+                        {task.progress}%
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="button-outline-on-dark button-sm"
+                        onClick={(e) => { e.stopPropagation(); handleInstall(hit); }}
+                      >
+                        <IconPlus size={13} />
+                        <span>INSTALL</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-export default Content;
+export { Content };

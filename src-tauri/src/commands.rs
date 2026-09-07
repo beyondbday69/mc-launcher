@@ -600,7 +600,7 @@ pub async fn modrinth_search(
 #[tauri::command]
 pub async fn modrinth_project(
     slug_or_id: String,
-) -> LauncherResult<crate::mods::modrinth::ProjectHit> {
+) -> LauncherResult<crate::mods::modrinth::ProjectDetail> {
     crate::mods::modrinth::get_project(&slug_or_id).await
 }
 
