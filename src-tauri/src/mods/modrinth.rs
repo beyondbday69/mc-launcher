@@ -62,6 +62,39 @@ impl ProjectType {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GalleryImage {
+    pub url: String,
+    pub featured: bool,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub created: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProjectDetail {
+    pub id: String,
+    pub slug: String,
+    pub title: String,
+    pub description: String,
+    pub project_type: String,
+    pub downloads: u64,
+    #[serde(default)]
+    pub icon_url: Option<String>,
+    #[serde(default)]
+    pub body: String,
+    #[serde(default)]
+    pub gallery: Vec<GalleryImage>,
+    #[serde(default)]
+    pub source_url: Option<String>,
+    #[serde(default)]
+    pub issues_url: Option<String>,
+    #[serde(default)]
+    pub wiki_url: Option<String>,
+    #[serde(default)]
+    pub discord_url: Option<String>,
+}
+
 /// A search hit (project summary).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProjectHit {
@@ -211,10 +244,10 @@ pub async fn search(
 }
 
 /// Fetch a single project's metadata.
-pub async fn get_project(slug_or_id: &str) -> LauncherResult<ProjectHit> {
+pub async fn get_project(slug_or_id: &str) -> LauncherResult<ProjectDetail> {
     let url = format!("{API_BASE}/project/{}", urlencoding::encode(slug_or_id));
     let bytes = http_get(&url).await?;
-    let hit: ProjectHit = serde_json::from_slice(&bytes)
+    let hit: ProjectDetail = serde_json::from_slice(&bytes)
         .map_err(|e| LauncherError::Other(format!("modrinth project: {e}")))?;
     Ok(hit)
 }
