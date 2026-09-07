@@ -23,7 +23,7 @@ pub mod modrinth;
 pub mod stub;
 
 pub use fabric::FabricLoader;
-pub use modrinth::{ProjectHit, ProjectType, ProjectVersion, VersionFile};
+pub use modrinth::{GalleryImage, ProjectDetail, ProjectHit, ProjectType, ProjectVersion, VersionFile};
 pub use stub::UnsupportedLoader;
 
 /// Loader kinds the launcher knows about.
